@@ -1,0 +1,7 @@
+**	Vas a necesitar esta info 
+https://stackoverflow.com/questions/42194571/identifying-time-zones-in-iso-8601
+
+Las timezones no son el problema el problema son los zone offsets (hora adelantada o atrasada por 1)
+
+las timezones las guardas por usuario y las fechas de los videos/streams las guardas en UTC 0 con timestamp en postgres
+

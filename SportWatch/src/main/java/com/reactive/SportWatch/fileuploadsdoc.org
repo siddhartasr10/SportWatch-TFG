@@ -1,0 +1,111 @@
+#+TITLE: Set Up Spring Boot for File Uploads
+First, you need to configure your Spring Boot application to accept file uploads. This can be done by setting up a file upload handler in your Spring controller.
+
+* Step 1: Configure Multipart File Uploads
+Add Multipart Support: Make sure you have the necessary dependencies in your pom.xml:
+
+#+BEGIN_SRC xml
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-commons</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-file-upload</artifactId>
+    </dependency>
+</dependencies>
+#+END_SRC
+
+Controller Method for File Upload:
+
+#+BEGIN_SRC java
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+@RestController
+public class FileUploadController {
+
+    @PostMapping("/upload")
+    public String uploadFile(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return "Failed to store empty file.";
+        }
+        try {
+            byte[] bytes = file.getBytes();
+            Path path = Paths.get("uploads/" + file.getOriginalFilename());
+            Files.write(path, bytes);
+            return "Successfully uploaded - " + file.getOriginalFilename();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Failed to upload file: " + e.getMessage();
+        }
+    }
+}
+#+END_SRC
+* Step 2: Handling the FFmpeg Stream
+If you are dealing with a live streaming scenario, the stream will be sent directly to your Spring Boot application as a Multipart stream. Here’s how you can adjust the controller to accept and handle such streams:
+
+Adjust Multipart Support in the Controller:
+
+#+BEGIN_SRC java
+@RestController
+public class VideoStreamController {
+
+    @PostMapping("/uploadStream")
+    public String uploadStream(@RequestParam("file") MultipartFile file) {
+        try {
+            byte[] bytes = file.getBytes();
+            // Process the stream as needed
+            // You might store it, analyze it, or forward it to another service
+            // Example of saving locally
+            Path path = Paths.get("streams/" + file.getOriginalFilename());
+            Files.write(path, bytes);
+            return "Stream uploaded successfully - " + file.getOriginalFilename();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Failed to upload stream: " + e.getMessage();
+        }
+    }
+}
+#+END_SRC
+FFmpeg Configuration: If your application requires specific processing of the stream (e.g., transcoding, real-time analysis), you might want to start an FFmpeg process to handle this stream. This requires capturing input from a network stream or file and then processing it using FFmpeg commands.
+
+Example of Starting an FFmpeg Process
+To process the stream with FFmpeg:
+
+Run FFmpeg in a separate process:
+#+BEGIN_SRC java
+ProcessBuilder processBuilder = new ProcessBuilder();
+processBuilder.command("ffmpeg", "-i", "input_stream_url", "output_destination");
+Process process = processBuilder.start();
+#+END_SRC
+
+Monitor and interact with the process:
+#+BEGIN_SRC java
+BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+String line;
+while ((line = reader.readLine()) != null) {
+    System.out.println(line);
+}
+#+END_SRC
+** Handling output: You might need to read from process.getInputStream() to get FFmpeg output or handle errors and statuses.
+
+* Step 3: Routing and Configuration
+Ensure proper routing in your Spring Boot application to map HTTP requests to the appropriate controller methods.
+Set up path handling in your application.properties if you need custom paths for file uploads or stream handling:
+properties
+
+#+BEGIN_SRC conf[JavaProp]
+spring.servlet.multipart.location=uploads/
+spring.servlet.multipart.max-file-size=1MB
+spring.servlet.multipart.max-request-size=1MB
+#+END_SRC

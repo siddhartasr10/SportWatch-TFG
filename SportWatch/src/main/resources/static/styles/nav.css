@@ -1,0 +1,53 @@
+body {
+    font-family: Arial;
+    background-color: var(--lighter-dark);
+}
+
+nav {
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 100vw;
+    height: 7vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background-color: var(--dark);
+    color: var(--light);
+    /* font-weight: bolder; */
+}
+ul {
+    display: flex;
+    flex-direction: row;
+
+    width: 65%;
+    list-style:none;
+}
+
+nav ul a:visited, nav ul a:link {
+    color: var(--light);
+    text-decoration:none;
+}
+nav ul li:first-child {
+    font-size: 1.25rem;
+    font-weight: bolder;
+}
+nav ul li {
+    margin-right: var(--xxs-mg);
+
+    display:flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 5rem;
+    height: 0.75rem;
+    font-size: 0.75rem;
+}
+
+nav ul li svg {
+    width: 20px;
+    height: 20px;
+    margin-right: 0.25rem;
+}

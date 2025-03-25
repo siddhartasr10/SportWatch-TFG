@@ -1,0 +1,16 @@
+#+title: Tfg
+
+
+*** 23/03/25 dom
+*       Trabajando en implementar una base de datos de postgres que funcione con el servidor
+        Primero añadi la config en application.properties y luego borre postgres/data y lo recree con initdb porque una nueva version de postgres habia salido
+        y tenia datos de proyectos antiguos que no servian, por lo que no iba a dumpear y restaurar
+        asi que un buen rm /var/lib/postgres/data/* y initdb /var/lib/postgres/data y palante
+*       Creando una implementación de User
+        Extendí la implementación por defecto que trae spring security, ya que no traía campo de email
+
+
+*** 24/03/25 lun
+*       Continuo implementación de User
+        Se alarga la tarea debido a poco tiempo y a que la implementación de user tiene bastantes métodos státicos que no puedo sobreescribir, además
+        a los que me veo forzado a returnear el builder antiguo, y a no poder returnear el mío. Pero ya queda bastante poco.
