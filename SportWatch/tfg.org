@@ -14,3 +14,29 @@
 *       Continuo implementación de User
         Se alarga la tarea debido a poco tiempo y a que la implementación de user tiene bastantes métodos státicos que no puedo sobreescribir, además
         a los que me veo forzado a returnear el builder antiguo, y a no poder returnear el mío. Pero ya queda bastante poco.
+
+*** 29/03/25 sab
+*       Termino implementación de User
+        Añado métodos personalizados de with* y un extBuilder. Además de crear un ExtUserDetails para poder crear un extWithUserDetails
+*       Implementación de un PasswordEncoder
+        Me informo de como funcionan los password encoders en spring security y de su uso de SecureRandom
+        #+BEGIN_SRC java
+            {@link java.security.SecureRandom}
+        #+END_SRC
+        Posiblemente utilizo la implementación de BcryptPasswordEncoder
+        Al final lo que voy a usar es basicamente eso
+        #+BEGIN_SRC java
+            PasswordEncoder encoder = new BCryptPasswordEncoder();
+            String pw = "JuanSecreto";
+
+            pw = encoder.encode(pw);
+            ExtUser user = (ExtUser) ExtUser.extWithUsername("Juan")
+            .email("Juan@elmejor.com")
+            // aquí se usaria un passwordEncoder
+            .password(pw)
+            .roles("Admin")
+            .build();
+
+
+            System.out.println(user);
+        #+END_SRC
