@@ -9,8 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.Assert;
 
 // Info: El encoding de la contraseña se hace aparte del builder por cuestiones de seguridad
-// TODO: termina de sobreescribir los with* y checkea que esté todo listo
-public class ExtUser extends User {
+public class ExtUser extends User implements ExtUserDetails {
     // I use a different logger than the super class
     private static final Logger logger = Logger.getLogger(ExtUser.class.toString());
 	private final String email;
@@ -36,6 +35,11 @@ public class ExtUser extends User {
     public String getEmail() {
 		return email;
 	}
+
+    @Override
+    public String toString() {
+        return String.format("ExtUser<Username: %s, Password: %s, Email: %s, Authorities: %s>", this.getUsername(), this.getPassword(), this.getEmail(), this.getAuthorities());
+    }
 
     /* Copia de UserBuilder de User pero con email y más simple (cutre)
     * Usa un UserBuilder de User y cambia el build para crear con el user buildeado
@@ -178,22 +182,12 @@ public class ExtUser extends User {
         // Little trick to avoid password encoding being carried over by the builder, which is marked as deprecated
         // and as insecure, so we don't use internalBuilder's created user's password
         // as its encoded and encoding in ExtUser is external not internal.
-		public UserDetails build() {
+		public ExtUserDetails build() {
             User internalUser = (User) internalBuilder.build();
 			return new ExtUser(internalUser, tmpPassword, this.email);
 		}
 
 	}
-
-    // This function isn't implemented by superclass "User", but is useful for my UserBuilder impl
-    // public static User.UserBuilder withPassword(String password) {
-    //     User.with
-    // }
-
-    // public static User.UserBuilder builder() {
-    //     logger.warning("ExtUser builder is extBuilder(), can't return superclass builder, I will return it anyways bc return type can't change, but with invalid info");
-    //     return User.withUsername("fooBar");
-    // }
 
     public static User.UserBuilder withDefaultPasswordEncoder() {
         logger.warning("ExtUser Doesn't allow this, encode the password separately, I will be returning empty UserBuilder");
@@ -201,16 +195,40 @@ public class ExtUser extends User {
     }
 
     public static User.UserBuilder withUsername(String username) {
-        logger.warning("ExtUser doesn't use User.UserBuilder, empty invalid builder will be returned instead");
+        logger.warning("ExtUser doesn't use User.UserBuilder, empty invalid builder will be returned");
+        logger.warning("Use extWithUsername instead");
         return User.builder();
     }
 
     public static User.UserBuilder builder() {
         logger.warning("ExtUser doesn't use builder(), use extBuilder instead!");
+        logger.warning("Use extBuilder instead");
         return User.builder();
     }
 
+    public static User.UserBuilder withUserDetails(UserDetails userDetails) {
+        logger.warning("ExtUser doesn't use User.UserBuilder, empty invalid builder will be returned");
+        logger.warning("Use extWithUserdetails instead");
+        return User.builder();
+    }
+
+    public static UserBuilder extWithEmail(String email) {
+        return extBuilder().email(email);
+    }
+
+    public static UserBuilder extWithUsername(String username) {
+        return extBuilder().username(username);
+    }
+    //
     public static UserBuilder extBuilder() {
        return new UserBuilder();
     }
+    // I don't use account Expired neither Locked, or disabled or nonexpired credentials
+    public static UserBuilder extWithUserDetails(ExtUserDetails extendedUserDetails) {
+        return extBuilder().username(extendedUserDetails.getUsername())
+            .password(extendedUserDetails.getPassword())
+            .authorities(extendedUserDetails.getAuthorities())
+            .email(extendedUserDetails.getEmail());
+    }
+
 }
