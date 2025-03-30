@@ -1,6 +1,8 @@
 package com.reactive.SportWatch.models;
 
+import java.sql.Timestamp;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -13,6 +15,9 @@ public class ExtUser extends User implements ExtUserDetails {
     // I use a different logger than the super class
     private static final Logger logger = Logger.getLogger(ExtUser.class.toString());
 	private final String email;
+    private final Timestamp created_at;
+    private final short user_timezone;
+    private final int streamerId;
     // Not mentioned params in the constructor: all (set to true in the shortened super constructor)
     /**
 	 * @param enabled set to <code>true</code> if the user is enabled
@@ -20,15 +25,21 @@ public class ExtUser extends User implements ExtUserDetails {
 	 * @param credentialsNonExpired set to <code>true</code> if the credentials have not expired
 	 * @param accountNonLocked set to <code>true</code> if the account is not locked
 	 */
-    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities) {
+    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, Timestamp created_at, short user_timezone, int streamerId) {
         super(username, password, authorities);
         this.email = email;
+        this.created_at = created_at;
+        this.user_timezone = user_timezone;
+        this.streamerId = streamerId;
     }
 
     // Constructor to allow builder to bypass internal builder's encoded password
-    public ExtUser(User user, String password, String email) {
+    public ExtUser(User user, String password, String email, Timestamp created_at, short user_timezone, int streamerId) {
         super(user.getUsername(), password, user.getAuthorities());
         this.email = email;
+        this.created_at = created_at;
+        this.user_timezone = user_timezone;
+        this.streamerId = streamerId;
 
     }
 
@@ -36,9 +47,23 @@ public class ExtUser extends User implements ExtUserDetails {
 		return email;
 	}
 
+    public Timestamp getCreated_at() {
+        return created_at;
+    }
+
+    public short getTimezone() {
+        return user_timezone;
+    }
+
+    public int getStreamerId() {
+        return streamerId;
+    }
     @Override
     public String toString() {
-        return String.format("ExtUser<Username: %s, Password: %s, Email: %s, Authorities: %s>", this.getUsername(), this.getPassword(), this.getEmail(), this.getAuthorities());
+        if (Objects.isNull(this.getStreamerId())) {
+            return String.format("ExtUser<Username: %s, Password: %s, Email: %s, Authorities: %s, created at: %s, UTC difference: %s>", this.getUsername(), this.getPassword(), this.getEmail(), this.getAuthorities(), this.getCreated_at(), this.getTimezone());
+        }
+        else return  String.format("ExtUser<Username: %s, Password: %s, Email: %s, Authorities: %s, created at: %s, UTC difference: %s, streamerId: %s>", this.getUsername(), this.getPassword(), this.getEmail(), this.getAuthorities(), this.getCreated_at(), this.getTimezone(), this.getStreamerId());
     }
 
     /* Copia de UserBuilder de User pero con email y más simple (cutre)
@@ -50,6 +75,11 @@ public class ExtUser extends User implements ExtUserDetails {
 
         private String email;
 
+        private Timestamp created_at;
+
+        private short user_timezone;
+
+        private int streamerId;
         /* Little trick to avoid using encoded password, as its a deprecated procedure
          * and is marked as insecure, so encoding will be carried over outside the builder
          * to do that using a internal User.UserBuilder I need to store the password twice
@@ -111,6 +141,24 @@ public class ExtUser extends User implements ExtUserDetails {
 			return this;
 		}
 
+        public UserBuilder created_at(Timestamp created_at) {
+			Assert.notNull(created_at, "created_at cannot be null");
+			this.created_at = created_at;
+			return this;
+        }
+
+        public UserBuilder timezone(short timezone) {
+			Assert.notNull(timezone, "timezone cannot be null");
+			this.user_timezone = timezone;
+			return this;
+        }
+
+        public UserBuilder streamerId(int streamerId) {
+			// streamerId can be null lol
+			// Assert.notNull(streamerId, "created_at cannot be null");
+			this.streamerId = streamerId;
+			return this;
+        }
 		/**
 		 * Populates the roles. This method is a shortcut for calling
 		 * {@link #authorities(String...)}, but automatically prefixes each entry with
@@ -184,7 +232,7 @@ public class ExtUser extends User implements ExtUserDetails {
         // as its encoded and encoding in ExtUser is external not internal.
 		public ExtUserDetails build() {
             User internalUser = (User) internalBuilder.build();
-			return new ExtUser(internalUser, tmpPassword, this.email);
+			return new ExtUser(internalUser, tmpPassword, this.email, this.created_at, this.user_timezone, this.streamerId);
 		}
 
 	}
@@ -228,7 +276,11 @@ public class ExtUser extends User implements ExtUserDetails {
         return extBuilder().username(extendedUserDetails.getUsername())
             .password(extendedUserDetails.getPassword())
             .authorities(extendedUserDetails.getAuthorities())
-            .email(extendedUserDetails.getEmail());
+            .email(extendedUserDetails.getEmail())
+            .created_at(extendedUserDetails.getCreated_at())
+            .timezone(extendedUserDetails.getTimezone())
+            .streamerId(extendedUserDetails.getStreamerId());
+
     }
 
 }
