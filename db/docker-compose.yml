@@ -1,21 +1,23 @@
 services:
 
   db:
-    image: postgres:latest
+    image: postgres:17
     restart: always
     # set shared memory limit when using docker-compose (Opción que viene por defecto en la documentación)
     shm_size: 128mb
     volumes: # Hecho en mi caso con un bind mount, si se quita el punto barra y se añade un volume al final también estaría bien.
       - ./postgres-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_DB: ProyectoDB
+      POSTGRES_DB: sportwatch
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
+    ports:
+      - 5432:5432
       # PGDATA: /var/lib/postgresql/data Valor por defecto, lo dejo por si quisiera cambiar la localización de los datos en el contenedor.
 
 
   adminer:
-    image: adminer:latest
+    image: adminer:5.1.0
     restart: always
     ports:
       - 8080:8080
