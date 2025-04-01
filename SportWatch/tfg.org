@@ -40,3 +40,27 @@
 
             System.out.println(user);
         #+END_SRC
+*       Estableciendo configuración específica de la db
+        Establezco la versión de los contenedores de docker (postgres y adminer) a una versión fija para evitar problemas
+        y reestablezco la base de datos, ya que estaba dando problemas al crearse una nueva versión de postgres
+        el esquema ER lo tengo en db designer y lo puedo descargar en un .SQL que puedo importar.
+
+        Igualmente cada vez que lo descargo tengo que cambiar las primary keys de datatype porque se ponen en cualquier cosa menos int
+        y no quiero ni short ni bigint y cambiar "with timezone" por without ya que, ya tengo user_timezone, un shortint que representa la diferencia de UTC (+1+2-1-2...)
+
+*       Implementación de un UserRep (para despues usarlo con un reactiveUserDetailService)
+        He creado una clase de @configuration jdbcConfig para crear un jdbc template creado con el datasource establecido en el application.properties
+        Luego he implementado un @Repository UserRep para poder hacer de DAO con los usuarios y usarlo después para un reactiveuserdetailservice
+
+        Al implementarlo me he dado cuenta de que mi clase modelo ExtUser y (por lo tanto su interfaz ExtUserDetails) no tenían soporte para el resto de campos de la base de datos
+        como created_at timezone o streamer_id
+
+        por lo que he implementado ese soporte también y el metodo findByUsername en UserRep
+
+        He añadido la dependencia spring-boot-starter-data-jdbc para que el jdbcConfig se cree automaticamente cogiendo el datasource de application.properties, por lo que
+        JdbcConfig.java ya no es necesario para nada.
+
+**  01/04/25 (hay dias que no apunto y sobreescribo en lo que hay)
+*      Modificación de userService, los métodos que requiere para el contrato UserDetailService deberían recoger el mínimo de info
+        Las tablas de las bases de datos se me están quedando muy grandes, no debería coger todas las columnas para buscar por usuario en el userdetailservice
+        ya que ese usuario se usa para la autenticación, para esa operación el usuario, la contraseña y las autoridades sobran la verdad.
