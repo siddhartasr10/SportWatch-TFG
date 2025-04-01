@@ -31,10 +31,12 @@ Ej: ESPN, FoxSports (tiene pero unicamente con servidores en EEUU), Skysports (r
 
 7. **Directo resubido**: Los streamers pueden decidir si dejar resubido el directo, una vez resubido se vera en su perfil y los usuarios podrán verlo en sus paneles de suscripción.
 
+8. **Administradores**: Permitir la creación de usuarios con un rol especial de administrador, para un producto minimo viable no lo veo un requerimiento, puedo borrar registros desde Adminer 
 ## 3. Requerimientos Técnicos
 **Frontend**: Angular, HTML, CSS, [HLS.js](https://github.com/video-dev/hls.js)
 
-**Backend**: Java Spring-boot (Webflux), PostgreSQL, 
+**Backend**: Java Spring-boot (Webflux), PostgreSQL, Adminer 
 
 **Integraciones**: AWS Streaming/Cloudflare Streaming
 
+**Despliegue**: Docker (Actualmente solo la base de datos está containerizada, el proyecto de spring boot se puede convertir facilmente en un .jar y crearse una imagen desde ahí cuando quiera)
