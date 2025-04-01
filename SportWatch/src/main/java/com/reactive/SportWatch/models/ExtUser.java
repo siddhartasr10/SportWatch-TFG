@@ -171,12 +171,12 @@ public class ExtUser extends User implements ExtUserDetails {
 
 		/**
 		 * Populates the email. This attribute is required.
-		 * @param email the email. Cannot be null.
+		 * @param email the email. Can be null.
 		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
 		 * additional attributes for this user)
 		 */
 		public UserBuilder email(String email) {
-			Assert.notNull(email, "email cannot be null");
+			// Assert.notNull(email, "email cannot be null");
 			this.email = email;
 			return this;
 		}
