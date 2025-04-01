@@ -1,4 +1,4 @@
-package com.reactive.SportWatch;
+package com.reactive.SportWatch.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

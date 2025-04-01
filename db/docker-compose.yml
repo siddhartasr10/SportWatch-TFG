@@ -20,5 +20,4 @@ services:
     image: adminer:5.1.0
     restart: always
     ports:
-      - 8080:8080
-
+      - 11000:8080
