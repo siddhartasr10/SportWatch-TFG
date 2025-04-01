@@ -1,8 +1,9 @@
 package com.reactive.SportWatch.models;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Objects;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -18,6 +19,13 @@ public class ExtUser extends User implements ExtUserDetails {
     private final Timestamp created_at;
     private final short user_timezone;
     private final int streamerId;
+    private final List<Integer> follows;
+    private final List<Integer> subscribed;
+    /*
+     * @Tparam char[l] l=128 is what I setted on the db
+     * some logic will have to be made to check the array until "\0" (null terminator)
+     * */
+    private final List<char[]> notifications;
     // Not mentioned params in the constructor: all (set to true in the shortened super constructor)
     /**
 	 * @param enabled set to <code>true</code> if the user is enabled
@@ -25,22 +33,27 @@ public class ExtUser extends User implements ExtUserDetails {
 	 * @param credentialsNonExpired set to <code>true</code> if the credentials have not expired
 	 * @param accountNonLocked set to <code>true</code> if the account is not locked
 	 */
-    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, Timestamp created_at, short user_timezone, int streamerId) {
+    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, Timestamp created_at, short user_timezone, int streamerId, List<Integer> follows, List<Integer> subscribed, List<char[]> notifications) {
         super(username, password, authorities);
         this.email = email;
         this.created_at = created_at;
         this.user_timezone = user_timezone;
         this.streamerId = streamerId;
+        this.follows = follows;
+        this.subscribed = subscribed;
+        this.notifications = notifications;
     }
 
     // Constructor to allow builder to bypass internal builder's encoded password
-    public ExtUser(User user, String password, String email, Timestamp created_at, short user_timezone, int streamerId) {
+    public ExtUser(User user, String password, String email, Timestamp created_at, short user_timezone, int streamerId, List<Integer> follows, List<Integer> subscribed, List<char[]> notifications) {
         super(user.getUsername(), password, user.getAuthorities());
         this.email = email;
         this.created_at = created_at;
         this.user_timezone = user_timezone;
         this.streamerId = streamerId;
-
+        this.follows = follows;
+        this.subscribed = subscribed;
+        this.notifications = notifications;
     }
 
     public String getEmail() {
@@ -58,18 +71,37 @@ public class ExtUser extends User implements ExtUserDetails {
     public int getStreamerId() {
         return streamerId;
     }
+
+    public List<Integer> getFollows() {
+        return follows;
+    }
+
+    public List<Integer> getSubscribed() {
+        return subscribed;
+    }
+
+    public List<char[]> getNotifications() {
+        return notifications;
+    }
+
     @Override
     public String toString() {
-        if (Objects.isNull(this.getStreamerId())) {
-            return String.format("ExtUser<Username: %s, Password: %s, Email: %s, Authorities: %s, created at: %s, UTC difference: %s>", this.getUsername(), this.getPassword(), this.getEmail(), this.getAuthorities(), this.getCreated_at(), this.getTimezone());
-        }
-        else return  String.format("ExtUser<Username: %s, Password: %s, Email: %s, Authorities: %s, created at: %s, UTC difference: %s, streamerId: %s>", this.getUsername(), this.getPassword(), this.getEmail(), this.getAuthorities(), this.getCreated_at(), this.getTimezone(), this.getStreamerId());
+        return  String.format("ExtUser: " +
+                              "<Username: %s, Password: %s, "
+                              + "Email: %s, authorities: %s, "
+                              + "created at: %s, UTC difference: %s, "
+                              + "streamerId: %s, follows: %s, "
+                              + "subscribed to: %s, with %s notifications>",
+                              this.getUsername(), this.getPassword(),
+                              this.getEmail(), this.getAuthorities(),
+                              this.getCreated_at(), this.getTimezone(),
+                              this.getStreamerId(), this.getFollows(),
+                              this.getSubscribed(), this.getNotifications());
     }
 
     /* Copia de UserBuilder de User pero con email y más simple (cutre)
     * Usa un UserBuilder de User y cambia el build para crear con el user buildeado
-    * Así los métodos withUsername heredados de User pueden ser usados con este nuevo
-    * UserBuilder
+    * Así los métodos withUsername heredados de User pueden ser usados con este nuevo * UserBuilder
     */
     public static final class UserBuilder {
 
@@ -80,6 +112,14 @@ public class ExtUser extends User implements ExtUserDetails {
         private short user_timezone;
 
         private int streamerId;
+
+        private List<Integer> follows;
+        private List<Integer> subscribed;
+
+        /*
+        * @Tparam char[l] l=128 is what I setted on the db
+        * */
+        private List<char[]> notifications;
         /* Little trick to avoid using encoded password, as its a deprecated procedure
          * and is marked as insecure, so encoding will be carried over outside the builder
          * to do that using a internal User.UserBuilder I need to store the password twice
@@ -155,9 +195,62 @@ public class ExtUser extends User implements ExtUserDetails {
 
         public UserBuilder streamerId(int streamerId) {
 			// streamerId can be null lol
-			// Assert.notNull(streamerId, "created_at cannot be null");
+			// Assert.notNull(streamerId, "... cannot be null");
 			this.streamerId = streamerId;
 			return this;
+        }
+        /**
+         * @param follows the StreamerIds of the streamers you follow
+         * it can be null.
+         *  * */
+        public UserBuilder follows(List<Integer> follows) {
+            this.follows = follows;
+            return this;
+        }
+
+        public UserBuilder follows(int[] follows) {
+            List<Integer> list = new ArrayList<Integer>();
+            for (int i = 0; i < follows.length; i++) list.add(follows[i]);
+            return follows(list);
+        }
+
+        /**
+         * @param subscribed the StreamerIds of the streamers you're a member of
+         * it can be null.
+         *  * */
+        public UserBuilder subscribed(List<Integer> subscribed) {
+            this.subscribed = subscribed;
+            return this;
+        }
+
+        public UserBuilder subscribed(int[] subscribed) {
+            List<Integer> list = new ArrayList<Integer>();
+            for (int i = 0; i < subscribed.length; i++) list.add(subscribed[i]);
+            return subscribed(list);
+        }
+
+        /**
+         * @param notifications the text of the notifications you've got
+         * char array is char[128]
+         * it can be null.
+         *  * */
+        public UserBuilder notifications(List<char[]> notifications) {
+            for (int i = 0; i < notifications.size(); i++) Assert.isTrue(notifications.get(i).length == 128, "Invalid length of notification char, has to be 128");
+            this.notifications = notifications;
+            return this;
+        }
+
+        // Won't call the other func as in the other because I want to check char[] length before adding it to a list
+        // and not the other way around
+        public UserBuilder notifications(char[][] notifications) {
+            List<char[]> list = new ArrayList<char[]>();
+            for (int i = 0; i < notifications.length; i++) {
+                Assert.isTrue(notifications[i].length == 128, "Invalid length of notification char, has to be 128");
+                list.add(notifications[i]);
+            }
+
+            this.notifications = list;
+            return this;
         }
 		/**
 		 * Populates the roles. This method is a shortcut for calling
@@ -231,12 +324,13 @@ public class ExtUser extends User implements ExtUserDetails {
         // and as insecure, so we don't use internalBuilder's created user's password
         // as its encoded and encoding in ExtUser is external not internal.
 		public ExtUserDetails build() {
-            User internalUser = (User) internalBuilder.build();
-			return new ExtUser(internalUser, tmpPassword, this.email, this.created_at, this.user_timezone, this.streamerId);
+            User internalUser = (User) this.internalBuilder.build();
+			return new ExtUser(internalUser, this.tmpPassword, this.email, this.created_at, this.user_timezone, this.streamerId, this.follows, this.subscribed, this.notifications);
 		}
 
 	}
 
+    @SuppressWarnings("Deprecation")
     public static User.UserBuilder withDefaultPasswordEncoder() {
         logger.warning("ExtUser Doesn't allow this, encode the password separately, I will be returning empty UserBuilder");
         return User.builder();
