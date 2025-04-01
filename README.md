@@ -15,7 +15,7 @@ Ej: ESPN, FoxSports (tiene pero unicamente con servidores en EEUU), Skysports (r
 
 Competidores: (en parte) DAZN, HBO/Max (Max sports)
 
-2. Funcionalidades Clave
+## 2. Funcionalidades Clave
 -- 1: Autenticación de usuarios
 
 -- 2: Streaming de vídeo: Se permite subir contenido en directo y se puede ver desde el canal del autor
@@ -31,7 +31,7 @@ Competidores: (en parte) DAZN, HBO/Max (Max sports)
 -- 6: Panel de suscripciones: Cada usuario puede ver en su panel de suscripciones los directos actuales de cada uno de los streamers a los que siguen.
 -- 7: Directo resubido: Los streamers pueden decidir si dejar resubido el directo, una vez resubido se vera en su perfil y los usuarios podrán verlo en sus paneles de suscripción.
 
-3. Requerimientos Técnicos
+## 3. Requerimientos Técnicos
 Frontend: Angular, HTML, CSS, [HLS.js](https://github.com/video-dev/hls.js)
 
 Backend: Java Spring-boot (Webflux), PostgreSQL, 
