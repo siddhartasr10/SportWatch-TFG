@@ -1,5 +1,6 @@
-#+title: Tfg
 
+#+title:  Tfg
+#+author: Siddharta Morión Suárez
 
 *** 23/03/25 dom
 *       Trabajando en implementar una base de datos de postgres que funcione con el servidor
@@ -64,3 +65,18 @@
 *      Modificación de userService, los métodos que requiere para el contrato UserDetailService deberían recoger el mínimo de info
         Las tablas de las bases de datos se me están quedando muy grandes, no debería coger todas las columnas para buscar por usuario en el userdetailservice
         ya que ese usuario se usa para la autenticación, para esa operación el usuario, la contraseña y las autoridades sobran la verdad.
+
+*       Expansión de ExtUser para añadir notificaciones, suscripciones y seguidores.
+
+**  02/04/25
+*      Creación de un ReactiveAuthManager
+        En webflux se utiliza como authmanager y authprovider un reactiveAuthManager.
+        He usado la impl concreta de un UserDetailsRepositoryReactiveAuthenticationManager;
+        #+BEGIN_SRC java
+            @Bean
+  59 + │    public ReactiveAuthenticationManager authenticationProvider() {
+       │        authProvider = new DaoAuthenticationProvider(passwordEncoder());
+  60 + │        UserDetailsRepositoryReactiveAuthenticationManager authManager = new UserDetailsRepositoryReactiveAuthenticationManager(CustomUserDetailService);
+  61 + │        authManager.setPasswordEncoder(passwordEncoder());
+  62 + │        return authManager;
+        #+END_SRC
