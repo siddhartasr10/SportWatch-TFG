@@ -330,7 +330,7 @@ public class ExtUser extends User implements ExtUserDetails {
 
 	}
 
-    @SuppressWarnings("Deprecation")
+    @SuppressWarnings("deprecation")
     public static User.UserBuilder withDefaultPasswordEncoder() {
         logger.warning("ExtUser Doesn't allow this, encode the password separately, I will be returning empty UserBuilder");
         return User.builder();
