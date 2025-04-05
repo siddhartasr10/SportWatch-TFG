@@ -93,3 +93,14 @@
 **  05/04/25
 *       Implementación de RDBC por JDBC
         Cambiado application properties, UserService ya no requiere de UserRepository, ya que los métodos del Dao directamente returnean el objeto Mono<>
+*       Implementación de JWT (empezamos)
+        Voy a implementar JWT para no necesitar preguntarle al servidor por la identidad del usuario cada vez que necesito su "username"
+        además es bastante seguro y las utilidades que voy a implementar pueden utilizarse después para implementar oauth2 si lo quisiera.
+        Permite una autenticación "stateless". (aunque por el momento voy a conservar los tokens de sesión también)
+        1. Crear unas keys publicas y privadas en una carpeta /certs dentro de resources
+        Además un archivo config para poder acceder a estos archivos como una clase de java que pueda usar.
+        Creo el archivo JwtConfig e inicializo las claves con los comandos mencionados en el issue #8
+        luego además creo los archivos en formato .der para que keyFactory pueda detectarlo.
+
+        Usando @values y ClassPathResource cargo el path de las claves desde un archivo config "JwtConfig"
+        y usando java.security cargo las claves del path y las convierto en una clase de java con la que puedo hacer de interfaz
