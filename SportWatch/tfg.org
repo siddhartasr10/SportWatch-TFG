@@ -104,3 +104,9 @@
 
         Usando @values y ClassPathResource cargo el path de las claves desde un archivo config "JwtConfig"
         y usando java.security cargo las claves del path y las convierto en una clase de java con la que puedo hacer de interfaz
+
+        2. Para gestionar la creación y verificación de JWS (voy a usar JWS por si no habia quedado claro cuando he hablado de crear un par de claves no es para JWE)
+           La librería en cuestión es jjwt (java jwt) https://github.com/jwtk/jjwt
+           Y voy a implementar una clase muy simple que utilice esta librería para crear y verficar JWS.
+           La clase creada es JwtService.
+           Despúes de esto voy a implementar un filtro src_java[:exports code]{code}class JwtAuthenticationFilter extends OncePerRequestFilter}
