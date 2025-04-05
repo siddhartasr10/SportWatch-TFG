@@ -33,6 +33,7 @@ public class ExtUser extends User implements ExtUserDetails {
 	 * @param credentialsNonExpired set to <code>true</code> if the credentials have not expired
 	 * @param accountNonLocked set to <code>true</code> if the account is not locked
 	 */
+     // If built from the constructor it will only check null on username and password (this is intended, as only debug extUsers will be created using the constructor)
     public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, Timestamp created_at, short user_timezone, int streamerId, List<Integer> follows, List<Integer> subscribed, List<char[]> notifications) {
         super(username, password, authorities);
         this.email = email;
@@ -213,6 +214,7 @@ public class ExtUser extends User implements ExtUserDetails {
             for (int i = 0; i < follows.length; i++) list.add(follows[i]);
             return follows(list);
         }
+
 
         /**
          * @param subscribed the StreamerIds of the streamers you're a member of

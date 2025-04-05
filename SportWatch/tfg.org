@@ -80,3 +80,16 @@
   61 + │        authManager.setPasswordEncoder(passwordEncoder());
   62 + │        return authManager;
         #+END_SRC
+
+**  04/04/25
+*       Modificaciones base de datos
+        Sabías que las contraseñas encriptadas por bcrypt miden hasta 72 carácterres? yo no, la base de datos menos ajajja varchar(50) no hace el avio aquí
+        además si no pones serial no hay autoincremento de las id en postgres, a no ser que hagas una sequence a mano que es lentísimo la verdad
+*       Cambio de dependencias
+        JDBC no está hecho para Webflux porque es bloqueante no asíncrono, hace falta RDBC, así que he cambiado las dependencias en el pom y estoy cambiando JDBCTemplate por DatabaseClient
+*       Prueba index.html generado con Angular
+        La página va a ser una SPA que a lo mejor tiene el login y eso por SSR pero el resto no.
+
+**  05/04/25
+*       Implementación de RDBC por JDBC
+        Cambiado application properties, UserService ya no requiere de UserRepository, ya que los métodos del Dao directamente returnean el objeto Mono<>
