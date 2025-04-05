@@ -14,24 +14,32 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
     private final ReactiveUserDetailsService CustomUserDetailService;
 
+    //necesitaras algo de esto para el encoder/decoder a lo mejor no aquí pero en un jwt util pero por lo menos está a la vista
+    private final JwtConfig jwtConfig;
+
     @Autowired
-    public SecurityConfig(UserService CustomUserDetailService) {
+    public SecurityConfig(UserService CustomUserDetailService, JwtConfig jwtConfig) {
         this.CustomUserDetailService = CustomUserDetailService;
+        this.jwtConfig = jwtConfig;
     }
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
             .authorizeExchange(exchanges -> exchanges
+                               .pathMatchers("/login", "/logout", "/register").permitAll()
                                .anyExchange().authenticated())
             .httpBasic().and()
             .formLogin();
+
+            // .httpBasic().and() .formLogin();
 
         return http.build();
     }
@@ -49,5 +57,18 @@ public class SecurityConfig {
         return authManager;
     }
 
- // la configuracion implicita establece esto también pero si lo quieres modificar tienes que añadir esto.
+
+    // @Bean
+    // public JwtDecoder jwtDecoder() {
+    //     return NimbusJwtDecoder.withPublicKey(rsaKeyConfigProperties.publicKey()).build();
+    // }
+
+    // @Bean
+    // JwtEncoder jwtEncoder() {
+    //     JWK jwk = new RSAKey.Builder(rsaKeyConfigProperties.publicKey()).privateKey(rsaKeyConfigProperties.privateKey()).build();
+
+    //     JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
+    //     return new NimbusJwtEncoder(jwks);
+    // }
+
 }
