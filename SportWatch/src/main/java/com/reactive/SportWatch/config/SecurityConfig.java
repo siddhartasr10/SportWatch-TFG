@@ -21,13 +21,9 @@ public class SecurityConfig {
 
     private final ReactiveUserDetailsService CustomUserDetailService;
 
-    //necesitaras algo de esto para el encoder/decoder a lo mejor no aquí pero en un jwt util pero por lo menos está a la vista
-    private final JwtConfig jwtConfig;
-
     @Autowired
-    public SecurityConfig(UserService CustomUserDetailService, JwtConfig jwtConfig) {
+    public SecurityConfig(UserService CustomUserDetailService) {
         this.CustomUserDetailService = CustomUserDetailService;
-        this.jwtConfig = jwtConfig;
     }
 
     @Bean
@@ -56,19 +52,5 @@ public class SecurityConfig {
         authManager.setPasswordEncoder(passwordEncoder());
         return authManager;
     }
-
-
-    // @Bean
-    // public JwtDecoder jwtDecoder() {
-    //     return NimbusJwtDecoder.withPublicKey(rsaKeyConfigProperties.publicKey()).build();
-    // }
-
-    // @Bean
-    // JwtEncoder jwtEncoder() {
-    //     JWK jwk = new RSAKey.Builder(rsaKeyConfigProperties.publicKey()).privateKey(rsaKeyConfigProperties.privateKey()).build();
-
-    //     JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
-    //     return new NimbusJwtEncoder(jwks);
-    // }
 
 }
