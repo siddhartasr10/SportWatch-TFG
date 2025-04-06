@@ -98,15 +98,33 @@
         además es bastante seguro y las utilidades que voy a implementar pueden utilizarse después para implementar oauth2 si lo quisiera.
         Permite una autenticación "stateless". (aunque por el momento voy a conservar los tokens de sesión también)
         1. Crear unas keys publicas y privadas en una carpeta /certs dentro de resources
-        Además un archivo config para poder acceder a estos archivos como una clase de java que pueda usar.
-        Creo el archivo JwtConfig e inicializo las claves con los comandos mencionados en el issue #8
-        luego además creo los archivos en formato .der para que keyFactory pueda detectarlo.
+            Además un archivo config para poder acceder a estos archivos como una clase de java que pueda usar.
+            Creo el archivo JwtConfig e inicializo las claves con los comandos mencionados en el issue #8
+            luego además creo los archivos en formato .der para que keyFactory pueda detectarlo.
 
         Usando @values y ClassPathResource cargo el path de las claves desde un archivo config "JwtConfig"
         y usando java.security cargo las claves del path y las convierto en una clase de java con la que puedo hacer de interfaz
 
         2. Para gestionar la creación y verificación de JWS (voy a usar JWS por si no habia quedado claro cuando he hablado de crear un par de claves no es para JWE)
-           La librería en cuestión es jjwt (java jwt) https://github.com/jwtk/jjwt
-           Y voy a implementar una clase muy simple que utilice esta librería para crear y verficar JWS.
-           La clase creada es JwtService.
-           Despúes de esto voy a implementar un filtro src_java[:exports code]{code}class JwtAuthenticationFilter extends OncePerRequestFilter}
+            La librería en cuestión es jjwt (java jwt) https://github.com/jwtk/jjwt
+            Y voy a implementar una clase muy simple que utilice esta librería para crear y verficar JWS.
+            La clase creada es JwtService.
+            Despúes de esto voy a implementar un filtro src_java[:exports code]{code}class JwtAuthenticationFilter extends OncePerRequestFilter}
+
+        3. Crear filtro pero esto ya para mañana, son las 21:30 un sábado y estoy en pijama otra vez
+**  06/04/25
+*       Implementación de filtro de SecurityWebFilterChain
+        En Spring webflux la clase OncePerRequestFilter no se usa, se usa la interfaz WebFilter, pero hace lo mismo, en vez de pasarle como parámetros al metodo principal
+        (Que en WebFilter se llama filter() en vez de doFilterInternal) request y response se le pasa ServerWebExchange (que es el objeto que representa el intercambio request response)
+        y contiene la request, cookies y todo basicamente y la filter chain (como en Oncerper..)  pero se llama webfilterchain, y se hace lo mismo de al final usar la filterchain con filter
+        para pasar al siguiente filtro.
+
+       - Implementación de un token de authenticacion JwtAuthenticationToken
+        He tenido que implementar un JwtAuthenticationToken, que extiende de abstractAuthentication token y lo único que hace es guardar el token y el usuario (extraido del token)
+        ya que en los filtros para que spring boot pueda tomar a un usuario por "autentificado" hay que añadir una implementación Authorization. Lo mismo que via a tener que hacer en login vamos.
+        Esto en laravel era más facil, porque usabas Auth::Attempt y no implementabas manager ninguno pa el token se usaba  $token = $request->user()->createToken($request->token_name);
+        y a chuparla. pero bueno aquí hay que implementar el token si no quieres usar oauth.
+
+
+       Una vez implementado el filtro y el token necesito ponerlo en la cadena de filtros, para eso uso en http.addFilterBefore(elfiltro, SecurityWebFilterOrder.AUTHENTICATION)
+       el securitywebfilterorder es un enum que tiene todas las fases. (menos mal no quería implementar nada más)

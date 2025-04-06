@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,14 +22,19 @@ public class SecurityConfig {
 
     private final ReactiveUserDetailsService CustomUserDetailService;
 
+    // está en el mismo paquete "config" me ahorro el import.
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Autowired
-    public SecurityConfig(UserService CustomUserDetailService) {
+    public SecurityConfig(UserService CustomUserDetailService, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.CustomUserDetailService = CustomUserDetailService;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
         http
+            .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange(exchanges -> exchanges
                                .pathMatchers("/login", "/logout", "/register").permitAll()
                                .anyExchange().authenticated())
