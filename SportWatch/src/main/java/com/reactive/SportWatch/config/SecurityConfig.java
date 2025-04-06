@@ -14,32 +14,43 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+// import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
+import org.springframework.security.web.server.csrf.CsrfToken;
+import org.springframework.web.server.WebFilter;
+
+import reactor.core.publisher.Mono;
 
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
-    private final ReactiveUserDetailsService CustomUserDetailService;
+    private final ReactiveUserDetailsService customUserDetailService;
 
     // está en el mismo paquete "config" me ahorro el import.
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
-    public SecurityConfig(UserService CustomUserDetailService, JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.CustomUserDetailService = CustomUserDetailService;
+    public SecurityConfig(UserService customUserDetailService, JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.customUserDetailService = customUserDetailService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+
         http
             .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange(exchanges -> exchanges
                                .pathMatchers("/login", "/logout", "/register").permitAll()
                                .anyExchange().authenticated())
-            .httpBasic().and()
+            .csrf(csrf -> csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()))
+            // Con NoOP desactivo la session, lo que con el login por defecto hace que no sea capaz de autentificarme.
+            .httpBasic().and().securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
             .formLogin();
+
 
             // .httpBasic().and() .formLogin();
 
@@ -54,9 +65,10 @@ public class SecurityConfig {
 
     @Bean
     public ReactiveAuthenticationManager authenticationProvider() { // Sad DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(passwordEncoder());
-        UserDetailsRepositoryReactiveAuthenticationManager authManager = new UserDetailsRepositoryReactiveAuthenticationManager(CustomUserDetailService);
+        UserDetailsRepositoryReactiveAuthenticationManager authManager = new UserDetailsRepositoryReactiveAuthenticationManager(customUserDetailService);
         authManager.setPasswordEncoder(passwordEncoder());
         return authManager;
     }
+
 
 }

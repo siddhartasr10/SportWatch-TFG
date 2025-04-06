@@ -128,3 +128,10 @@
 
        Una vez implementado el filtro y el token necesito ponerlo en la cadena de filtros, para eso uso en http.addFilterBefore(elfiltro, SecurityWebFilterOrder.AUTHENTICATION)
        el securitywebfilterorder es un enum que tiene todas las fases. (menos mal no quería implementar nada más)
+
+
+        - Eliminación de la sesión
+        Una vez creado un token y un filtro voy a desactivar totalmente las sesiones de spring para que el servidor funcione de verdad sin estado (stateless). Esto en spring boot es muy facil de hacer
+        por que puedes poner literalmente .session(STATELESS) pero en webflux hay un issue de github https://github.com/spring-projects/spring-security/issues/6552#issuecomment-519398510 en el que recomiendan cambiar el securityContextRepository a un NoOpServerContextRepository. Eso es lo que he hecho y para que la protección de csrf se pueda seguir usando he cambiado el repositorio de csrf a un CookieServerCsrfTokenRepository con httponly.false()  para que lo pueda coger por js cuando esté usando angular.
+
+        De esta forma la página de login por defecto no funciona porque no puede guardar la información de autenticación en ningún lado. Cuando haga la página por mi cuenta habra que coger el token por las cookies y o pasarlo como header si hago /login por ajax o añadirlo a un input hidden si hago un login por formulario (bloqueante)
