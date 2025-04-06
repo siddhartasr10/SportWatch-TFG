@@ -1,13 +1,13 @@
 package com.reactive.SportWatch.services;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import com.reactive.SportWatch.config.JwtConfig;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -36,6 +36,12 @@ public class JwtService {
                 .and().compact();
     }
 
+    // verifyWith throws JwtException which encapsulates:
+    // SignatureException: Thrown when the signature doesn’t match.
+    // ExpiredJwtException: Thrown when the token is expired.
+    // PrematureJwtException: Thrown when the token isn’t yet valid (e.g., nbf
+    // claim).
+    // MalformedJwtException: Thrown when the JWT structure is invalid.
     public String getUsernameFromToken(String token) throws IllegalStateException {
         try {
             return Jwts.parser().verifyWith(jwtConfig.publicKey())
@@ -43,27 +49,26 @@ public class JwtService {
                     .getPayload().getSubject();
         } catch (JwtException e) {
             logger.warning(String.format("JWT exception during validation: %s", (Object) e.getStackTrace()));
+            return null;
         }
-
-        throw new IllegalStateException();
     }
-
-    // Verify the sign and the username, verifyWith throws JwtException which
-    // encapsulates:
-    // SignatureException: Thrown when the signature doesn’t match.
-    // ExpiredJwtException: Thrown when the token is expired.
-    // PrematureJwtException: Thrown when the token isn’t yet valid (e.g., nbf
-    // claim).
-    // MalformedJwtException: Thrown when the JWT structure is invalid.
-    public boolean validateToken(String token, String username) {
+    // Verify the signature and the username, verifyWith throws JwtException
+    // the signature is verified when username gets extracted
+    // username is null when JWTexception throws, so invalid signature for example
+    public boolean validateToken(String token) {
+        if (Objects.isNull(token)) return false;
         String extractedUsername = getUsernameFromToken(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+        // if a username exists but signature is invalid, it will be null
+        return (!isTokenExpired(token) && Objects.nonNull(extractedUsername));
     }
 
+    // if no expiration date found the token is permannent
     private boolean isTokenExpired(String token) {
         Date expiration = getExpirationDateFromToken(token);
-        Assert.isNull(expiration, "Token Expiration can't be null");
-        return getExpirationDateFromToken(token).before(new Date());
+
+        if (Objects.isNull(expiration)) return false;
+        // if expires earlier than right now or right now then its expired.
+        return expiration.before(new Date()) || expiration.equals(new Date());
     }
 
     private Date getExpirationDateFromToken(String token) {
