@@ -23,6 +23,7 @@ Ej: ESPN, FoxSports (tiene pero unicamente con servidores en EEUU), Skysports (r
 3. **Servicio de seguimiento y subscripción**:  Los usuarios pueden seguir o subscribirse (de pago) a los autores para ser notificados de su contenido y tener el acceso total a este.
 
 4. **Feed dinámico de inicio**:  La página de inicio muestra a los usuarios registrados y en parte a los no registrados algunos de los directos.
+
 5. **Comentarios y Notificaciones**:  En cada directo se muestran unos comentarios y los usuarios pueden recibir notificaciones si les contestan un comentario o uno de los streamers a los que siguen empieza un directo.
 
 ### (Si da tiempo)
