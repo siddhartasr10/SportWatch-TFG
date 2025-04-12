@@ -11,7 +11,7 @@ SportWatch se lleva el 0% de lo que generen los proveedores y les da una platafo
 **Objetivo Principal**: Crear un sitio de streaming de vídeo que permita a los proveedores de deportes externalizar la creación de una plataforma web internacional para solo centrarse en la gestión de su contenido y sus canales de televisión.
 
 **Público Objetivo**: Canales de deportes de pago que no tengan plataforma OTT, que la tengan pero prefieran ahorrar costes o que la tengan pero restringida a ese país. O en muchos casos que tengan plataforma pero sea bastante cutre/lenta.
-Ej: ESPN, FoxSports (tiene pero unicamente con servidores en EEUU), Skysports (restringido a UK), canales de televisión de cualquier país que tengan los derechos de emisión del deporte pero solo funcionen por ese medio (Ej: Max sport, Diema sport, sport.ro)
+Ej: ESPN, FoxSports (tiene pero unicamente con servidores en EEUU), Skysports (restringido a UK), canales de televisión de cualquier país que tengan los derechos de emisión del deporte pero solo funcionen por ese medio (Ej: Diema sport, sport.ro)
 
 **Competidores**: (en parte) DAZN, HBO/Max (Max sports)
 
