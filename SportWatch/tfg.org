@@ -135,3 +135,47 @@
         por que puedes poner literalmente .session(STATELESS) pero en webflux hay un issue de github https://github.com/spring-projects/spring-security/issues/6552#issuecomment-519398510 en el que recomiendan cambiar el securityContextRepository a un NoOpServerContextRepository. Eso es lo que he hecho y para que la protección de csrf se pueda seguir usando he cambiado el repositorio de csrf a un CookieServerCsrfTokenRepository con httponly.false()  para que lo pueda coger por js cuando esté usando angular.
 
         De esta forma la página de login por defecto no funciona porque no puede guardar la información de autenticación en ningún lado. Cuando haga la página por mi cuenta habra que coger el token por las cookies y o pasarlo como header si hago /login por ajax o añadirlo a un input hidden si hago un login por formulario (bloqueante)
+
+**  07/04/25
+*       Implementación de ruta /login
+        Creación de un controlador mapeado a la ruta "/login" que realice autenticación y si es exitosa cree un token jwt
+
+**  12/04/25
+*       Adaptación no bloqueante JwtService y JwtAuthenticationFilter
+        Durante este tiempo he estado ignorando en ciertas clases que estoy usando webflux y todo lo que utilizo debería se no bloqueante desde el principio, así voy a hacer eso.
+        Lo que es bloqueante por naturaleza se puede correr en un hilo aparte y lo más recomendado es Mono.fromCallable(funcbloqueante).subscribeOn(Schedulers.boundedElastic()).
+
+        Para hacer un filtro realmente no bloqueante que añada al contexto de seguridad no vale con usar SecurityContextHolder, sino que hay que usar ReactiveSecurityContextHolder.
+
+        Y por lo que se vé lo recomendado es hacerlo después de chain.filter(), a ese mono se le encadena .contextWrite (método de un Mono que añade al contexto de la rutina por así decirlo) y ReactiveSecurityContextHolder.withSecurityContext(ctx) siendo ctx un new SecurityContextImpl(auth). tiene withAuthorization pero supuestamente es más fiel a spring webflux añadir una impl entera.
+
+**  13/04/25
+*       Ruta Login totalmente asíncrona
+        Pues eso, crea la cookie y la añade a la respuesta, y si falla o la autenticación no se puede determinar hace un backflip (returnea 401 unauthorized para verlo con el fetch y hacer .catch)
+
+*       Arreglo bug filtros, JwtAuthenticationFilter
+        Resulta que si bloqueo en un filtro de autenticación la página ni renderiza, está bien saber que no puedo usar .block(). Así que he arreglado eso y he descubierto que para generar el token de .csrf en las cookies hay que suscribir al exchange.getAttribute(CsrfToken.class.getName()) o returnear la request con un .then en este token o un flatmap (supuestamente ya que flatmap a mi no me va). Para que así el csrfTokenCookieRepository sepa que tiene que generar una cookie de xsrf
+
+       #+begin_src java
+
+        Mono<ResponseEntity<String>> index(ServerWebExchange exch) {
+                // token.defaultIfEmpty(new DefaultCsrfToken("aaa", "aaa", "joder"))
+                // .doOnSuccess(csrf -> {
+                //         ResponseCookie csrfCookie = ResponseCookie.from(csrf.getHeaderName(), csrf.getToken()).build();
+                //         exch.getResponse().addCookie(csrfCookie);
+                //     });
+                Mono<CsrfToken> csrfToken = exch.getAttribute(CsrfToken.class.getName());
+                csrfToken.subscribe();// esto funciona pero a veces tarda el token en estar porque se resuelva asíncrono
+                // return csrfToken.then(Mono.just(ResponseEntity.ok("ahi tienes crack"))); // Este es el suyo
+                // haz csrfToken.then(lo que quieras hacer) y te aseguras de que el token estará listo.
+                // return csrfToken.map(token -> {
+                //         ResponseCookie csrfCookie = ResponseCookie.from(token.getHeaderName(), token.getToken()).build();
+                //         // exch.getResponse().addCookie(csrfCookie);
+                //         return ResponseEntity.ok(token.getToken());
+                //     });
+                return Mono.just(ResponseEntity.ok("aaa"));
+       #+end_src
+
+**  14/04/25
+*       Ponerlo todo en orden y hacer rutas /api/login /api/register y /api/logout para angular.
+        Cuando me sucedio el bug hice un git reset --hard y los cambios anteriores los guardé en una carpeta aparte, voy a restaurarlos ahora que ya he arreglado que fallaba y a darle caña.
