@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 
+import reactor.core.publisher.Mono;
 
 @Service
 public class JwtService {
@@ -25,15 +26,29 @@ public class JwtService {
 
     private static Logger logger = Logger.getLogger(JwtService.class.toString());
 
-    public String generateToken(String username, Integer daysToExpire) throws IllegalStateException {
-        return Jwts.builder().subject(username)
+    public Mono<String> generateToken(String username, Integer daysToExpire) throws IllegalStateException {
+
+        return Mono.fromCallable(() -> Jwts.builder().subject(username)
                 .issuedAt(new Date()) // Dos semanas en milisegundos -> expira en 2 semanas
                 .expiration(new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * daysToExpire))
-                // Por defecto usa de digest algorithm SHA256, así que el "alg" es RS256, pero lo pone automaticamente la libreria.
+                // Por defecto usa de digest algorithm SHA256, así que el "alg" es RS256, pero
+                // lo pone automaticamente la libreria.
                 .signWith(jwtConfig.privateKey())
                 // No es necesario, es opcional añadir el tipo pero bueno yo lo pongo
                 .header().type("JWT")
-                .and().compact();
+                .and().compact());
+
+        // Versión síncrona:
+        // return Jwts.builder().subject(username)
+        // .issuedAt(new Date()) // Dos semanas en milisegundos -> expira en 2 semanas
+        // .expiration(new Date(new Date().getTime() + 1000 * 60 * 60 * 24 *
+        // daysToExpire))
+        // // Por defecto usa de digest algorithm SHA256, así que el "alg" es RS256,
+        // pero lo pone automaticamente la libreria.
+        // .signWith(jwtConfig.privateKey())
+        // // No es necesario, es opcional añadir el tipo pero bueno yo lo pongo
+        // .header().type("JWT")
+        // .and().compact();
     }
 
     // verifyWith throws JwtException which encapsulates:
@@ -42,41 +57,81 @@ public class JwtService {
     // PrematureJwtException: Thrown when the token isn’t yet valid (e.g., nbf
     // claim).
     // MalformedJwtException: Thrown when the JWT structure is invalid.
-    public String getUsernameFromToken(String token) throws IllegalStateException {
+    public Mono<String> getUsernameFromToken(String token) throws IllegalStateException {
         try {
-            return Jwts.parser().verifyWith(jwtConfig.publicKey())
+            return Mono.just(Jwts.parser().verifyWith(jwtConfig.publicKey())
                     .build().parseSignedClaims(token)
-                    .getPayload().getSubject();
+                    .getPayload().getSubject());
+
+            // Versión síncrona:
+            // return Jwts.parser().verifyWith(jwtConfig.publicKey())
+            // .build().parseSignedClaims(token)
+            // .getPayload().getSubject();
+
         } catch (JwtException e) {
             logger.warning(String.format("JWT exception during validation: %s", (Object) e.getStackTrace()));
-            return null;
+            return Mono.just(null);
         }
     }
+
     // Verify the signature and the username, verifyWith throws JwtException
     // the signature is verified when username gets extracted
     // username is null when JWTexception throws, so invalid signature for example
-    public boolean validateToken(String token) {
-        if (Objects.isNull(token)) return false;
-        String extractedUsername = getUsernameFromToken(token);
-        // if a username exists but signature is invalid, it will be null
-        return (!isTokenExpired(token) && Objects.nonNull(extractedUsername));
+    public Mono<Boolean> validateToken(String token) {
+        if (Objects.isNull(token)) return Mono.just(false);
+        return getUsernameFromToken(token)
+                .filter(username -> Objects.nonNull(username))
+                .flatMap(validUsername -> isTokenExpired(token))
+                .filter(expired -> !expired)
+                .defaultIfEmpty(false);
+
+        // return Mono.fromCallable(() -> {
+        //         if (Objects.isNull(token)) return Mono.just(false);
+        //         return getUsernameFromToken(token)
+        //             .flatMap((username) -> Mono.just(!(isTokenExpired(token).block()) && Objects.nonNull(username)));
+        //     }).block();
+
+        // synchronous code:
+        // if (Objects.isNull(token)) return false;
+
+        // String extractedUsername = getUsernameFromToken(token);
+        // // // if a username exists but signature is invalid, it will be null
+        // return (!isTokenExpired(token) && Objects.nonNull(extractedUsername));
     }
 
     // if no expiration date found the token is permannent
-    private boolean isTokenExpired(String token) {
-        Date expiration = getExpirationDateFromToken(token);
+    private Mono<Boolean> isTokenExpired(String token) {
+        Mono<Date> expiration = getExpirationDateFromToken(token);
 
-        if (Objects.isNull(expiration)) return false;
-        // if expires earlier than right now or right now then its expired.
-        return expiration.before(new Date()) || expiration.equals(new Date());
+        return expiration.flatMap((date) -> {
+            if (Objects.isNull(date))
+                return Mono.just(false);
+            return Mono.just(date.before(new Date()) || date.equals(new Date()));
+            // if expiration date is earlier than right now or right now then its expired.
+        });
+
+        // synchronous version
+        // Date expiration getExpirationDateFromToken(token)
+        // if (Objects.isNull(expiration)) return false;
+        // // i
+        // f expires earlier than right now or right now then its expired.
+        // return expiration.before(new Date()) || expiration.equals(new Date());
     }
 
-    private Date getExpirationDateFromToken(String token) {
-        return Jwts.parser()
+    private Mono<Date> getExpirationDateFromToken(String token) {
+        return Mono.fromCallable(() -> Jwts.parser()
                 .verifyWith(jwtConfig.publicKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
-                .getExpiration();
+                .getExpiration());
+
+        // synchronous version
+        // return Jwts.parser()
+        // .verifyWith(jwtConfig.publicKey())
+        // .build()
+        // .parseSignedClaims(token)
+        // .getPayload()
+        // .getExpiration();
     }
 }
