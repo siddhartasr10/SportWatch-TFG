@@ -5,6 +5,7 @@ import com.reactive.SportWatch.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -17,10 +18,6 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 // import org.springframework.security.web.server.csrf.ServerCsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository;
-import org.springframework.security.web.server.csrf.CsrfToken;
-import org.springframework.web.server.WebFilter;
-
-import reactor.core.publisher.Mono;
 
 
 @Configuration
@@ -44,15 +41,12 @@ public class SecurityConfig {
         http
             .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange(exchanges -> exchanges
-                               .pathMatchers("/login", "/logout", "/register").permitAll()
+                               .pathMatchers("/**").permitAll()
                                .anyExchange().authenticated())
             .csrf(csrf -> csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()))
             // Con NoOP desactivo la session, lo que con el login por defecto hace que no sea capaz de autentificarme.
             .httpBasic().and().securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
-            .formLogin();
-
-
-            // .httpBasic().and() .formLogin();
+            .formLogin(login->login.loginPage("/login"));
 
         return http.build();
     }
