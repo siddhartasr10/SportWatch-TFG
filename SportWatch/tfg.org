@@ -179,3 +179,101 @@
 **  14/04/25
 *       Ponerlo todo en orden y hacer rutas /api/login /api/register y /api/logout para angular.
         Cuando me sucedio el bug hice un git reset --hard y los cambios anteriores los guardé en una carpeta aparte, voy a restaurarlos ahora que ya he arreglado que fallaba y a darle caña.
+        Archivos restaurados y borrados archivos inútiles
+
+*       Ruta genérica
+        Creado un "GlobalController" que forwardee todo a index.html (webflux no tiene forward, así que cargar manualmente el archivo).
+        Como no hay forma de usar un regex que afecte a todos las secciones / / / /. He usado un wildcard y parseados los archivos .css .js, etc manualmente como ClassPathResources
+        que se encuentran en static/
+
+        Para las rutas api, crear controladores más específicos hace que tengan prioridad.
+
+*       Creados métodos createUser(UserDetails) updateTimezone(username, timezone) en UserService
+        Hacían falta para register y eso, updateTimezone es para ir quitando camino.
+        createUser asume que el email puede ser nulo y solo lo añade al query SQL si el user que se pasa lo tiene. (en el createUser(ExtUserDetails))
+
+*       Creadas rutas api/login y api/register
+        Hacen lo que se supone que tienen que hacer pero hay que testearlas para ver si no explotan.
+        He cambiado el JwtService para que la cookie de authToken se cree en un método y evitar repetirme en los controladores.
+
+
+        Hay que probarlas y hacer el logout también.
+
+        ACTUALIZACIÓN, no funcionan en principio porque el token de csrf se genera con synchronizer pattern, y sin sesion (stateless), esa cookie tiene un valor diferente cada vez si la borras
+        sino no te da otra pero el valor cambia.
+
+        La otra forma de hacer protección csrf es con el double submit pattern, aunque spring security no lo suportea por su cuenta (no se porque si es mas simple que el caliz).
+        (El approach simple)
+        Aquí se explica porque este approach no es seguro del todo para casos en los que un atacante hace MITM, se apodera de un subdominio o encuentra un XSS en un subdominio.
+        https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#naive-double-submit-cookie-pattern-discouraged
+        #+begin_src java
+                @Bean
+                public WebFilter csrfCookieGeneratorFilter() {
+                        return (exchange, chain) -> {
+                                String csrfToken = UUID.randomUUID().toString();
+
+                                ResponseCookie cookie = ResponseCookie.from("XSRF-TOKEN", csrfToken)
+                                .httpOnly(false)
+                                .path("/")
+                                .sameSite("Lax")
+                                .build();
+
+                                exchange.getResponse().addCookie(cookie);
+
+                                // Store it in a request attribute for validation later
+                                exchange.getAttributes().put("XSRF_TOKEN", csrfToken);
+
+                                return chain.filter(exchange);
+                        };
+                }
+        #+end_src
+
+        Esto envia un nuevo token con cada request. Pero como la valida con la del header da igual, aquí no va a validarla con una interna
+        por lo que no va a dar fallo
+
+        #+begin_src java
+                @Bean
+                public WebFilter csrfValidatorFilter(exchange, chain) {
+                        ServerHttpRequest request = exchange.getRequest();
+
+                        if (request.getMethod().matches("POST|PUT|DELETE")) {
+                        String headerToken = request.getHeaders().getFirst("X-XSRF-TOKEN");
+                        String cookieToken = request.getCookies().getFirst("XSRF-TOKEN") != null
+                                ? request.getCookies().getFirst("XSRF-TOKEN").getValue()
+                                : null;
+
+                        if (headerToken == null || cookieToken == null || !headerToken.equals(cookieToken)) {
+                            return Mono.error(new AccessDeniedException("Invalid CSRF token"));
+                        }
+
+                        return chain.filter(exchange);
+                };
+        }
+
+        #+end_src
+        El cliente simplemente guarda el valor de la cookie y lo manda por el header
+
+
+
+*** [15-16/04/25]
+*    Arregladas rutas paras que funcionen por completo (no estaban creando correctamente las cookies de auth) y además creados tests de integración para poder probar el registro y el login.
+        Basicamente eso, se me olvido ir apuntándolo a medida que lo hacía, además limpie un poco los métodos para que fueran más claros y estuvieran menos identados.
+        Me pelee bastante con spring tests pero he conseguido aprender a usarlo. Ahora hay tests que validen la necesidad de un token csrf, tests para comprobar que un registro
+        de un usuario ya existente de error, etc.
+*    Creada config de seguridad secundaria
+        Arreglando el registro me di cuenta de que la contraseña no se subia encriptada y al arreglarlo (añadiendo el encoder a el servicio de usuario), me encontré con un problema de
+        dependencias circulares, userService -> SecurityConfig[BCryptPasswordEncoder] -> userService(para el authManager) ->...
+
+        Por lo que cree una config de seguridad diferente y puse el encoder ahí.
+
+***  [18/04/25]
+
+*    Creada ruta de logout que sustituye las cookies de user y authtoken por cookies vacias que caducan al segundo.
+        Además creados tests para esa ruta. Que estaban fallando para la ruta logout que requiere auth por el siguiente punto.
+
+*    Corregido JwtAuthenticationFilter:
+        Faltaba poner que al crear la auth en mi jwtAuthenticationFilter, se pusiera esa auth como valida con auth.setAuthorized(true). Con un authmanager va solo eso, pero para mi jwtAuthenticationToken
+        no hay. así spring boot permite acceso a las rutas que requieren autorización incluso con noOpContextRepository.
+
+*    Añadido test de logout con un JWT válido.
+        El test es el que me ha permitido arreglar bastantes errores.
