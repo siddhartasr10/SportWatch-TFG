@@ -1,8 +1,6 @@
 package com.reactive.SportWatch.config;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -49,35 +47,24 @@ public class JwtAuthenticationFilter implements WebFilter {
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        // logger.info("OLA?!?");
         return extractTokenFromCookies(exchange.getRequest().getCookies())
                 .defaultIfEmpty("Invalid_Token")
                 .flatMap(token -> {
-                    if (token.equals("Invalid_Token")) return chain.filter(exchange);
-
+                    if (token == null || token.equals("Invalid_Token")) {
+                        logger.info("User hasn't got a valid JWT");
+                        return chain.filter(exchange);
+                    }
                     return jwtService.getUsernameFromToken(token)
                         .map(username -> {
+                                logger.info("User has a valid JWT!");
                                 List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
                                 Authentication auth = new JwtAuthenticationToken(token, username, authorities);
+                                auth.setAuthenticated(true);
                                 return new SecurityContextImpl(auth);
 
                         }).flatMap(ctx -> chain.filter(exchange).contextWrite(ReactiveSecurityContextHolder.withSecurityContext(Mono.just(ctx))));
                     });
 
-
-        // Synchronous code
-        // String token = extractTokenFromCookies(exchange.getRequest().getCookies());
-
-        // if (Objects.nonNull(token)) {
-        //     // Right now only one authority is used in my page, and is user.
-        //     List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-        //     authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-        //     Authentication auth = new JwtAuthenticationToken(token, jwtService.getUsernameFromToken(token), authorities);
-        //     // Make spring security know the guy is identified.
-        //     SecurityContextHolder.getContext().setAuthentication(auth);
-        // }
-
-        // return chain.filter(exchange);
     }
 
     /**
@@ -91,7 +78,6 @@ public class JwtAuthenticationFilter implements WebFilter {
     public Mono<String> extractTokenFromCookies(MultiValueMap<String, HttpCookie> cookies) {
         List<HttpCookie> authCookies = cookies.get("authToken");
         if (Objects.isNull(authCookies) || authCookies.isEmpty()) {
-            logger.info("No hay cookies de auth, asi que extractTokenFromCookies no puede hacer milagros");
             return Mono.empty();
         }
 
@@ -103,42 +89,5 @@ public class JwtAuthenticationFilter implements WebFilter {
                             .map(valid -> token);
 
                 }).next();
-
     }
-
-        // return Mono.fromCallable(() -> {
-        //     for (Entry<String, List<HttpCookie>> multivalEntry : cookies.entrySet()) {
-        //         if (!multivalEntry.getKey().equals("authToken"))
-        //             continue;
-        //         for (HttpCookie cookie : multivalEntry.getValue()) {
-        //             if (!(jwtService.validateToken(cookie.getValue()).block()))
-        //                 continue;
-        //             return cookie.getValue();
-        //         }
-        //     }
-        //     return null;
-        // }).subscribeOn(Schedulers.boundedElastic());
-
-    // return Mono.justOrEmpty(cookies.get("authToken")) // Get the list of cookies for "authToken"
-    //     .flatMap(cookieList -> {
-    //         // For each cookie in the list, check if it's valid
-    //         for (HttpCookie cookie : cookieList) {
-    //             return jwtService.validateToken(cookie.getValue())
-    //                     .filter(valid -> valid) // Filter out invalid tokens
-    //                     .map(valid -> cookie.getValue()) // Return token value if valid
-    //                     .switchIfEmpty(Mono.empty()); // If token is invalid, skip it
-    //         }
-    //         return Mono.empty(); // Return empty Mono if no valid token found
-    //     });
-
-
-        // for (Entry<String, List<HttpCookie>> multivalEntry : cookies.entrySet()) {
-        //     if (!multivalEntry.getKey().equals("authToken")) continue;
-        //     for (HttpCookie cookie : multivalEntry.getValue()) {
-        //         if (!jwtService.validateToken(cookie.getValue())) continue;
-        //         return cookie.getValue();
-        //     }
-        // }
-        // return null;
-    // }
 }
