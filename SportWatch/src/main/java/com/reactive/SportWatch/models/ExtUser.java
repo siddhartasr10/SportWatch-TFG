@@ -171,7 +171,7 @@ public class ExtUser extends User implements ExtUserDetails {
 
 
 		/**
-		 * Populates the email. This attribute is required.
+		 * Populates the email.
 		 * @param email the email. Can be null.
 		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
 		 * additional attributes for this user)
@@ -182,27 +182,50 @@ public class ExtUser extends User implements ExtUserDetails {
 			return this;
 		}
 
+		/**
+		 * Populates when the user was created
+		 * @param created_at can't be null
+		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
+		 * additional attributes for this user)
+		 * It shouldn't be set at register time postgres does it for you.
+		 */
         public UserBuilder created_at(Timestamp created_at) {
 			Assert.notNull(created_at, "created_at cannot be null");
 			this.created_at = created_at;
 			return this;
         }
 
+
+		/**
+		 * Populates the user timezone
+		 * @param timezone as UTC difference, can't be null.j
+		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
+		 * additional attributes for this user)
+		 */
         public UserBuilder timezone(short timezone) {
 			Assert.notNull(timezone, "timezone cannot be null");
 			this.user_timezone = timezone;
 			return this;
         }
 
+		/**
+		 * Populates the Streamer ID
+		 * @param streamerId can be null
+		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
+		 * It shouldn't be set at register time
+		 * additional attributes for this user)
+		 */
         public UserBuilder streamerId(int streamerId) {
-			// streamerId can be null lol
+			// streamerId can be null
 			// Assert.notNull(streamerId, "... cannot be null");
 			this.streamerId = streamerId;
 			return this;
         }
+
         /**
+         * Populates the follows List.
          * @param follows the StreamerIds of the streamers you follow
-         * it can be null.
+         * it can be null and shouldn't be set at register time.
          *  * */
         public UserBuilder follows(List<Integer> follows) {
             this.follows = follows;
@@ -242,8 +265,8 @@ public class ExtUser extends User implements ExtUserDetails {
             return this;
         }
 
-        // Won't call the other func as in the other because I want to check char[] length before adding it to a list
-        // and not the other way around
+        // Won't create a list and then call its overloaded method
+        // As it would iterate two times per notification list.
         public UserBuilder notifications(char[][] notifications) {
             List<char[]> list = new ArrayList<char[]>();
             for (int i = 0; i < notifications.length; i++) {
