@@ -277,3 +277,23 @@
 
 *    Añadido test de logout con un JWT válido.
         El test es el que me ha permitido arreglar bastantes errores.
+
+*    Creado User flow
+        Me falta hacer el wireframe de las páginas más importantes  (welcomepage, feed, login/registro), pensando en el uso de
+        componentes de Angular Material y alomejor angular ng
+
+        y poco más de diseño. el resto rutas, un design system adaptado a la pagina y eso.
+        Dios me haga el usar Angular menos pesado que Spring Security 🤞🤞🤞
+
+***  [19/04/25]
+*    Creado wireframe detallado de la página de inicio:
+       https://www.figma.com/design/MOY6o8cLVlmN2LrbGbcnAh/Wireframe?node-id=0-1&p=f&t=VCdnnoY2PxkawkQr-0
+       Tengo que añadir una imagen a una sección pero por lo demás esta decente. (Probablemente cambie la otra por una de mejor calidad pero no hay cojones a encontrar una con varios deportistas diferentes y más de 3 píxeles).
+
+
+*    Creado wireframe intermediamente detallado Login y registro
+        mismo link para que lo voy a poner otra vez
+
+***   [26/04/25]
+*   Creado componente navbar, config Angular proxy y establecidas fuentes.
+        Descripción? Trivago.
