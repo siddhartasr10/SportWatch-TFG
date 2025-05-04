@@ -1,16 +1,17 @@
-<div class="sticky top-0 left-0 flex flex-row w-screen h-20
+<div class="sticky top-0 left-0 flex flex-row w-screen h-20 overflow-visible z-100
             bg-white rounded-md justify-start items-center border-b-3 border-black/15">
-
-    <div class="w-[70px] h-[70px] rounded-[20cm] border-2 border-black ml-4">
-        <a class="w-full h-full rounded-[20cm]" href="#">
+    <div class="w-[70px] h-[70px] rounded-[20cm] border-2 border-black ml-6 select-none">
+        <a class="w-full h-full rounded-[20cm]" routerLink="">
             <img src="" alt="SportWatch Logo" class="object-cover object-top-left w-full h-full rounded-[20cm]">
         </a>
     </div>
-    <button class="w-32 h-12 bg-black rounded-2xl text-white font-black font-inter text-[21px] ml-300
-                   hover:shadow-[inset_0_0_7px_25px_rgb(59,75,83)] focus:border-2 focus:border-white focus:outline-black focus:outline-3
-                   cursor-pointer"> Regístrate </button>
+    <!-- <button class="w-32 h-12 bg-black rounded-2xl text-white font-black font-inter text-[21px] ml-300
+         hover:shadow-[inset_0_0_7px_25px_rgb(59,75,83)] focus:border-2 focus:border-white focus:outline-black focus:outline-3
+         cursor-pointer"> Regístrate </button>
 
-    <button class="w-34 h-12 bg-white rounded-2xl text-black font-black font-inter text-[21px] ml-20
-                   pl-2 pr-2 box-content hover:shadow-[inset_0_0_15px_25px_rgba(130,140,170,0.18)] focus:outine-black focus:outline-3
-                   cursor-pointer "> Iniciar Sesión </button>
+         <button class="w-34 h-12 bg-white rounded-2xl text-black font-black font-inter text-[21px] ml-20
+         pl-2 pr-2 box-content hover:shadow-[inset_0_0_15px_25px_rgba(130,140,170,0.18)] focus:outine-black focus:outline-3
+         cursor-pointer "> Iniciar Sesión </button> -->
+
+    <ng-content></ng-content>
 </div>

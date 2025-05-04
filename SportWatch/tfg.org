@@ -297,3 +297,16 @@
 ***   [26/04/25]
 *   Creado componente navbar, config Angular proxy y establecidas fuentes.
         Descripción? Trivago.
+
+***   [27/04/25]
+*   Avanzado Landing page y añadidos componentes de angular material (tarjeta y lista)
+        He añadido esos componentes prefabricados de angular material, los cuales no tengo otra que estilizarlos mediante estilos globales (puedes usar el nombre del componente en los selectores ya que contiene al resto de elementos.)
+
+***   [03/05/25]
+*   Practicamente terminada la landing page, añadido componente 'tabs' para las preguntas frecuentes y contacto
+        No hice mucho el sabado la verdad, añadi el componente lo complete al principio con unos <detail> para los extensibles y luego para quitar el marcador que se queda (en principio se puede quitar con un selector pero no funciona hoy en día con la mayoría de los navegadores) lo refactorice en unos divs con la misma funcionalidad.
+***   [04/05/25]
+*   Cambiado estilo general de Angular Material
+        Ahora uso el estilo cyan orange (oscuro) y en el landing he modificado los componentes para conservar tarjetas blancas y otros elementos claros.
+*   Hecho diseño register
+        Usado componente mat-form-field y mat-button. Voy a intentar hacer la interacción con el backend del registro y aparte el login con la interacción también

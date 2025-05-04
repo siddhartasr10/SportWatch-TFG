@@ -1,0 +1,7 @@
+
+:host {
+    /* background-color:#1E1E1E; */
+    /* width: 100vw; height: 100vh; Keep this disabled or navbar won't scroll to the end; */
+    display: block;
+    /* overflow-x: hidden; */
+}
