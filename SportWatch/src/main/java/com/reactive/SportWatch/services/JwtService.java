@@ -75,7 +75,8 @@ public class JwtService {
                 .flatMap(validUsername -> isTokenExpired(token))
                 // .doOnNext(isExpired -> logger.info(String.format("Is JWT expired?: %s", isExpired)))
                 .map(isExpired -> !isExpired) // this should be a filter, but for some reason it doesn't work right if its one.
-                .defaultIfEmpty(false)
+                // Invert the cond, if is expired then validateToken should return false (as token is not valid)
+                .defaultIfEmpty(false);
                 // .doOnSuccess(res -> logger.info(String.format("Is token valid?: %s", res)));
 
     }

@@ -39,7 +39,7 @@ public class GlobalController {
             return Mono.just(ResponseEntity.ok(source));
         }
 
-        Mono<CsrfToken> csrfToken = exch.getAttribute(CsrfToken.class.getName());
+        // Mono<CsrfToken> csrfToken = exch.getAttribute(CsrfToken.class.getName());
         // return csrfToken.doOnNext(token -> System.out.println(token.getToken()))
                 /* .then */return (Mono.just(ResponseEntity.ok(ENTRYPOINT)));
     }
