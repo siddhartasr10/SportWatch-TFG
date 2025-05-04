@@ -67,6 +67,7 @@ public class SecurityConfig {
         return authManager;
     }
 
+    // Sets a csrf double submit type token on the user cookies only on get requests.
     @Bean
     public WebFilter csrfTokenFilter() {
         return (exch, chain) -> {
