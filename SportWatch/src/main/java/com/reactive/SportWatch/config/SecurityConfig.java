@@ -48,7 +48,7 @@ public class SecurityConfig {
         http
             .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange(exchanges -> exchanges
-                               .pathMatchers("/api/register", "/api/login", "/").permitAll()
+                               .pathMatchers("/api/register", "/api/login", "/api/csrf-token").permitAll()
                                .anyExchange().authenticated())
             // .csrf(csrf -> csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()))
             .csrf(csrf -> csrf.disable())

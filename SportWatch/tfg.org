@@ -310,3 +310,6 @@
         Ahora uso el estilo cyan orange (oscuro) y en el landing he modificado los componentes para conservar tarjetas blancas y otros elementos claros.
 *   Hecho diseño register
         Usado componente mat-form-field y mat-button. Voy a intentar hacer la interacción con el backend del registro y aparte el login con la interacción también
+
+*   Creado controlador "debug" CsrfController
+        Creado controlador que da acceso a un endpoint de la api con método GET para poder conseguir un token de csrf desde el servidor de desarrollo de angular.
