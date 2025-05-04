@@ -17,7 +17,6 @@ public class ExtUser extends User implements ExtUserDetails {
     private static final Logger logger = Logger.getLogger(ExtUser.class.toString());
 	private final String email;
     private final Timestamp created_at;
-    private final short user_timezone;
     private final int streamerId;
     private final List<Integer> follows;
     private final List<Integer> subscribed;
@@ -34,11 +33,10 @@ public class ExtUser extends User implements ExtUserDetails {
 	 * @param accountNonLocked set to <code>true</code> if the account is not locked
 	 */
      // If built from the constructor it will only check null on username and password (this is intended, as only debug extUsers will be created using the constructor)
-    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, Timestamp created_at, short user_timezone, int streamerId, List<Integer> follows, List<Integer> subscribed, List<char[]> notifications) {
+    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, Timestamp created_at, int streamerId, List<Integer> follows, List<Integer> subscribed, List<char[]> notifications) {
         super(username, password, authorities);
         this.email = email;
         this.created_at = created_at;
-        this.user_timezone = user_timezone;
         this.streamerId = streamerId;
         this.follows = follows;
         this.subscribed = subscribed;
@@ -46,11 +44,10 @@ public class ExtUser extends User implements ExtUserDetails {
     }
 
     // Constructor to allow builder to bypass internal builder's encoded password
-    public ExtUser(User user, String password, String email, Timestamp created_at, short user_timezone, int streamerId, List<Integer> follows, List<Integer> subscribed, List<char[]> notifications) {
+    public ExtUser(User user, String password, String email, Timestamp created_at, int streamerId, List<Integer> follows, List<Integer> subscribed, List<char[]> notifications) {
         super(user.getUsername(), password, user.getAuthorities());
         this.email = email;
         this.created_at = created_at;
-        this.user_timezone = user_timezone;
         this.streamerId = streamerId;
         this.follows = follows;
         this.subscribed = subscribed;
@@ -63,10 +60,6 @@ public class ExtUser extends User implements ExtUserDetails {
 
     public Timestamp getCreated_at() {
         return created_at;
-    }
-
-    public short getTimezone() {
-        return user_timezone;
     }
 
     public int getStreamerId() {
@@ -90,12 +83,12 @@ public class ExtUser extends User implements ExtUserDetails {
         return  String.format("ExtUser: " +
                               "<Username: %s, Password: %s, "
                               + "Email: %s, authorities: %s, "
-                              + "created at: %s, UTC difference: %s, "
+                              + "created at: %s "
                               + "streamerId: %s, follows: %s, "
                               + "subscribed to: %s, with %s notifications>",
                               this.getUsername(), this.getPassword(),
                               this.getEmail(), this.getAuthorities(),
-                              this.getCreated_at(), this.getTimezone(),
+                              this.getCreated_at(),
                               this.getStreamerId(), this.getFollows(),
                               this.getSubscribed(), this.getNotifications());
     }
@@ -109,8 +102,6 @@ public class ExtUser extends User implements ExtUserDetails {
         private String email;
 
         private Timestamp created_at;
-
-        private short user_timezone;
 
         private int streamerId;
 
@@ -192,19 +183,6 @@ public class ExtUser extends User implements ExtUserDetails {
         public UserBuilder created_at(Timestamp created_at) {
 			Assert.notNull(created_at, "created_at cannot be null");
 			this.created_at = created_at;
-			return this;
-        }
-
-
-		/**
-		 * Populates the user timezone
-		 * @param timezone as UTC difference, can't be null.j
-		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
-		 * additional attributes for this user)
-		 */
-        public UserBuilder timezone(short timezone) {
-			Assert.notNull(timezone, "timezone cannot be null");
-			this.user_timezone = timezone;
 			return this;
         }
 
@@ -350,7 +328,7 @@ public class ExtUser extends User implements ExtUserDetails {
         // as its encoded and encoding in ExtUser is external not internal.
 		public ExtUserDetails build() {
             User internalUser = (User) this.internalBuilder.build();
-			return new ExtUser(internalUser, this.tmpPassword, this.email, this.created_at, this.user_timezone, this.streamerId, this.follows, this.subscribed, this.notifications);
+			return new ExtUser(internalUser, this.tmpPassword, this.email, this.created_at, this.streamerId, this.follows, this.subscribed, this.notifications);
 		}
 
 	}
@@ -397,7 +375,6 @@ public class ExtUser extends User implements ExtUserDetails {
             .authorities(extendedUserDetails.getAuthorities())
             .email(extendedUserDetails.getEmail())
             .created_at(extendedUserDetails.getCreated_at())
-            .timezone(extendedUserDetails.getTimezone())
             .streamerId(extendedUserDetails.getStreamerId());
 
     }

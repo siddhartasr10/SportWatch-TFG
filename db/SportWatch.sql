@@ -5,7 +5,6 @@ CREATE TABLE IF NOT EXISTS users (
 	password varchar(72) NOT NULL,
 	email varchar(400) UNIQUE,
 	created_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	user_timezone smallint NOT NULL DEFAULT 0,
 	streamer_id int UNIQUE,
 	follows int[],
 	subscribed int[],

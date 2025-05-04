@@ -99,8 +99,6 @@ public class RegisterController {
         String password = formData.getFirst("password");
         String email = formData.getFirst("email");
 
-        // timezone cannot be null, unpacking won't convert to 0 it will throw lol.
-        Short timezone = (formData.getFirst("timezone") != null) ? Short.parseShort(formData.getFirst("timezone")) : 0;
         logger.info(username+","+password);
         if (username == null || password == null)
             return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password must be set in the request"));
@@ -109,7 +107,6 @@ public class RegisterController {
                 .username(username)
                 .password(password)
                 .email(email)
-                .timezone(timezone)
                 .build());
     }
 

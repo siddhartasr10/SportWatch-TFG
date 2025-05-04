@@ -44,13 +44,12 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
     // el momento no lo es.
     public Mono<ExtUserDetails> extFindByUsername(String username) {
         Mono<ExtUserDetails> user = dbClient.sql(
-                "SELECT username, password, email, created_at, user_timezone, streamer_id FROM users WHERE username = :username")
+                "SELECT username, password, email, created_at, streamer_id FROM users WHERE username = :username")
                 .bind("username", username).map((row, metadata) -> {
                     return ExtUser.extBuilder().username(row.get("username", String.class))
                             .password(row.get("password", String.class))
                             .email(row.get("email", String.class))
                             .created_at(row.get("created_at", Timestamp.class))
-                            .timezone(row.get("user_timezone", Short.class))
                             .streamerId(row.get("streamer_id", Integer.class))
                             .authorities("USER") // La db actual no tiene roles, todos son users.
                             .build();
@@ -84,7 +83,6 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             .password(row.get("password", String.class))
                             .email(row.get("email", String.class))
                             .created_at(row.get("created_at", Timestamp.class))
-                            .timezone(row.get("user_timezone", Short.class))
                             .streamerId(row.get("streamer_id", Integer.class))
                             .follows(row.get("follows", int[].class))
                             .subscribed(row.get("subscribed", int[].class))
@@ -136,18 +134,18 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
 
         return Mono.just(user);
     }
-    public Mono<Short> updateTimezone(String username, short timezone) {
-        dbClient.sql("UPDATE users SET user_timezone = :timezone WHERE username = :username")
-                .bind("username", username)
-                .bind("timezone", timezone)
-                .fetch().rowsUpdated()
-                .doOnNext(changes -> {
-                        if (changes == 0) logger.warning("No timezone was changed");
-                        logger.info("Timezone changed successfully");
-                });
+    // public Mono<Short> updateTimezone(String username, short timezone) {
+    //     dbClient.sql("UPDATE users SET user_timezone = :timezone WHERE username = :username")
+    //             .bind("username", username)
+    //             .bind("timezone", timezone)
+    //             .fetch().rowsUpdated()
+    //             .doOnNext(changes -> {
+    //                     if (changes == 0) logger.warning("No timezone was changed");
+    //                     logger.info("Timezone changed successfully");
+    //             });
 
-        return Mono.just(timezone);
-    }
+    //     return Mono.just(timezone);
+    // }
 
     public Mono<UserDetails> createUser(UserDetails user) {
         return isUsernameTaken(user.getUsername())
@@ -176,8 +174,8 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                     if (isTaken)
                         return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username already taken"));
 
-                    StringBuilder columns = new StringBuilder("username, password, user_timezone");
-                    StringBuilder values = new StringBuilder(":username, :password, :timezone");
+                    StringBuilder columns = new StringBuilder("username, password");
+                    StringBuilder values = new StringBuilder(":username, :password");
 
                     // Null check has to be made to be perfectly sure im not messing up.
                     if (user.getEmail() != null) {
@@ -189,8 +187,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
 
                     GenericExecuteSpec pausedSpec = dbClient.sql(sql)
                             .bind("username", user.getUsername())
-                            .bind("password", encoder.encode(user.getPassword()))
-                            .bind("timezone", user.getTimezone());
+                            .bind("password", encoder.encode(user.getPassword()));
 
                     // Have to reassign because object is inmmutable, so a new copy is created.
                     if (user.getEmail() != null) pausedSpec = pausedSpec.bind("email", user.getEmail());

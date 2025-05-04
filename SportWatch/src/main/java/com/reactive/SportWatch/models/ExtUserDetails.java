@@ -19,12 +19,6 @@ public interface ExtUserDetails extends UserDetails {
     Timestamp getCreated_at();
 
 	/**
-	 * Returns the difference with UTC saved to calculate video uploading dates and streaming dates. Cannot return <code>null</code>.
-	 * @return the difference with UTC.
-	 */
-    short getTimezone();
-
-	/**
 	 * Returns the streamer id or null saved to identify if the user can upload videos. Can return <code> null </code>
 	 * @return the streamer id or <code> null </code>
 	 */

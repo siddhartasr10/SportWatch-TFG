@@ -175,7 +175,10 @@ public class AuthTests {
     protected void deleteAccountSuccesfully() {
         logger.info("deleteAccountSuccesfully Test starting...");
         userService.deleteUser(TEST_USERNAME).block();
+        //  FIXME: THIS IS DANGEROUS, SEQUENCE WILL START AS 1, IF ONE USER EXISTS IDs WILL CONFLICT
+        //  replace with method before and create and enpoint ffs
         userService.query("ALTER SEQUENCE users_user_id_seq restart");
+        // userService.query("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))");
         logger.info("deleteAccountSuccesfully Test executed");
     }
 
