@@ -1,0 +1,35 @@
+<app-navbar>
+         <button class="w-34 h-12 bg-white rounded-2xl text-black font-black font-inter text-[21px] ml-352
+         pl-2 pr-2 box-content hover:shadow-[inset_0_0_15px_25px_rgba(130,140,170,0.18)] focus:outine-black focus:outline-3
+         cursor-pointer" routerLink="/login"> Iniciar Sesión </button>
+</app-navbar>
+
+<div class="flex justify-center items-center w-screen h-[90vh]">
+   <div class="flex flex-col gap-4 px-4 py-2 border-1 border-[rgb(224_227_226)]/[0.25] w-[700px] h-[705px]
+               box-content rounded-xl justify-start items-center text-white">
+       <h1 class="text-[55px] tracking-wider font-roboto-serif font-bold mt-[40px] mb-[10px]"> Registrate </h1>
+       <h6 class="text-[22px] text-gray-100/[0.7] font-roboto-serif font-thin mb-[12px]"> Crea tu cuenta </h6>
+       <mat-form-field hideRequiredMarker="true" class="w-5/6">
+           <mat-label> Usuario </mat-label>
+           <input matInput required />
+       </mat-form-field>
+
+       <mat-form-field hideRequiredMarker="true" class="w-5/6">
+           <mat-label> Email </mat-label>
+           <input matInput required />
+       </mat-form-field>
+
+       <mat-form-field hideRequiredMarker="true" class="w-5/6">
+           <mat-label> Contraseña </mat-label>
+           <input matInput required />
+       </mat-form-field>
+
+       <mat-form-field hideRequiredMarker="true" class="w-5/6 mb-2">
+           <mat-label> Verifica tu Contraseña </mat-label>
+           <input matInput required />
+       </mat-form-field>
+
+       <button mat-flat-button class="w-3/6 rounded-lg! mb-2"> Registrarte </button>
+       <span class="font-inter tracking-wide"> <p> ¿Ya tienes una cuenta? <a routerLink="/login" class="underline"> Inicia sesión </a></p></span>
+   </div>
+</div>

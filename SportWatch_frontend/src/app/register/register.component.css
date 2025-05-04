@@ -1,0 +1,9 @@
+:host {
+    background-color: #1E1E1E;
+    display: block;
+
+    /* If i want the navbar to follow going under this would have to go */
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
