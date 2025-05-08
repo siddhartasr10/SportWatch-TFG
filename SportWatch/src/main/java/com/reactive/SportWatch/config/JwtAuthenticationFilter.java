@@ -51,12 +51,12 @@ public class JwtAuthenticationFilter implements WebFilter {
                 .defaultIfEmpty("Invalid_Token")
                 .flatMap(token -> {
                     if (token == null || token.equals("Invalid_Token")) {
-                        logger.info("User hasn't got a valid JWT");
+                        // logger.info("INFO: User hasn't got a valid JWT");
                         return chain.filter(exchange);
                     }
                     return jwtService.getUsernameFromToken(token)
                         .map(username -> {
-                                logger.info("User has a valid JWT!");
+                                // logger.info("INFO: User has a valid JWT!");
                                 List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
                                 Authentication auth = new JwtAuthenticationToken(token, username, authorities);
                                 auth.setAuthenticated(true);
