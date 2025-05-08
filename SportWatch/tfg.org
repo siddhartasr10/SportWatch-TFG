@@ -313,3 +313,16 @@
 
 *   Creado controlador "debug" CsrfController
         Creado controlador que da acceso a un endpoint de la api con método GET para poder conseguir un token de csrf desde el servidor de desarrollo de angular.
+
+*   Empezados validadores de formulario registro.
+
+*   Hecho servicio de autenticación angular que permite registrar y logear, aparte de coger un token csrf
+
+***   [07/05/25]
+*   Terminados validadores registro
+        Sin usar form group y haciendo un validador personalizado que valida que el campo de repetir contraseña sea igual a la contraseña,
+        aparte necesita una función especial para que el campo repetir contraseña actualice su estado cada vez que el de contraseña cambia.
+
+***   [08/05/25]
+*   Añadida muestra de errores como usuario que ya existe
+        Literalmente cogiendo el error que devuelve el servidor y mostrándolo.

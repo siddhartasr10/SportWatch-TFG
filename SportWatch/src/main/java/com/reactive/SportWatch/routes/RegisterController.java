@@ -67,7 +67,7 @@ public class RegisterController {
 
                 return Mono.error(
                         new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                                "You're using multipart/from-data instead of application/x-www-form-urlencoded,"
+                                "You're using multipart/form-data instead of application/x-www-form-urlencoded,"
                                 + "that's not supported sorry."));
 
             return extractUserFromFormData(formData);
@@ -98,6 +98,8 @@ public class RegisterController {
         String username = formData.getFirst("username");
         String password = formData.getFirst("password");
         String email = formData.getFirst("email");
+
+        logger.info(String.format("Entire map: %s", formData));
 
         logger.info(username+","+password);
         if (username == null || password == null)
