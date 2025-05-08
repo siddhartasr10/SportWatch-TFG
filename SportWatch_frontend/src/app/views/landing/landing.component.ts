@@ -4,7 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
 import { MatTabsModule } from '@angular/material/tabs';
 
-import { LandingHeaderComponent } from '../landing-header/landing-header.component';
+import { LandingHeaderComponent } from './components/landing-header/landing-header.component';
 
 @Component({
   selector: 'app-landing',
@@ -16,8 +16,8 @@ export class LandingComponent {
     randomVal: number = Math.random() * 4 + 1;
 
 
-    togglePanel(e: MouseEvent) : void {
-        let panel = e.target as HTMLElement;
-        panel.children[0].classList.toggle('hidden');
+    toggleDetails(e: MouseEvent) : void {
+        let details = e.target as HTMLElement;
+        details.children[0].classList.toggle('hidden');
     }
 }

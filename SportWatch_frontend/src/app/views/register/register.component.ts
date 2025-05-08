@@ -1,6 +1,7 @@
 import { Component, signal, WritableSignal } from '@angular/core';
 import { NgIf } from '@angular/common';
-import { NavbarComponent } from '../navbar/navbar.component';
+import { HttpErrorResponse } from '@angular/common/http';
+
 import { Router, RouterLink } from '@angular/router';
 import { AbstractControl, FormControl, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 
@@ -8,8 +9,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button'
 
-import { AuthService } from '../services/auth-service.service';
-import { HttpErrorResponse } from '@angular/common/http';
+import { AuthService } from '../../shared/services/auth-service/auth-service.service';
+import { NavbarComponent } from '../../shared/components/navbar/navbar.component';
 
 @Component({
   selector: 'app-register',
