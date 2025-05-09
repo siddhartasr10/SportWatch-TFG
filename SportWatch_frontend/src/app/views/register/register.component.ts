@@ -54,7 +54,7 @@ export class RegisterComponent {
 
 
     // Handles all error Msgs that come from validators.
-    // username || password || verifyPassword || email
+    // target: username || password || verifyPassword || email
     updateErrorMsg(target : string, control : FormControl) : void {
         if (!control.errors) return;
         let msg : string = "";

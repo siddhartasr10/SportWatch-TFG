@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 @Injectable({providedIn: 'root'})
 export class AuthService {
     // I really hope angular starts automatically taking the cookie and setting it as header
-    // when i move to prod, bc this is ugly
+    // when i move to prod, bc this is ugly (it should do it btw but angular doesnt want to.)
     private xsrfToken : string = "";
     constructor(private http: HttpClient) {
         this.addCsrfTokenToCookies().subscribe({
