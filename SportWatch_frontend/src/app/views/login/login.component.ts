@@ -14,7 +14,7 @@ import { NavbarComponent } from '../../shared/components/navbar/navbar.component
 
 @Component({
   selector: 'app-login',
-    imports: [NavbarComponent, RouterLink, ReactiveFormsModule, NgIf, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [NavbarComponent, RouterLink, ReactiveFormsModule, NgIf, MatFormFieldModule, MatInputModule, MatButtonModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
