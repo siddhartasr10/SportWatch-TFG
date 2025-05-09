@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import com.reactive.SportWatch.models.ExtUser;
 import com.reactive.SportWatch.models.ExtUserDetails;
+import com.reactive.SportWatch.models.JsonResponse;
 import com.reactive.SportWatch.services.JwtService;
 import com.reactive.SportWatch.services.UserService;
 
@@ -19,16 +20,16 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
-@Controller
+@RestController
 @RequestMapping("/api/")
 public class AuthController {
 
@@ -57,7 +58,7 @@ public class AuthController {
 
     // We asume field validation is made on frontend by Angular
     @PostMapping("register")
-    public Mono<ResponseEntity<String>> postRegister(ServerWebExchange exch) {
+    public Mono<ResponseEntity<JsonResponse>> postRegister(ServerWebExchange exch) {
         // Creo el token antes de que el usuario exista. Porque puedo.
 
         return exch.getFormData().flatMap(formData -> {
@@ -86,7 +87,7 @@ public class AuthController {
                 .doOnError(err -> logger.log(Level.WARNING, "Authentication error!:", err))
                 // I could use ((Userdetails) auth.getPrincipal()).getUsername() and avoid chaining to the flatmap of user but lines would be longer
                 .flatMap(auth -> jwtService.generateToken(user.getUsername()).flatMap(token -> jwtService.setUserCookies(token, user.getUsername(), exch)))
-                .flatMap(cookies -> Mono.just(ResponseEntity.status(HttpStatus.ACCEPTED).body("Authentication succeded, use authToken and user cookies pls")));
+                .flatMap(cookies -> Mono.just(ResponseEntity.status(HttpStatus.ACCEPTED).body(new JsonResponse("Authentication succeded, use authToken and user cookies pls"))));
         });
 
 
@@ -106,7 +107,7 @@ public class AuthController {
     *     No se puede usar @RequestParameters porque en webflux solo pilla query params.
     */
     @PostMapping("login")
-    public Mono<ResponseEntity<String>> postLogin(ServerWebExchange exch) {
+    public Mono<ResponseEntity<JsonResponse>> postLogin(ServerWebExchange exch) {
 
         return exch.getFormData().flatMap(formData -> {
             if (exch.getRequest().getHeaders().get("Content-Type")
@@ -140,7 +141,7 @@ public class AuthController {
                      .flatMap(token -> jwtService.setUserCookies(token, ((UserDetails) auth.getPrincipal()).getUsername(), exch)))
 
             .flatMap(cookies -> Mono.just(ResponseEntity.status(HttpStatus.ACCEPTED)
-                                          .body("Authentication succeded, use authToken and user cookies pls")));
+                                          .body(new JsonResponse("Authentication succeded, use authToken and user cookies pls"))));
 
     }
 
@@ -160,7 +161,7 @@ public class AuthController {
      *
      */
     @PostMapping("logout")
-    public Mono<ResponseEntity<String>> postLogout(ServerWebExchange exch) {
+    public Mono<ResponseEntity<JsonResponse>> postLogout(ServerWebExchange exch) {
         ResponseCookie jwtCookie = ResponseCookie.from("authToken").value(null)
                 .httpOnly(true).maxAge(0)
                 .sameSite("Strict").path("/")
@@ -175,7 +176,7 @@ public class AuthController {
         exch.getResponse().addCookie(jwtCookie);
 
 
-        return Mono.just(ResponseEntity.ok("Logout handled succesfully"));
+        return Mono.just(ResponseEntity.ok(new JsonResponse("Logout handled succesfully")));
     }
 
 

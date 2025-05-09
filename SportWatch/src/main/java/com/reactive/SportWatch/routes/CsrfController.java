@@ -1,9 +1,11 @@
 package com.reactive.SportWatch.routes;
 
+import com.reactive.SportWatch.models.JsonResponse;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import reactor.core.publisher.Mono;
 
@@ -13,14 +15,14 @@ import reactor.core.publisher.Mono;
 // is its made on angular dev server, so this endpoint is just for dev purposes only, so the proxied
 // endpoints allowed by angular proxy can return a token to use for api interactions.
 
-@Controller
+@RestController
 @RequestMapping("/api/csrf-token")
 public class CsrfController {
 
     // Filter automatically adds token to the cookies, so do nothing literally.
     @GetMapping("")
-    public Mono<ResponseEntity<String>> getCsrfToken() {
-        return Mono.just(ResponseEntity.ok("Here you have your token"));
+    public Mono<ResponseEntity<JsonResponse>> getCsrfToken() {
+        return Mono.just(ResponseEntity.ok(new JsonResponse("Here you have your token")));
     }
 
 }
