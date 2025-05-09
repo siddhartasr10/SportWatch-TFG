@@ -50,10 +50,11 @@ public class SecurityConfig {
             .authorizeExchange(exchanges -> exchanges
                                .pathMatchers("/api/register", "/api/login", "/api/csrf-token").permitAll()
                                .anyExchange().authenticated())
+            .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
             // .csrf(csrf -> csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()))
             .csrf(csrf -> csrf.disable())
             // Con NoOP desactivo la session, lo que con el login por defecto hace que no sea capaz de autentificarme.
-            .httpBasic(httpConf -> httpConf.securityContextRepository(NoOpServerSecurityContextRepository.getInstance()))
+            .httpBasic(httpConf -> httpConf.disable())
             .formLogin(login->login.disable());
 
         return http.build();
