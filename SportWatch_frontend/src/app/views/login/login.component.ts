@@ -61,7 +61,7 @@ export class LoginComponent {
         this.authService.login(this.username.value!, this.password.value!).subscribe({
             next: () => this.router.navigateByUrl("/feed"),
             // when status is 401 and authManager in the backend found invalid user it won't return any message so we set one manually. (In the register authManager shouldnt never found unauthorized user, cause we create one).
-            error: (body : HttpErrorResponse) => (body.status === 401) ? this.loginErr.set("Usuario o Contraseña inválidos") : this.loginErr.set(body.error.message)
+            error: (body : HttpErrorResponse) => (body.status === 500) ? this.loginErr.set("Usuario o Contraseña inválidos") : this.loginErr.set(body.error.message)
         });
     }
 }
