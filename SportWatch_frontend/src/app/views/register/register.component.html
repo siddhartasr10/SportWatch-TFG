@@ -17,33 +17,25 @@
        <mat-form-field hideRequiredMarker="true" class="w-5/6">
            <mat-label> Usuario </mat-label>
            <input matInput required (input)="updateFormValidity()" (input)="updateErrorMsg('username', this.username)" (focus)="updateErrorMsg('username', this.username)" [formControl]="username"/>
-        <!-- @if (this.username.invalid && (this.username.dirty || this.username.touched)) { -->
             <mat-error *ngIf="this.username.invalid && (this.username.dirty || this.username.touched)">{{usernameErrMsg()}}</mat-error>
-        <!-- } -->
        </mat-form-field>
 
        <mat-form-field hideRequiredMarker="true" class="w-5/6">
            <mat-label> Email </mat-label>
            <input matInput required (input)="updateFormValidity()" (input)="updateErrorMsg('email', this.email)" (focus)="updateErrorMsg('email', this.email)" [formControl]="email" />
-           @if (this.email.invalid && (this.email.dirty || this.email.touched)) {
-               <mat-error>{{emailErrMsg()}}</mat-error>
-           }
+               <mat-error *ngIf="this.email.invalid && (this.email.dirty || this.email.touched)">{{emailErrMsg()}}</mat-error>
        </mat-form-field>
 
        <mat-form-field hideRequiredMarker="true" class="w-5/6">
            <mat-label> Contraseña </mat-label>
            <input matInput required (input)="updateFormValidity()" (input)="updateErrorMsg('password', this.password)" (input)="passwordControlSynchronizer()" (focus)="updateErrorMsg('password', this.password)" [formControl]="password"/>
-           @if (this.password.invalid && (this.password.dirty || this.password.touched)) {
-               <mat-error>{{passwordErrMsg()}}</mat-error>
-           }
+               <mat-error *ngIf="this.password.invalid && (this.password.dirty || this.password.touched)">{{passwordErrMsg()}}</mat-error>
        </mat-form-field>
 
        <mat-form-field hideRequiredMarker="true" class="w-5/6 mb-2">
            <mat-label> Verifica tu Contraseña </mat-label>
            <input matInput required (input)="updateFormValidity()" (input)="updateErrorMsg('verifyPassword', this.verifyPassword)" (focus)="updateErrorMsg('verifyPassword', this.verifyPassword)" [formControl]="verifyPassword"/>
-           @if ((this.verifyPassword.invalid) && (this.verifyPassword.dirty || this.verifyPassword.touched)) {
-               <mat-error>{{verifyPasswordErrMsg()}}</mat-error>
-           }
+               <mat-error *ngIf="this.verifyPassword.invalid && (this.verifyPassword.dirty || this.verifyPassword.touched)">{{verifyPasswordErrMsg()}}</mat-error>
        </mat-form-field>
 
        <button mat-flat-button class="w-3/6 rounded-lg! mb-2" [disabled]="isFormInvalid()" (click)="handleRegister()" > Registrarte </button>

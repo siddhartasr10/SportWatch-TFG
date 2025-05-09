@@ -26,6 +26,7 @@ body {
 .mat-mdc-card {
     background-color: white !important;
 }
+
 // styles mainly used in Landing Component (have to be global for angular material to take them.)
 app-landing {
     /* Mat-Button selector */
@@ -39,7 +40,8 @@ app-landing {
     .mdc-list {
         padding-bottom: 10px !important;
     }
-    /* mat-list selector */
+    /* mat-list selector *
+     */
     .mdc-list-item__primary-text {
         color: white !important;
         font-family: var(--font-roboto-serif) !important;
@@ -62,7 +64,7 @@ app-landing {
 
 // Styles mainly used in register/login controller
 
-app-register {
+app-register, app-login {
 
     .mdc-text-field--filled {
         border-radius: 10px;
