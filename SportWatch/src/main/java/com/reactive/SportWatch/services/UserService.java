@@ -4,8 +4,7 @@ import java.sql.Timestamp;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import com.reactive.SportWatch.models.ExtUser;
-import com.reactive.SportWatch.models.ExtUserDetails;
+import com.reactive.SportWatch.models.ExtUser; import com.reactive.SportWatch.models.ExtUserDetails;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -104,6 +103,24 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                 .map(userMap -> !userMap.isEmpty());
     }
 
+    /**
+     * <h1> Iterates over possible matches of username or email and returns the first one it finds. </h1>
+     * if both were found returns the first field it found arbitrarily (bc i don't care tbh).
+     * @return
+     * {@code Mono<0>} If no match <br>
+     * {@code Mono<1>} If username is matched <br>
+     * {@code Mono<2>} If email is matched
+     *  */
+    public Mono<Integer> isUsernameOrEmailTaken(String username, String email) {
+        return dbClient.sql("SELECT username, email FROM users WHERE username = :username OR email = :email")
+                .bind("username", username)
+                .bind("email", email)
+                .fetch().all()
+                .filter(row -> row.get("username").equals(username) || row.get("email").equals(email))
+                .next().map(matchedRow -> (matchedRow.get("username").equals(username)) ? 1 : 2)
+                .defaultIfEmpty(0);
+    }
+
     public Mono<ExtUserDetails> updatePassword(ExtUserDetails user, String newPassword) {
         updatePassword((UserDetails) user, newPassword);
         // if doesn't throw, new password changed successfully
@@ -165,19 +182,24 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             .flatMap(v -> {logger.info("User created."); return Mono.just(user);});
                 });
 
+
     }
 
 
     public Mono<ExtUserDetails> createUser(ExtUserDetails user)  {
-        return isUsernameTaken(user.getUsername())
-                .flatMap(isTaken -> {
-                    if (isTaken)
+
+        return isUsernameOrEmailTaken(user.getUsername(), user.getEmail())
+                .flatMap(takenCode -> {
+                    if (takenCode == 1)
                         return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username already taken"));
+
+                    if (takenCode == 2)
+                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Email already taken"));
 
                     StringBuilder columns = new StringBuilder("username, password");
                     StringBuilder values = new StringBuilder(":username, :password");
 
-                    // Null check has to be made to be perfectly sure im not messing up.
+                    // Null check has to be made to be perfectly sure im not messing up (and that someone registering by the API instead of the form doesn't crash the server)
                     if (user.getEmail() != null) {
                         columns.append(", email");
                         values.append(", :email");
@@ -192,15 +214,47 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                     // Have to reassign because object is inmmutable, so a new copy is created.
                     if (user.getEmail() != null) pausedSpec = pausedSpec.bind("email", user.getEmail());
 
-                    return pausedSpec.fetch()
-                            .rowsUpdated()
+                    return pausedSpec.fetch().rowsUpdated()
                             .doOnNext(changes -> {
-                                    if (changes == 0)
-                                        logger.warning("No user was created");
+                                    if (changes == 0) logger.warning("No user was created");
                                     logger.info("User created successfully");
-                            })
-                            .flatMap(v -> Mono.just(user));
-                });
+                            });
+                    })
+
+                .flatMap(v -> Mono.just(user));
+
+        // return isUsernameTaken(user.getUsername())
+        //         .flatMap(isTaken -> {
+        //             if (isTaken)
+        //                 return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username already taken"));
+
+        //             StringBuilder columns = new StringBuilder("username, password");
+        //             StringBuilder values = new StringBuilder(":username, :password");
+
+        //             // Null check has to be made to be perfectly sure im not messing up (and that someone registering by the API instead of the form doesn't crash the server)
+        //             if (user.getEmail() != null) {
+        //                 columns.append(", email");
+        //                 values.append(", :email");
+        //             }
+
+        //             String sql = String.format("INSERT INTO users (%s) VALUES (%s)", columns, values);
+
+        //             GenericExecuteSpec pausedSpec = dbClient.sql(sql)
+        //                     .bind("username", user.getUsername())
+        //                     .bind("password", encoder.encode(user.getPassword()));
+
+        //             // Have to reassign because object is inmmutable, so a new copy is created.
+        //             if (user.getEmail() != null) pausedSpec = pausedSpec.bind("email", user.getEmail());
+
+        //             return pausedSpec.fetch()
+        //                     .rowsUpdated()
+        //                     .doOnNext(changes -> {
+        //                             if (changes == 0)
+        //                                 logger.warning("No user was created");
+        //                             logger.info("User created successfully");
+        //                     })
+        //                     .flatMap(v -> Mono.just(user));
+        //         });
     }
 
     public Mono<Void> deleteUser(String username) {

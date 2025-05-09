@@ -18,6 +18,7 @@ import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -83,8 +84,8 @@ public class AuthController {
                             : Mono.just(auth);
                 })
                 .doOnError(err -> logger.log(Level.WARNING, "Authentication error!:", err))
-
-                .flatMap(auth ->jwtService.generateToken(user.getUsername()).flatMap(token -> jwtService.setUserCookies(token, user.getUsername(), exch)))
+                // I could use ((Userdetails) auth.getPrincipal()).getUsername() and avoid chaining to the flatmap of user but lines would be longer
+                .flatMap(auth -> jwtService.generateToken(user.getUsername()).flatMap(token -> jwtService.setUserCookies(token, user.getUsername(), exch)))
                 .flatMap(cookies -> Mono.just(ResponseEntity.status(HttpStatus.ACCEPTED).body("Authentication succeded, use authToken and user cookies pls")));
         });
 
@@ -111,13 +112,11 @@ public class AuthController {
             if (exch.getRequest().getHeaders().get("Content-Type")
                 .toString().startsWith("[multipart/form-data"))
 
-
             return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,
                                                           "You're using multipart/form-data instead of application/x-www-form-urlencoded,"
                                                           + "that's not supported sorry."));
 
-            String username = formData.getFirst("username");
-            String password = formData.getFirst("password");
+            String username = formData.getFirst("username"), password = formData.getFirst("password");
 
             if (username == null || password == null)
                 return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username and password must be set in the request"));
@@ -134,19 +133,14 @@ public class AuthController {
                                 ? Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authorization couldn't be determined"))
                                 : Mono.just(auth);
                     })
-                    .doOnError(err -> logger.warning("Authentication error!"))
-                    .flatMap(auth -> {
+                    .doOnError(err -> logger.warning("Authentication error!"));
+            })
+            // Default authManager uses {@link UserDetails} as principal of the Authentication. in this case (login is a longer func) i prefer using it so func is clearer.
+            .flatMap(auth -> jwtService.generateToken(((UserDetails) auth.getPrincipal()).getUsername())
+                     .flatMap(token -> jwtService.setUserCookies(token, ((UserDetails) auth.getPrincipal()).getUsername(), exch)))
 
-                        return jwtService.generateToken(username).flatMap(token -> {
-
-                            jwtService.setUserCookies(token, username, exch);
-
-                            return Mono.just(ResponseEntity.status(HttpStatus.ACCEPTED)
-                                    .body("Authentication succeded, use authToken and user cookies pls"));
-
-                        });
-                    });
-        });
+            .flatMap(cookies -> Mono.just(ResponseEntity.status(HttpStatus.ACCEPTED)
+                                          .body("Authentication succeded, use authToken and user cookies pls")));
 
     }
 
@@ -186,8 +180,7 @@ public class AuthController {
 
 
     private Mono<ExtUserDetails> extractUserFromFormData(MultiValueMap<String, String> formData) {
-        String username = formData.getFirst("username");
-        String password = formData.getFirst("password");
+        String username = formData.getFirst("username"), password = formData.getFirst("password");
         String email = formData.getFirst("email");
 
         // logger.info(String.format("Entire map: %s", formData));
