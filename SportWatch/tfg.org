@@ -326,3 +326,15 @@
 ***   [08/05/25]
 *   Añadida muestra de errores como usuario que ya existe
         Literalmente cogiendo el error que devuelve el servidor y mostrándolo.
+
+***   [09/05/25]
+*   Creado Login
+        Creado el login copiando y pegando del registro y cambiando márgenes y tamaño del formulario básicamente.
+*   Añadida comprobación de la existencia del email en el backend
+        Al igual que el usuario se comprueba que el email exista en el backend antes de crear un nuevo usuario, para evitar duplicados que den errores de SQL
+        (ya que el email es un campo único).
+*   Arreglado error que evitaba que funcionarán los redirects al registrarse y logearse
+        El backend devolvia los errores como json y responseEntity como texto, mientras que HTTPClient solo soporta un tipo de respuesta a la vez (no ambos)
+        por lo que en las respuestas exitosas httpclient crasheaba sigilosamente, por lo que (next) no se ejecutaba nunca. Ahora el backend devuelve un nuevo objeto
+        'JsonResponse' y los controladores son @RestController, detectando que se está devolviendo un solo objeto y convirtiendolo a json (una string la devolvia como content-type text).
+        El objeto es una dataclass (record) con un solo campo.
