@@ -1,4 +1,4 @@
-import { Component, WritableSignal, signal } from '@angular/core';
+import { Component, WritableSignal, signal} from '@angular/core';
 import { NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 
@@ -7,7 +7,7 @@ import {FormControl, ReactiveFormsModule, Validators} from '@angular/forms';
 
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button'
+import { MatButton, MatButtonModule } from '@angular/material/button'
 
 import { AuthService } from '../../shared/services/auth-service/auth-service.service';
 import { NavbarComponent } from '../../shared/components/navbar/navbar.component'
@@ -30,6 +30,8 @@ export class LoginComponent {
     passwordErrMsg : WritableSignal<string> = signal('');
 
     loginErr : WritableSignal<string> = signal('');
+
+    // @ViewChild('submit') submitBtn!: MatButton;
     // Updates global form validation state, acting as a formGroup (i don't like short form groups).
     updateFormValidity() : void {
         (this.username.invalid || this.password.invalid)
@@ -58,6 +60,8 @@ export class LoginComponent {
 
     // Te registra y te lleva al feed, que por el momento no tengo implementado jajaj
     handleLogin() : void {
+        // Esta linea evita que alguien se logee si el boton esta desactivado. (cuando lo está el formulario no es válido)
+        if (this.isFormInvalid()) return;
         this.authService.login(this.username.value!, this.password.value!).subscribe({
             next: () => this.router.navigateByUrl("/feed"),
             // when status is 401 and authManager in the backend found invalid user it won't return any message so we set one manually. (In the register authManager shouldnt never found unauthorized user, cause we create one).
