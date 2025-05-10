@@ -13,6 +13,9 @@
     --font-roboto-mono: 'Roboto Mono', monospace;
     --font-roboto-serif: 'Roboto Serif', serif;
     --font-roboto-flex: 'Roboto Flex', sans-serif;
+
+    // Little utility for covering the rest of the screen in its bg color, so i can design comfortably
+    --h-screen-minus-navbar: calc(100vh - 80px);
 }
 
 body {
