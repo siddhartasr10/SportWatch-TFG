@@ -3,23 +3,23 @@
 #+author: Siddharta Morión Suárez
 
 *** 23/03/25 dom
-*       Trabajando en implementar una base de datos de postgres que funcione con el servidor
+*   Trabajando en implementar una base de datos de postgres que funcione con el servidor
         Primero añadi la config en application.properties y luego borre postgres/data y lo recree con initdb porque una nueva version de postgres habia salido
         y tenia datos de proyectos antiguos que no servian, por lo que no iba a dumpear y restaurar
         asi que un buen rm /var/lib/postgres/data/* y initdb /var/lib/postgres/data y palante
-*       Creando una implementación de User
+*   Creando una implementación de User
         Extendí la implementación por defecto que trae spring security, ya que no traía campo de email
 
 
 *** 24/03/25 lun
-*       Continuo implementación de User
+*   Continuo implementación de User
         Se alarga la tarea debido a poco tiempo y a que la implementación de user tiene bastantes métodos státicos que no puedo sobreescribir, además
         a los que me veo forzado a returnear el builder antiguo, y a no poder returnear el mío. Pero ya queda bastante poco.
 
 *** 29/03/25 sab
-*       Termino implementación de User
+*   Termino implementación de User
         Añado métodos personalizados de with* y un extBuilder. Además de crear un ExtUserDetails para poder crear un extWithUserDetails
-*       Implementación de un PasswordEncoder
+*   Implementación de un PasswordEncoder
         Me informo de como funcionan los password encoders en spring security y de su uso de SecureRandom
         #+BEGIN_SRC java
             {@link java.security.SecureRandom}
@@ -41,7 +41,7 @@
 
             System.out.println(user);
         #+END_SRC
-*       Estableciendo configuración específica de la db
+*   Estableciendo configuración específica de la db
         Establezco la versión de los contenedores de docker (postgres y adminer) a una versión fija para evitar problemas
         y reestablezco la base de datos, ya que estaba dando problemas al crearse una nueva versión de postgres
         el esquema ER lo tengo en db designer y lo puedo descargar en un .SQL que puedo importar.
@@ -49,7 +49,7 @@
         Igualmente cada vez que lo descargo tengo que cambiar las primary keys de datatype porque se ponen en cualquier cosa menos int
         y no quiero ni short ni bigint y cambiar "with timezone" por without ya que, ya tengo user_timezone, un shortint que representa la diferencia de UTC (+1+2-1-2...)
 
-*       Implementación de un UserRep (para despues usarlo con un reactiveUserDetailService)
+*   Implementación de un UserRep (para despues usarlo con un reactiveUserDetailService)
         He creado una clase de @configuration jdbcConfig para crear un jdbc template creado con el datasource establecido en el application.properties
         Luego he implementado un @Repository UserRep para poder hacer de DAO con los usuarios y usarlo después para un reactiveuserdetailservice
 
@@ -62,14 +62,14 @@
         JdbcConfig.java ya no es necesario para nada.
 
 **  01/04/25 (hay dias que no apunto y sobreescribo en lo que hay)
-*      Modificación de userService, los métodos que requiere para el contrato UserDetailService deberían recoger el mínimo de info
+*   Modificación de userService, los métodos que requiere para el contrato UserDetailService deberían recoger el mínimo de info
         Las tablas de las bases de datos se me están quedando muy grandes, no debería coger todas las columnas para buscar por usuario en el userdetailservice
         ya que ese usuario se usa para la autenticación, para esa operación el usuario, la contraseña y las autoridades sobran la verdad.
 
-*       Expansión de ExtUser para añadir notificaciones, suscripciones y seguidores.
+*   Expansión de ExtUser para añadir notificaciones, suscripciones y seguidores.
 
 **  02/04/25
-*      Creación de un ReactiveAuthManager
+*   Creación de un ReactiveAuthManager
         En webflux se utiliza como authmanager y authprovider un reactiveAuthManager.
         He usado la impl concreta de un UserDetailsRepositoryReactiveAuthenticationManager;
         #+BEGIN_SRC java
@@ -82,18 +82,18 @@
         #+END_SRC
 
 **  04/04/25
-*       Modificaciones base de datos
+*   Modificaciones base de datos
         Sabías que las contraseñas encriptadas por bcrypt miden hasta 72 carácterres? yo no, la base de datos menos ajajja varchar(50) no hace el avio aquí
         además si no pones serial no hay autoincremento de las id en postgres, a no ser que hagas una sequence a mano que es lentísimo la verdad
-*       Cambio de dependencias
+*   Cambio de dependencias
         JDBC no está hecho para Webflux porque es bloqueante no asíncrono, hace falta RDBC, así que he cambiado las dependencias en el pom y estoy cambiando JDBCTemplate por DatabaseClient
-*       Prueba index.html generado con Angular
+*   Prueba index.html generado con Angular
         La página va a ser una SPA que a lo mejor tiene el login y eso por SSR pero el resto no.
 
 **  05/04/25
-*       Implementación de RDBC por JDBC
+*   Implementación de RDBC por JDBC
         Cambiado application properties, UserService ya no requiere de UserRepository, ya que los métodos del Dao directamente returnean el objeto Mono<>
-*       Implementación de JWT (empezamos)
+*   Implementación de JWT (empezamos)
         Voy a implementar JWT para no necesitar preguntarle al servidor por la identidad del usuario cada vez que necesito su "username"
         además es bastante seguro y las utilidades que voy a implementar pueden utilizarse después para implementar oauth2 si lo quisiera.
         Permite una autenticación "stateless". (aunque por el momento voy a conservar los tokens de sesión también)
@@ -113,7 +113,7 @@
 
         3. Crear filtro pero esto ya para mañana, son las 21:30 un sábado y estoy en pijama otra vez
 **  06/04/25
-*       Implementación de filtro de SecurityWebFilterChain
+*   Implementación de filtro de SecurityWebFilterChain
         En Spring webflux la clase OncePerRequestFilter no se usa, se usa la interfaz WebFilter, pero hace lo mismo, en vez de pasarle como parámetros al metodo principal
         (Que en WebFilter se llama filter() en vez de doFilterInternal) request y response se le pasa ServerWebExchange (que es el objeto que representa el intercambio request response)
         y contiene la request, cookies y todo basicamente y la filter chain (como en Oncerper..)  pero se llama webfilterchain, y se hace lo mismo de al final usar la filterchain con filter
@@ -137,11 +137,11 @@
         De esta forma la página de login por defecto no funciona porque no puede guardar la información de autenticación en ningún lado. Cuando haga la página por mi cuenta habra que coger el token por las cookies y o pasarlo como header si hago /login por ajax o añadirlo a un input hidden si hago un login por formulario (bloqueante)
 
 **  07/04/25
-*       Implementación de ruta /login
+*   Implementación de ruta /login
         Creación de un controlador mapeado a la ruta "/login" que realice autenticación y si es exitosa cree un token jwt
 
 **  12/04/25
-*       Adaptación no bloqueante JwtService y JwtAuthenticationFilter
+*   Adaptación no bloqueante JwtService y JwtAuthenticationFilter
         Durante este tiempo he estado ignorando en ciertas clases que estoy usando webflux y todo lo que utilizo debería se no bloqueante desde el principio, así voy a hacer eso.
         Lo que es bloqueante por naturaleza se puede correr en un hilo aparte y lo más recomendado es Mono.fromCallable(funcbloqueante).subscribeOn(Schedulers.boundedElastic()).
 
@@ -150,49 +150,26 @@
         Y por lo que se vé lo recomendado es hacerlo después de chain.filter(), a ese mono se le encadena .contextWrite (método de un Mono que añade al contexto de la rutina por así decirlo) y ReactiveSecurityContextHolder.withSecurityContext(ctx) siendo ctx un new SecurityContextImpl(auth). tiene withAuthorization pero supuestamente es más fiel a spring webflux añadir una impl entera.
 
 **  13/04/25
-*       Ruta Login totalmente asíncrona
+*   Ruta Login totalmente asíncrona
         Pues eso, crea la cookie y la añade a la respuesta, y si falla o la autenticación no se puede determinar hace un backflip (returnea 401 unauthorized para verlo con el fetch y hacer .catch)
 
-*       Arreglo bug filtros, JwtAuthenticationFilter
-        Resulta que si bloqueo en un filtro de autenticación la página ni renderiza, está bien saber que no puedo usar .block(). Así que he arreglado eso y he descubierto que para generar el token de .csrf en las cookies hay que suscribir al exchange.getAttribute(CsrfToken.class.getName()) o returnear la request con un .then en este token o un flatmap (supuestamente ya que flatmap a mi no me va). Para que así el csrfTokenCookieRepository sepa que tiene que generar una cookie de xsrf
-
-       #+begin_src java
-
-        Mono<ResponseEntity<String>> index(ServerWebExchange exch) {
-                // token.defaultIfEmpty(new DefaultCsrfToken("aaa", "aaa", "joder"))
-                // .doOnSuccess(csrf -> {
-                //         ResponseCookie csrfCookie = ResponseCookie.from(csrf.getHeaderName(), csrf.getToken()).build();
-                //         exch.getResponse().addCookie(csrfCookie);
-                //     });
-                Mono<CsrfToken> csrfToken = exch.getAttribute(CsrfToken.class.getName());
-                csrfToken.subscribe();// esto funciona pero a veces tarda el token en estar porque se resuelva asíncrono
-                // return csrfToken.then(Mono.just(ResponseEntity.ok("ahi tienes crack"))); // Este es el suyo
-                // haz csrfToken.then(lo que quieras hacer) y te aseguras de que el token estará listo.
-                // return csrfToken.map(token -> {
-                //         ResponseCookie csrfCookie = ResponseCookie.from(token.getHeaderName(), token.getToken()).build();
-                //         // exch.getResponse().addCookie(csrfCookie);
-                //         return ResponseEntity.ok(token.getToken());
-                //     });
-                return Mono.just(ResponseEntity.ok("aaa"));
-       #+end_src
-
-**  14/04/25
-*       Ponerlo todo en orden y hacer rutas /api/login /api/register y /api/logout para angular.
+*
+*   Ponerlo todo en orden y hacer rutas /api/login /api/register y /api/logout para angular.
         Cuando me sucedio el bug hice un git reset --hard y los cambios anteriores los guardé en una carpeta aparte, voy a restaurarlos ahora que ya he arreglado que fallaba y a darle caña.
         Archivos restaurados y borrados archivos inútiles
 
-*       Ruta genérica
+*   Ruta genérica
         Creado un "GlobalController" que forwardee todo a index.html (webflux no tiene forward, así que cargar manualmente el archivo).
         Como no hay forma de usar un regex que afecte a todos las secciones / / / /. He usado un wildcard y parseados los archivos .css .js, etc manualmente como ClassPathResources
         que se encuentran en static/
 
         Para las rutas api, crear controladores más específicos hace que tengan prioridad.
 
-*       Creados métodos createUser(UserDetails) updateTimezone(username, timezone) en UserService
+*   Creados métodos createUser(UserDetails) updateTimezone(username, timezone) en UserService
         Hacían falta para register y eso, updateTimezone es para ir quitando camino.
         createUser asume que el email puede ser nulo y solo lo añade al query SQL si el user que se pasa lo tiene. (en el createUser(ExtUserDetails))
 
-*       Creadas rutas api/login y api/register
+*   Creadas rutas api/login y api/register
         Hacen lo que se supone que tienen que hacer pero hay que testearlas para ver si no explotan.
         He cambiado el JwtService para que la cookie de authToken se cree en un método y evitar repetirme en los controladores.
 
@@ -256,11 +233,11 @@
 
 
 *** [15-16/04/25]
-*    Arregladas rutas paras que funcionen por completo (no estaban creando correctamente las cookies de auth) y además creados tests de integración para poder probar el registro y el login.
+*   Arregladas rutas paras que funcionen por completo (no estaban creando correctamente las cookies de auth) y además creados tests de integración para poder probar el registro y el login.
         Basicamente eso, se me olvido ir apuntándolo a medida que lo hacía, además limpie un poco los métodos para que fueran más claros y estuvieran menos identados.
         Me pelee bastante con spring tests pero he conseguido aprender a usarlo. Ahora hay tests que validen la necesidad de un token csrf, tests para comprobar que un registro
         de un usuario ya existente de error, etc.
-*    Creada config de seguridad secundaria
+*   Creada config de seguridad secundaria
         Arreglando el registro me di cuenta de que la contraseña no se subia encriptada y al arreglarlo (añadiendo el encoder a el servicio de usuario), me encontré con un problema de
         dependencias circulares, userService -> SecurityConfig[BCryptPasswordEncoder] -> userService(para el authManager) ->...
 
@@ -268,17 +245,17 @@
 
 ***  [18/04/25]
 
-*    Creada ruta de logout que sustituye las cookies de user y authtoken por cookies vacias que caducan al segundo.
+*   Creada ruta de logout que sustituye las cookies de user y authtoken por cookies vacias que caducan al segundo.
         Además creados tests para esa ruta. Que estaban fallando para la ruta logout que requiere auth por el siguiente punto.
 
-*    Corregido JwtAuthenticationFilter:
+*   Corregido JwtAuthenticationFilter:
         Faltaba poner que al crear la auth en mi jwtAuthenticationFilter, se pusiera esa auth como valida con auth.setAuthorized(true). Con un authmanager va solo eso, pero para mi jwtAuthenticationToken
         no hay. así spring boot permite acceso a las rutas que requieren autorización incluso con noOpContextRepository.
 
-*    Añadido test de logout con un JWT válido.
+*   Añadido test de logout con un JWT válido.
         El test es el que me ha permitido arreglar bastantes errores.
 
-*    Creado User flow
+*   Creado User flow
         Me falta hacer el wireframe de las páginas más importantes  (welcomepage, feed, login/registro), pensando en el uso de
         componentes de Angular Material y alomejor angular ng
 
@@ -286,12 +263,12 @@
         Dios me haga el usar Angular menos pesado que Spring Security 🤞🤞🤞
 
 ***  [19/04/25]
-*    Creado wireframe detallado de la página de inicio:
+*   Creado wireframe detallado de la página de inicio:
        https://www.figma.com/design/MOY6o8cLVlmN2LrbGbcnAh/Wireframe?node-id=0-1&p=f&t=VCdnnoY2PxkawkQr-0
        Tengo que añadir una imagen a una sección pero por lo demás esta decente. (Probablemente cambie la otra por una de mejor calidad pero no hay cojones a encontrar una con varios deportistas diferentes y más de 3 píxeles).
 
 
-*    Creado wireframe intermediamente detallado Login y registro
+*   Creado wireframe intermediamente detallado Login y registro
         mismo link para que lo voy a poner otra vez
 
 ***   [26/04/25]
@@ -338,3 +315,8 @@
         por lo que en las respuestas exitosas httpclient crasheaba sigilosamente, por lo que (next) no se ejecutaba nunca. Ahora el backend devuelve un nuevo objeto
         'JsonResponse' y los controladores son @RestController, detectando que se está devolviendo un solo objeto y convirtiendolo a json (una string la devolvia como content-type text).
         El objeto es una dataclass (record) con un solo campo.
+
+***   [10/05/25]
+*   Empezamos feed
+        A darle caña no?
+        Hecho el header, que utilizara rutas dinámicas para pasar la información al feed. (No voy a meter su lógica en el feed porque el header va a servir para muchos componentes).
