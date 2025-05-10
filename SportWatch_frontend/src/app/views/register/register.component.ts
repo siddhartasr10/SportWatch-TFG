@@ -113,6 +113,7 @@ export class RegisterComponent {
 
     // Te registra y te lleva al feed, que por el momento no tengo implementado jajaj
     handleRegister() : void {
+        if (this.isFormInvalid()) return;
         this.authService.register(this.username.value!, this.password.value!, this.email.value!).subscribe({
             next: () => this.router.navigateByUrl("/feed"),
             error: (body : HttpErrorResponse) => this.registrationErr.set(body.error.message)

@@ -6,7 +6,7 @@
 
 </app-navbar>
 
-<div class="flex justify-center items-center w-screen h-[90vh]">
+<div class="flex justify-center items-center w-screen h-[90vh]" (keydown.enter)="handleLogin()">
    <div class="flex flex-col gap-2 px-4 py-2 border-1 border-[rgb(224_227_226)]/[0.25] w-[700px] h-[550px]
                box-content rounded-xl justify-start items-center text-white">
        <h1 class="text-[55px] tracking-wider font-roboto-serif font-bold mt-[40px] mb-[10px]"> Iniciar sesión </h1>
@@ -16,13 +16,13 @@
            <b> {{ this.loginErr() }} </b>
        </mat-error>
 
-       <mat-form-field hideRequiredMarker="true" class="w-5/6">
+       <mat-form-field hideRequiredMarker="true" (keydown.enter)="handleLogin()" class="w-5/6">
            <mat-label> Usuario </mat-label>
            <input matInput required (input)="updateFormValidity()" (input)="updateErrorMsg('username', this.username)" (focus)="updateErrorMsg('username', this.username)" [formControl]="username"/>
             <mat-error *ngIf="this.username.invalid && (this.username.dirty || this.username.touched)">{{usernameErrMsg()}}</mat-error>
        </mat-form-field>
 
-       <mat-form-field hideRequiredMarker="true" class="w-5/6 mb-4">
+       <mat-form-field hideRequiredMarker="true" (keydown.enter)="handleLogin()" class="w-5/6 mb-4">
            <mat-label> Contraseña </mat-label>
            <input matInput required (input)="updateFormValidity()" (input)="updateErrorMsg('password', this.password)" (focus)="updateErrorMsg('password', this.password)" [formControl]="password"/>
                <mat-error *ngIf="this.password.invalid && (this.password.dirty || this.password.touched)">{{passwordErrMsg()}}</mat-error>
