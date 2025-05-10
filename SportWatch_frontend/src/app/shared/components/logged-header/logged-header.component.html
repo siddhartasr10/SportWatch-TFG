@@ -1,0 +1,19 @@
+<app-navbar>
+
+    <div class="w-[450px] h-65/100 bg-[#383838] rounded-[20cm] shadow-[0px_3px_15px_1px_rgba(0,0,0,0.20)]
+                mx-auto grid grid-cols-[0.85fr_0.15fr] items-center justify-center border-2 border-gray-400 box-content
+                focus-within:border-2 focus-within:border-blue-400">
+
+        <input #searchBar class="text-white placeholder:text-gray-300 ml-[20px] col-start-1 focus:outline-0" (keydown.enter)="handleSearch(searchBar.value)" type="search" placeholder="Buscar" />
+        <img src="/search.svg" class="w-[45px] h-[45px] justify-self-center opacity-75 cursor-pointer" (click)="handleSearch(searchBar.value)"  alt="Una lupa de búsqueda" />
+    </div>
+
+
+    <div class="w-[70px] h-[70px] rounded-[20cm] select-none mr-6">
+        <a class="w-full h-full rounded-[20cm] focus:outline-blue-200" routerLink="/user/{{ user }}">
+            <img src="/default_user.svg" alt="SportWatch Logo" class="w-full h-full rounded-[20cm]">
+        </a>
+    </div>
+
+
+</app-navbar>
