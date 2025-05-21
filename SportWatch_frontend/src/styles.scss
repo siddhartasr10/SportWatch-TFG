@@ -7,6 +7,7 @@
 
 @import '@fontsource/roboto-flex';
 
+@plugin 'tailwind-scrollbar';
 
 @theme {
     --font-inter: 'Inter', sans-serif;
@@ -16,6 +17,10 @@
 
     // Little utility for covering the rest of the screen in its bg color, so i can design comfortably
     --h-screen-minus-navbar: calc(100vh - 80px);
+}
+
+html {
+    // scrollbar-gutter:stable;
 }
 
 body {
@@ -95,4 +100,32 @@ app-register, app-login {
         padding: 12px 8px 12px 8px !important;
     }
 
+}
+
+app-feed {
+
+    // contenedor invisible dentro de la mat-chip-listbox
+    .mdc-evolution-chip-set__chips {
+        justify-content: center;
+        margin-top: auto;
+        margin-bottom: auto;
+    }
+
+    // Contentedor (donde se ponen los bordes) en la chip sin seleccionar.
+   .mdc-evolution-chip__action--primary::before {
+        border-radius: 20cm !important;
+    }
+
+   // Contenedor en la chip seleccionada.
+   .mat-mdc-chip {
+       border-radius: 20cm;
+       // margin-right: 3px !important;
+   }
+
+   .mat-mdc-chip-listbox {
+       display: flex;
+       flex-wrap: nowrap;
+       overflow-x: auto;
+       gap: 8px;
+    }
 }

@@ -5,15 +5,21 @@
                 focus-within:border-2 focus-within:border-blue-400">
 
         <input #searchBar class="text-white placeholder:text-gray-300 ml-[20px] col-start-1 focus:outline-0" (keydown.enter)="handleSearch(searchBar.value)" type="search" placeholder="Buscar" />
-        <img src="/search.svg" class="w-[45px] h-[45px] justify-self-center opacity-75 cursor-pointer" (click)="handleSearch(searchBar.value)"  alt="Una lupa de búsqueda" />
+        <img src="/shared/search.svg" class="w-[45px] h-[45px] justify-self-center opacity-75 cursor-pointer" (click)="handleSearch(searchBar.value)"  alt="Una lupa de búsqueda" />
     </div>
 
-
-    <div class="w-[70px] h-[70px] rounded-[20cm] select-none mr-6">
-        <a class="w-full h-full rounded-[20cm] focus:outline-blue-200" routerLink="/user/{{ user }}">
-            <img src="/default_user.svg" alt="SportWatch Logo" class="w-full h-full rounded-[20cm]">
-        </a>
+    <div class="w-[70px] h-[70px] rounded-[20cm] select-none mr-11" (click)="updateProfileModal()">
+        <img src="/shared/default_user.svg" alt="SportWatch Logo" class="w-full h-full rounded-[20cm] focus:outline-blue-200 cursor-pointer">
     </div>
-
 
 </app-navbar>
+
+
+<div class="flex flex-col fixed top-[75px] right-12 w-[160px] h-[160px] bg-[#1E1E1E] border-2 border-[#BFBFBF]/33 rounded-xl z-100 py-2 px-3 box-content invisible" [class.invisible]="!profileModalState()" >
+    <span class="text-blue-400 text-bold text-sm font-roboto-flex text-center w-full tracking-tighter mb-2"> <a [routerLink]="'/profile/' + user">Ver tu canal </a></span>
+    <div class="flex flex-col items-center justify-items-center gap-y-6">
+        <a [routerLink]="'/logout'" class="w-full"><span class="grid grid-cols-[0.2fr_0.8fr] gap-x-3 text-white text-black text-md font-roboto-flex"><img src="/shared/default_user_white.svg" alt="icono silueta usuario en blanco con circunferencia" class="w-[20px] h-[20px] place-self-end self-center"> <p> Cerrar sesión </p></span></a>
+        <a [routerLink]="'suscriptions'" class="w-full"><span class="grid grid-cols-[0.2fr_0.8fr] gap-x-3 text-white text-black text-md font-roboto-flex"><img src="/shared/suscriptions.svg" alt="icono silueta usuario en negro" class="w-[20px] h-[20px] place-self-end self-center"> <p> Suscripciones</p></span></a>
+        <a [routerLink]="'account'" class="w-full"><span class="grid grid-cols-[0.2fr_0.8fr] gap-x-3 text-white text-black text-md font-roboto-flex"><img src="/shared/gear.svg" alt="engranaje" class="w-[20px] h-[20px] place-self-end self-center"/> <p> Configuración </p></span></a>
+    </div>
+</div>

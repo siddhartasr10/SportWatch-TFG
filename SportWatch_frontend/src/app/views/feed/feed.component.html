@@ -1,6 +1,36 @@
-<app-logged-header></app-logged-header>
-<div class="flex flex-col justify-start items-center w-screen h-[var(--h-screen-minus-navbar)] bg-[#1E1E1E]">
+<app-logged-header (searchEv)="onSearch($event)"></app-logged-header>
+
+<div class="flex flex-col justify-start items-center w-screen min-h-[var(--h-screen-minus-navbar)] bg-[#1E1E1E]">
+    <div class="flex flex-row justify-center items-center h-15 w-98/100">
+        <mat-chip-listbox #chipList (click)="updateSelectedChips(chipList)" [multiple]="true" class="w-full h-full" aria-label="Fish selection">
+            <mat-chip-option class="mr-2!">Fútbol</mat-chip-option>
+            <mat-chip-option class="mr-!">Baloncesto</mat-chip-option>
+            <mat-chip-option class="mr-2!">Tenis</mat-chip-option>
+            <mat-chip-option class="mr-2!">F1</mat-chip-option>
+            <mat-chip-option class="mr-2!">Boxeo</mat-chip-option>
+            <mat-chip-option class="mr-2!">UFC</mat-chip-option>
+            <mat-chip-option class="mr-2!">Rally</mat-chip-option>
+            <mat-chip-option class="mr-2!">Moto GP</mat-chip-option>
+            <mat-chip-option class="mr-2!">Golf</mat-chip-option>
+        </mat-chip-listbox>
+    </div>
 
 
+    <div class="w-90/100 min-h-100 mt-10 flex flex-row flex-wrap justify-start gap-y-8 gap-x-16">
+        <!-- @for (video of videos(); track video.title) { -->
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja" profileLink="/Profile/lenteja"></app-video>
+        <!-- }
+                @empty {} -->
+    </div>
 </div>
-<!-- <p>feed works!</p> -->

@@ -1,0 +1,16 @@
+<a [routerLink]="videoLink">
+    <div class="w-[20vw] h-[30vh] flex flex-col justify-start items-center rounded-xl gap-y-1">
+            <img [src]="videoImgUrl" class="w-full h-4/5 bg-white rounded-lg" alt="a">
+        <div class="grid grid-cols-[40px_1fr] grid-rows-1 w-full h-3/7 bg-[#1E1E1E] gap-x-3">
+            <div class="w-full h-fit grid-col-1 rounded-[20cm] mt-0.5">
+                <a [routerLink]="profileLink"><img class="w-[40px] h-[40px] rounded-[20cm]" [src]="profileImgUrl"> </a> <!-- [src]="getUserIcon(videos()[0])"-->
+            </div>
+
+            <div class="grid-col-2 flex flex-col justify-start items-start mt-1">
+                <span class="text-white font-inter text-[16px] tracking-tight">{{videoTitle}}</span> <!-- Ej Playing Evil Landlord Simulator - Beholder LIVE -->
+                <span class="text-gray-400 font-roboto-serif text-[14px] font-lighter tracking-[-0.1em]"> <a [routerLink]="profileLink">{{streamer}}</a></span> <!-- Elmejorstreamer -->
+                <span class="text-gray-400 font-roboto-serif text-[14px] font-lighter tracking-[-0.1em]">{{viewers}} usuarios</span> <!--0 usuarios -->
+            </div>
+        </div>
+    </div>
+</a>
