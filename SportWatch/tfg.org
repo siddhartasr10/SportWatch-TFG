@@ -320,3 +320,26 @@
 *   Empezamos feed
         A darle caña no?
         Hecho el header, que utilizara rutas dinámicas para pasar la información al feed. (No voy a meter su lógica en el feed porque el header va a servir para muchos componentes).
+
+        Hecho el header que es un componente compartido que outputea por un evento lo que el usuario busque en la barra y redirecciona a /feed?s=loquesea.
+
+        Hechas chips falta margen
+
+***** [TODO] Hay que añadir categorias a la db, el approach de una columna metadata para tan pocos datos realmente no es necesario.
+Lo hago otro día, primero via a terminar el frontend del feed.
+
+
+***   [14/05/25]
+*   Creado componente vídeo dentro de feed
+        Se usará para otras partes como en el perfíl.
+
+***   [15/05/25]
+*   Terminada conexión componente padre hijo entre vídeo y feed
+        Usando @Input, Además he conectado con output el panel desplegable de la foto de perfil con el header. Una vez termine este desplegable la vista la daré como terminada.
+
+
+***   [17/05/25]
+*   Terminado modal perfil
+        Me estaba dando problemas el modal del perfil porque se mueve con la scrollbar pero si no lo intento centrar y lo pongo como youtube cogiendo una esquina del icono del perfil da bastante igual el tema de la scrollbar.
+
+        Además esta hecho para que con position fixed (no se porque) siga a la navbar que es sticky y que bloquee el scroll mientras está abierta (lo hace yt no se porque tampoco)
