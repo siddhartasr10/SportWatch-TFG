@@ -343,3 +343,183 @@ Lo hago otro día, primero via a terminar el frontend del feed.
         Me estaba dando problemas el modal del perfil porque se mueve con la scrollbar pero si no lo intento centrar y lo pongo como youtube cogiendo una esquina del icono del perfil da bastante igual el tema de la scrollbar.
 
         Además esta hecho para que con position fixed (no se porque) siga a la navbar que es sticky y que bloquee el scroll mientras está abierta (lo hace yt no se porque tampoco)
+***   [25/05/25]
+*   Creado cubo s3 y configuración de canal de IVS que destina todos los directos resubidos a un cubo s3
+*   Empezado servicio Aws que facilite a la api usar canales de IVS y cubos S3
+
+
+***   [26/05/25]
+*   Trabajando en el servicio para hacerle seguimiento a aquellos directos que se han terminado
+        Usando una cola de amazon (SQS) y añadiendo un evento en el cubo en el que se suben los directos una vez se ha terminado de streamear, puedo pollear a esa cola desde el backend sucesivamente y hacer seguimiento a que canal termina y la id de stream que tiene. Y estos datos puedo guardarlos en la db local.
+
+        El flujo es el siguiente:
+                Usuario -> Subir Directo -> Se apunta su id y la id del canal que usa (identificador único) -> Una vez el directo termina un evento del s3 manda a una cola SQS el object key (usado para encontrar el directo en el bucket)  -> El backend pollea cada 2-3 minutos la info y el nuevo object_key se guarda en la fila de la db con el mismo id del canal más reciente
+
+        Example:
+
+        Channel ARN:
+        arn:aws:ivs:eu-west-1:123456789012:channel/AbCDeFGh1234
+
+        The folder prefix in S3 will be:
+        AbCDeFGh1234/<stream-id>/media.mp4
+
+# TODO Cuando se cree o se busque un canal libre, haz que se guarde la id del canal que se usa (ejemplo ID justo detras) en la db, junto al usuario y eso, cambia la estructura de la tabla stream para esto
+# AÑADE A LA TABLA STREAMS: channel_id y object_key
+# Haz que el poller por cada mensaje busque en la db por id del canal (sacandola de la key del objeto) y complete el último registro que tenga la id del mismo canal y no tenga object key.
+***   [27/05/25]
+*  Se crea un StreamService y una clase de datos Streaming para poder interactuar con la tabla 'streams' de la db
+        Este servicio simplemente permite hacer lo que he comentado antes, crear directo con id del usuario y del canal de ivs que usa, buscar un directo con esa id de canal sin object_key y añadirlo
+        y buscar un object_key de un directo dependiendo de la id del directo que necesite.
+
+        Este servicio es clave ya que es un crud muy específico con muy poco código pero tiene muchísimo uso.
+
+*  Se modifica la tabla streams
+        Se añade titulo, object_key y channel_id (que esta contenida guardando el arn, literalmente split("/")[1]), que junto a la author_id son los datos mas importantes. **enseñar sql en el tfg**
+       #+begin_src sql
+                CREATE TABLE IF NOT EXISTS "users" (
+                        "user_id" serial NOT NULL UNIQUE,
+                        "username" varchar(50) NOT NULL UNIQUE,
+                        "password" varchar(72) NOT NULL,
+                        "email" varchar(400) UNIQUE,
+                        "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        "streamer_id" int UNIQUE,
+                        "subscribed" int,
+                        "notifications" varchar(128) DEFAULT '[]',
+                        "follows" int,
+                        PRIMARY KEY ("user_id")
+                );
+
+                CREATE TABLE IF NOT EXISTS "streamer_details" (
+                        "streamer_id" int NOT NULL UNIQUE,
+                        "is_live" boolean NOT NULL DEFAULT false,
+                        "sport_type" varchar(30) NOT NULL DEFAULT '[]',
+                        "followers" int,
+                        "subscribers" int
+                );
+
+                CREATE TABLE IF NOT EXISTS "streams" (
+                        "stream_id" serial NOT NULL UNIQUE,
+                        "author_id" int NOT NULL UNIQUE,
+                        "title" varchar(32),
+                        "channel_arn" varchar(2048),
+                        "object_key" varchar(160) UNIQUE,
+                        "category" varchar(30) NOT NULL,
+                        "desc" varchar(512),
+                        "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        "thumbnail_obj_key" varchar(160) UNIQUE
+                        PRIMARY KEY ("stream_id")
+                );
+
+                CREATE TABLE IF NOT EXISTS "comments" (
+                        "comment_id" serial NOT NULL UNIQUE,
+                        "author_id" int NOT NULL UNIQUE,
+                        "stream_id" int NOT NULL UNIQUE,
+                        "comment" varchar(512) NOT NULL,
+                        "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        PRIMARY KEY ("comment_id")
+                );
+
+                CREATE TABLE IF NOT EXISTS "suscribers_streamers" (
+                        "suscriber_id" int NOT NULL,
+                        "streamer_id" int NOT NULL,
+                        PRIMARY KEY ("suscriber_id")
+                );
+
+                CREATE TABLE IF NOT EXISTS "followers_streamers" (
+                        "follower_id" int NOT NULL,
+                        "streamer_id" int NOT NULL,
+                        PRIMARY KEY ("follower_id")
+                );
+
+                ALTER TABLE "users" ADD CONSTRAINT "users_fk5" FOREIGN KEY ("streamer_id") REFERENCES "streamer_details"("streamer_id");
+                ALTER TABLE "streamer_details" ADD CONSTRAINT "streamer_details_fk0" FOREIGN KEY ("streamer_id") REFERENCES "users"("user_id");
+                ALTER TABLE "streams" ADD CONSTRAINT "streams_fk1" FOREIGN KEY ("author_id") REFERENCES "streamer_details"("streamer_id");
+                ALTER TABLE "comments" ADD CONSTRAINT "comments_fk1" FOREIGN KEY ("author_id") REFERENCES "users"("user_id");
+
+                ALTER TABLE "comments" ADD CONSTRAINT "comments_fk2" FOREIGN KEY ("stream_id") REFERENCES "streams"("stream_id");
+                ALTER TABLE "suscribers_streamers" ADD CONSTRAINT "suscribers_streamers_fk0" FOREIGN KEY ("suscriber_id") REFERENCES "users"("user_id");
+
+                ALTER TABLE "suscribers_streamers" ADD CONSTRAINT "suscribers_streamers_fk1" FOREIGN KEY ("streamer_id") REFERENCES "streamer_details"("streamer_id");
+                ALTER TABLE "followers_streamers" ADD CONSTRAINT "followers_streamers_fk0" FOREIGN KEY ("follower_id") REFERENCES "users"("user_id");
+
+                ALTER TABLE "followers_streamers" ADD CONSTRAINT "followers_streamers_fk1" FOREIGN KEY ("streamer_id") REFERENCES "streamer_details"("streamer_id");
+       #+end_src
+
+       Guardo como estaba el sql en ese momento para luego enseñarlo.
+
+       Así es como se guarda una object key, (lo tengo arriba pero esta lejos). Usando la id
+       MENTIRA, CHATGPT ME HA MENTIDO ;()
+        auto-record/<channel-id>/<recording-session-id>/recording.mp4
+        ES ASÍ:
+        ivs/v1/173473165842/64TnBPjBxLH9/2025/5/29/18/48/DlB7WDw9nkVU/media/hls/720p30/playlist.m3u8
+        la channel id es lo que empieza por 64
+        Recorded stream	ivs/v1/173473165842/64TnBPjBxLH9/2025/5/29/18/48/DlB7WDw9nkVU/media/hls/720p30/playlist.m3u8
+        Thumbnail images	ivs/v1/173473165842/64TnBPjBxLH9/2025/5/29/18/48/DlB7WDw9nkVU/media/thumbnails/thumb0.jpg
+
+*    Terminando AwsService y renombrandolo a UploadService (Hay que hacer un FetchService)
+        He metido SqsPoller dentro de AwsService ya que solo se usará aquí y muchas constantes que usa AwsService también las usa el poller.
+        No me basta con permitir que el s3 mande mensajes en la politica de acceso de la cola:
+       #+begin_src json
+        {
+        "Version": "2012-10-17",
+        "Id": "__default_policy_ID",
+        "Statement": [
+                {
+                "Sid": "__owner_statement",
+                "Effect": "Allow",
+                "Principal": {
+                        "AWS": "arn:aws:iam::173473165842:root"
+                },
+                "Action": "SQS:*",
+                "Resource": "arn:aws:sqs:eu-west-1:173473165842:stream-upload-queue"
+                },
+                {
+                "Sid": "AllowS3SendMessage",
+                "Effect": "Allow",
+                "Principal": {
+                        "Service": "s3.amazonaws.com"
+                },
+                "Action": "sqs:SendMessage",
+                "Resource": "arn:aws:sqs:eu-west-1:173473165842:stream-upload-queue",
+                "Condition": {
+                        "ArnLike": {
+                        "aws:SourceArn": "arn:aws:s3:::streams-ivs"
+                        }
+                    }
+                }
+                ]
+        }
+       #+end_src
+       Sino que también tengo que añadir en la politica de usuario (IAM) para darme permiso como usuario a recibir mensajes:
+       #+begin_src json
+{
+        "Version": "2012-10-17",
+        "Statement": [
+                {
+                "Effect": "Allow",
+                "Action": [
+                        "sqs:ReceiveMessage",
+                        "sqs:DeleteMessage",
+                        "sqs:GetQueueAttributes"
+                ],
+                "Resource": "arn:aws:sqs:eu-west-1:173473165842:stream-upload-queue"
+                }
+        ]
+}
+        #+end_src
+        Creo esta política y se la añado a mi usuario: 'sportwatch-user'
+***   [28/05/25]
+*   Añado thumbnail_url a la db que coja la primera imagen que le llegue para el mismo channel id que no tenga stream_key ni thumbnail
+        Actualizo el sql de atras para que muestre la versión más moderna, en el mismo sqs poller hay que añadir logica para añadirla a la db. Además un array en memoria en el sqs poller de channelIds que una vez que se guarde una miniatura para un directo, añada esa channelId hasta que se añada la object key para esa misma channel Id en la db. Durante el tiempo que se mantiene la channelId en el array, si llega un .jpg
+        TODO: LO QUE ACABO DE MENCIONAR Y TERMINAR EL FETCHSERVICE
+
+        formato una object key de una imagen:
+ivs/v1/<aws_account_id>/<channel_id>/<year>/<month>/<day>/<hour>/<minute>/<recording_id>/media/thumbnails/<timestamp>.jpg
+ivs/v1/173473165842/64TnBPjBxLH9/2025/5/29/18/48/DlB7WDw9nkVU/media/thumbnails/thumb0.jpg
+
+ivs/v1/123456789012/abcdEfghIJkl/2025/05/28/media/latest_thumbnail/thumb.jpg
+
+***   [29/05/25]
+*   Termino FetchService (o por lo menos llego a un punto en el que es utilizable)
+        FetchService ya es capaz de devolver todos los directos live, los que no están live y uno por id (este live o no), junto a todos sus datos.
+        Ahora solo necesito rutas en la api para devolver todos los directos, debería darlos todos juntos y que el frontend según si la streamUrl es .m3u8 o .mp4 distinga.

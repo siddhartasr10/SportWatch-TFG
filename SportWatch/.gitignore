@@ -35,3 +35,5 @@ build/
 ### Secretos ###
 *.pem
 *.der
+secrets/*
+secrets/

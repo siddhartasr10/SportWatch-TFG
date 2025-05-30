@@ -105,9 +105,20 @@
 			<artifactId>s3</artifactId>
 		</dependency>
 		<dependency>
-		<groupId>software.amazon.awssdk</groupId>
-		<artifactId>ivs</artifactId>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>ivs</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>sqs</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-lambda-java-events</artifactId>
+			<version>3.11.3</version> <!-- Use the latest version -->
+		</dependency>
+
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
