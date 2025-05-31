@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+// This imports are here to remember what i went through.
 // import com.amazonaws.services.lambda.runtime.events.models.s3.S3EventNotification;
 // import com.amazonaws.services.lambda.runtime.events.S3Event;
 import com.fasterxml.jackson.databind.MapperFeature;
@@ -54,7 +55,7 @@ public class UploadService {
     private final StaticCredentialsProvider credentialsProvider;
     private final Region REGION = Region.EU_WEST_1;
     public final int MAXCHANNELS = 3;
-    private final int POLLERINTERVAL = 30; // In secs, time it takes poller to check sqs queue and update streams.
+    private final int POLLERINTERVAL = 45; // In secs, time it takes poller to check sqs queue and update streams.
 
     // "arn:aws:ivs:eu-west-1:173473165842:recording-configuration/Xz5nptwXD4Kf"
     // la conf 2 es la que tiene la config de sobreescritura de miniaturas
