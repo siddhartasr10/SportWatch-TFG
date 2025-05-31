@@ -53,7 +53,7 @@ public class UploadService {
 
     private final StaticCredentialsProvider credentialsProvider;
     private final Region REGION = Region.EU_WEST_1;
-    private final int MAXCHANNELS = 3;
+    public final int MAXCHANNELS = 3;
     private final int POLLERINTERVAL = 30; // In secs, time it takes poller to check sqs queue and update streams.
 
     // "arn:aws:ivs:eu-west-1:173473165842:recording-configuration/Xz5nptwXD4Kf"
@@ -93,7 +93,7 @@ public class UploadService {
 
     public Mono<IvsChannelInfo> newChannel(int user_id, String title, Optional<String> desc, Optional<String> category, Optional<ChannelLatencyMode> latency) {
         // Integer channelAmnt = ivs.listChannels(ListChannelsRequest.builder().build()).channels().size();
-        Mono<Integer> channelAmnt = Mono.fromCallable(() -> ivs.listChannels(ListChannelsRequest.builder().build()).channels().size());
+        Mono<Integer> channelAmnt = countChannels();
 
         return channelAmnt.flatMap((amnt) -> (amnt > MAXCHANNELS)
                 ? Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "A new channel could not be created, limit of channels reached: " + channelAmnt))
@@ -122,6 +122,10 @@ public class UploadService {
             .flatMapMany(Flux::fromIterable)
             .flatMap(summary -> Mono.fromCallable(() -> ivs.getChannel(req -> req.arn(summary.arn()).build()).channel()));
 
+    }
+
+    public Mono<Integer> countChannels() {
+        return Mono.fromCallable(() -> ivs.listChannels(ListChannelsRequest.builder().build()).channels().size());
     }
 
     // if null channel info returned no free channel found.
