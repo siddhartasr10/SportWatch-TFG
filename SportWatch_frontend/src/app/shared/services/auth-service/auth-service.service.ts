@@ -1,26 +1,17 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { BaseCsrfService } from '../base-csrf-service/base-csrf-service.service';
 
 
 @Injectable({providedIn: 'root'})
-export class AuthService {
+export class AuthService extends BaseCsrfService {
     // I really hope angular starts automatically taking the cookie and setting it as header
     // when i move to prod, bc this is ugly (it should do it btw but angular doesnt want to.)
-    private xsrfToken : string = "";
-    constructor(private http: HttpClient) {
-        this.addCsrfTokenToCookies().subscribe({
-            next: () => this.xsrfToken = document.cookie.split("; ").filter(cookiePair => cookiePair.startsWith("XSRF"))[0].split("=")[1]
-        });
-    }
-
     private readonly apiUrl : string = "http://localhost:4200/api";
 
-    // Gets CsrfToken and sets it on the existing cookies.
-    // withCredentials only needed if different origin (im using proxy so no need), but just in case
-    // I don't need to add csrf token to header cause angular does this for me
-    addCsrfTokenToCookies() : Observable<Object> {
-        return this.http.get(`${this.apiUrl}/csrf-token`, {withCredentials: true, responseType: 'text' });
+    constructor(http : HttpClient) {
+        super(http)
     }
 
     // Server only recognizes x-url-form-encoded so data must be passed by requestParams.
