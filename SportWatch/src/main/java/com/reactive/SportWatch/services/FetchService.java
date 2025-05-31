@@ -84,8 +84,7 @@ public class FetchService {
                     } catch(MalformedURLException e) {
                         return Mono.error(new RuntimeException("Invalid playback URL: " + strm.arn(), e));
                     }
-                })
-                ;
+                });
     }
 
     // this one gets a stream by its stream id and depending on the object_key it generates presigned url or returns playback one.
