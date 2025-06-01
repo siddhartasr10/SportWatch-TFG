@@ -2,6 +2,7 @@ import { Component, output, Output, OutputEmitterRef, WritableSignal, signal, On
 import { Router, RouterLink } from '@angular/router';
 
 import { NavbarComponent } from '../navbar/navbar.component';
+import { AuthService } from '../../services/auth-service/auth-service.service';
 
 @Component({
   selector: 'app-logged-header',
@@ -10,7 +11,7 @@ import { NavbarComponent } from '../navbar/navbar.component';
   styleUrl: './logged-header.component.css'
 })
 export class LoggedHeaderComponent {
-    constructor(private router : Router) {}
+    constructor(private router : Router, private authService : AuthService) {}
 
     user : string = document.cookie.split("; ").filter(cookiePair => cookiePair.startsWith("user"))[0]?.split("=")[1];
 
@@ -40,6 +41,16 @@ export class LoggedHeaderComponent {
                 window.scrollBy(0, this.previousScrollY - window.scrollY);
         }, 400);
 
+    }
+
+    handleLogout() {
+        this.authService.addCsrfTokenToCookies().subscribe({
+            next: (res) => this.authService.logout().subscribe({complete: () => this.router.navigate(['login'])}),
+
+        });
+        // this.authService.logout().subscribe({
+        //     next: () => this.router.navigate(['login']),
+        // });
     }
 
     ngOnDestroy() {

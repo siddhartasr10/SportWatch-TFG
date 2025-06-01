@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { BaseCsrfService } from '../base-csrf-service/base-csrf-service.service';
 
 
@@ -24,7 +24,7 @@ export class AuthService extends BaseCsrfService {
         // let params = `username=${username}&password=${password}&email=${email}`;
 
         return this.http.post(`${this.apiUrl}/register`, params, {
-            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.xsrfToken }),
+            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -35,11 +35,20 @@ export class AuthService extends BaseCsrfService {
         let params : HttpParams = new HttpParams().appendAll({'username': username, 'password': password});
 
         return this.http.post(`${this.apiUrl}/login`, params.toString(), {
-            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.xsrfToken }),
+            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
 ;
+    }
+
+    logout() : Observable<Object> {
+        return this.http.post(`${this.apiUrl}/logout`, "", {
+            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            withCredentials: true,
+            responseType: 'json',
+        });
+
     }
 
     // Component will have to catch errors in observable catch: () => and handle redirect with this.router.navigate().

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { StreamingInfo } from '../../interfaces/StreamingInfo';
@@ -21,6 +21,10 @@ export class FetchService extends BaseCsrfService {
   // POST /api/stream/{stream_id} - fetch stream info by id with optional urlDuration in hours
   fetchStreamById(streamId: number, urlDuration?: number): Observable<StreamingInfo> {
     const body = urlDuration ? { urlDuration: urlDuration.toString() } : {};
-    return this.http.post<StreamingInfo>(`${this.apiUrl}stream/${streamId}`, body);
+      return this.http.post<StreamingInfo>(`${this.apiUrl}stream/${streamId}`, body, {
+            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            withCredentials: true,
+            responseType: 'json',
+        });
   }
 }

@@ -1,6 +1,7 @@
 package com.reactive.SportWatch.config;
 
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import com.reactive.SportWatch.services.UserService;
 
@@ -29,6 +30,8 @@ import reactor.core.publisher.Mono;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
+    private static final Logger log = Logger.getLogger(SecurityConfig.class.getName());
+
     private final ReactiveUserDetailsService customUserDetailService;
 
     private final PasswordEncoder passwordEncoder;
@@ -48,7 +51,7 @@ public class SecurityConfig {
         http
             .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange(exchanges -> exchanges
-                               .pathMatchers("/api/register", "/api/login", "/api/csrf-token").permitAll()
+                               .pathMatchers("/api/register", "/api/login", "/api/csrf-token", "/api/logout").permitAll()
                                .anyExchange().authenticated())
             .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
             // .csrf(csrf -> csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()))
@@ -95,10 +98,15 @@ public class SecurityConfig {
             ServerHttpRequest request = exch.getRequest();
             if (request.getMethod().toString().matches("POST|PUT|DELETE")) {
                 String headerToken = request.getHeaders().getFirst("X-XSRF-TOKEN");
+                log.info("Header Token: " + headerToken);
+
                 String cookieToken = (request.getCookies().getFirst("XSRF-TOKEN") != null) ?
                         request.getCookies().getFirst("XSRF-TOKEN").getValue() : null;
+                log.info("Cookie Token: " + cookieToken);
 
+                log.info("Are they equals: " + headerToken.equals(cookieToken));
                 if (headerToken == null || cookieToken == null || !headerToken.equals(cookieToken)) {
+                    log.info("invalidtoken, also headerand cookies equal state: " + headerToken.strip().equals(cookieToken.strip()));
                     return Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid CSRF token"));
                 }
 

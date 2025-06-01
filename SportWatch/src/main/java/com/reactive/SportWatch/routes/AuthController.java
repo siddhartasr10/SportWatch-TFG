@@ -175,7 +175,6 @@ public class AuthController {
         exch.getResponse().addCookie(usernameCookie);
         exch.getResponse().addCookie(jwtCookie);
 
-
         return Mono.just(ResponseEntity.ok(new JsonResponse("Logout handled succesfully")));
     }
 

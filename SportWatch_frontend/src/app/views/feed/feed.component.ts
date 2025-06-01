@@ -21,15 +21,18 @@ export class FeedComponent {
         this.loadVideos();
     }
 
-    search : WritableSignal<string | null> = signal('');
+    search : WritableSignal<string> = signal('');
     selectedChips : WritableSignal<string[]> = signal([]);
 
     videos : WritableSignal<StreamingInfo[]> = signal([]);
+    filteredVideos : WritableSignal<StreamingInfo[]> = signal([]);
+
 
     // Me podría pasar los parámetros si quisiera del valor del .value del input si sacara el otro componente pero no sería escalable para funcionar en todos los componentes.
     onSearch(searchQuery : string) {
         this.search.set(searchQuery);
-
+        this.filteredVideos.set(this.filterBySearch(this.videos()));
+        this.filteredVideos.set(this.filterByCategory(this.filteredVideos()));
         // Después del search habría un get a la api y luego el @for se encargaría del resto.
 
     }
@@ -38,14 +41,18 @@ export class FeedComponent {
         this.fetchService.fetchAllStreams().subscribe({
             next: (videos : StreamingInfo[]) => this.videos.set(videos),
             error: (error : HttpErrorResponse) => console.log("Error ocurred loading videos: ", error),
-            complete: () => console.log(this.videos()),
+            complete: () => {
+                this.filteredVideos.set(this.filterBySearch(this.videos()));
+                this.filteredVideos.set(this.filterByCategory(this.filteredVideos()));
+            }
         });
+
     }
 
     updateSelectedChips(chipList : MatChipListbox) {
         let newChips = chipList.selected as MatChipOption[];
 
-        this.selectedChips.update( currentChips => {
+        this.selectedChips.update(currentChips => {
             // Vacio las chips que hayan.
             currentChips.splice(0, currentChips.length);
             for (let chip of newChips) {
@@ -53,11 +60,24 @@ export class FeedComponent {
                 currentChips.push(chip.value);
             }
 
+
             return currentChips;
         });
 
-        console.log("Selected Chips:", this.selectedChips());
+        this.filteredVideos.set(this.filterByCategory(this.videos()));
+        this.filteredVideos.set(this.filterBySearch(this.filteredVideos()));
+        // usaria update en vez de set pero no se porque no funciona.
         // Me imagino que aquí filtraría la vista o llamaría a un filter con los videos que hay.
+    }
+
+    filterByCategory(videos : StreamingInfo[]) : StreamingInfo[] {
+        if (this.selectedChips().length === 0) return videos;
+        return videos.filter(video => this.selectedChips().filter(category => (video.category.toLowerCase()) === category.toLowerCase()).length !== 0);
+    }
+
+    filterBySearch(videos : StreamingInfo[]) : StreamingInfo[] {
+        if (this.search() === "") return videos;
+        return videos.filter(video => this.search()!.split(" ")!.filter(word => new RegExp(`\\b${word}\s`, "i").test(video.title)).length !== 0)
     }
 
 }

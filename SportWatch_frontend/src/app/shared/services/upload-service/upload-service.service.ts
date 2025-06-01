@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { IvsChannelInfo } from '../../interfaces/IvsChannelInfo';
@@ -17,6 +17,10 @@ export class UploadService extends BaseCsrfService {
    * @param data Object with required 'title' and optional 'desc' and 'category'
    */
   requestChannel(data: { title: string; desc?: string; category?: string }): Observable<IvsChannelInfo> {
-    return this.http.post<IvsChannelInfo>(`${this.apiUrl}/request-channel`, data);
+      return this.http.post<IvsChannelInfo>(`${this.apiUrl}/request-channel`, data, {
+            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            withCredentials: true,
+            responseType: 'json',
+        });
   }
 }

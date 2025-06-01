@@ -43,7 +43,7 @@
                 <app-video videoLink="/Lenteja" videoTitle="Playing Evil Landlord Simulator - Beholder LIVE" streamer="Lenteja"
                     profileLink="/Profile/lenteja"></app-video>
                 <!-- } -->
-        @for (video of videos(); track video.title) {
+        @for (video of filteredVideos(); track video.title) {
         <app-video [videoLink]="'/video/' + video.streamId " [videoImgUrl]="video.thumbnailUrl" [videoTitle]="video.title" [profileLink]="'/profile/' + video.author"
             [profileImgUrl]="''" [streamer]="video.author" [viewers]="0"></app-video>
         }
