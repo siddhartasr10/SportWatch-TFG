@@ -4,8 +4,11 @@ import java.time.LocalDateTime;
 
 public class Streaming {
 
+    private int streamId;
+
     private int authorId;
     private String arn;
+
     // auto-record/<channel-id>/<recording-session-id>/recording.mp4
     // .mp4 Object key of the stream when it gets uploaded.
     private String object_key;
@@ -22,6 +25,10 @@ public class Streaming {
 
     public static Streaming stream() {
         return new Streaming();
+    }
+
+    public int streamId() {
+        return streamId;
     }
 
     public int authorId() {
@@ -60,6 +67,13 @@ public class Streaming {
     public String thumbnail_obj_key() {
         return thumbnail_obj_key;
     }
+
+
+    public Streaming streamId(int streamId) {
+        this.streamId = streamId;
+        return this;
+    }
+
 
     public Streaming authorId(int authorId) {
         this.authorId = authorId;

@@ -30,6 +30,7 @@ public class StreamService {
     public Flux<Streaming> findUploadedStreams() {
         Flux<Streaming> streamings = dbClient.sql("SELECT * FROM streams WHERE object_key IS NOT NULL OR object_key != ''")
                 .map((row, metadata) -> new Streaming()
+                        .streamId(row.get("stream_id", Integer.class))
                         .authorId(row.get("author_id", Integer.class))
                         .arn(row.get("arn", String.class))
                         .object_key(row.get("object_key", String.class))
@@ -49,6 +50,7 @@ public class StreamService {
     public Flux<Streaming> findNonUploadedStreams() {
         Flux<Streaming> streamings = dbClient.sql("SELECT * FROM streams WHERE object_key IS NULL OR object_key = ''")
                 .map((row, metadata) -> new Streaming()
+                        .streamId(row.get("stream_id", Integer.class))
                         .authorId(row.get("author_id", Integer.class))
                         .arn(row.get("arn", String.class))
                         .title(row.get("title", String.class))

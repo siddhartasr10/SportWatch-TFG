@@ -36,8 +36,14 @@ public class FetchService {
     private final String BUCKETNAME = "streams-ivs";
 
     private final StreamService streamService;
+    private final UserService userService;
+
     private final IvsClient ivs;
     private final S3Presigner presigner;
+
+    // Url switched if mono returns empty.
+    // I do this here and in authController as mono cannot use null.
+    private URL INVALIDURL;
 
     /**
      * Constructs a new {@link FetchService} using AWS credentials and stream service.
@@ -46,9 +52,10 @@ public class FetchService {
      * @param streamService the service used to query streaming metadata
      */
     @Autowired
-    public FetchService(AwsCredentialsConfig awsCredentialsConfig, StreamService streamService) {
+    public FetchService(AwsCredentialsConfig awsCredentialsConfig, StreamService streamService, UserService userService) {
         this.credentialsProvider = StaticCredentialsProvider.create(awsCredentialsConfig.awsCredentials());
         this.streamService = streamService;
+        this.userService = userService;
 
         this.presigner = S3Presigner.builder()
             .region(REGION)
@@ -59,6 +66,10 @@ public class FetchService {
             .region(REGION)
             .credentialsProvider(credentialsProvider)
             .build();
+
+
+        try {this.INVALIDURL = new URL("https://google.com");}
+        catch (MalformedURLException e) {log.info(String.format("Error while initializing the invalid url: %s", e.getStackTrace()));}
     }
 
     /**
@@ -71,12 +82,14 @@ public class FetchService {
         return streamService.findUploadedStreams()
             .flatMap(strm -> {
                 Mono<URL> streamUrlMono = getPresignedUrl(strm.object_key(), urlDuration);
-                Mono<URL> thumbnailUrlMono = getPresignedUrl(strm.thumbnail_obj_key(), urlDuration).defaultIfEmpty(null);
+                Mono<URL> thumbnailUrlMono = getPresignedUrl(strm.thumbnail_obj_key(), urlDuration);
+                Mono<String> authorMono = userService.findUsernameById(strm.authorId());
 
-                return Mono.zip(streamUrlMono, thumbnailUrlMono)
+                return Mono.zip(streamUrlMono, thumbnailUrlMono, authorMono)
                     .map(tuple -> new StreamingInfo(
-                        strm.title(), strm.category(),
-                        tuple.getT1(), tuple.getT2(),
+                        strm.streamId(), strm.title(),
+                        strm.category(), tuple.getT1(),
+                        tuple.getT2(), tuple.getT3(),
                         strm.authorId(), strm.desc(),
                         strm.created_at()
                     ));
@@ -94,14 +107,18 @@ public class FetchService {
             .flatMap(strm -> {
                 try {
                     URL streamUrl = new URL(ivs.getChannel(req -> req.arn(strm.arn()).build()).channel().playbackUrl());
-                    return getPresignedUrl(strm.thumbnail_obj_key(), urlDuration)
-                        .defaultIfEmpty(null)
-                        .map(thumbnailUrl -> new StreamingInfo(
-                            strm.title(), strm.category(),
-                            streamUrl, thumbnailUrl,
+                    Mono<URL> thumbnailUrlMono = getPresignedUrl(strm.thumbnail_obj_key(), urlDuration);
+                    Mono<String> authorMono = userService.findUsernameById(strm.authorId());
+
+                    return Mono.zip(thumbnailUrlMono, authorMono)
+                        .map(tuple -> new StreamingInfo(
+                            strm.streamId(), strm.title(),
+                            strm.category(), streamUrl,
+                            tuple.getT1(), tuple.getT2(),
                             strm.authorId(), strm.desc(),
                             strm.created_at()
                         ));
+
                 } catch (MalformedURLException e) {
                     return Mono.error(new RuntimeException("Invalid playback URL: " + strm.arn(), e));
                 }
@@ -118,37 +135,27 @@ public class FetchService {
     public Mono<StreamingInfo> fetchStreamById(int streamId, Optional<Duration> urlDuration) {
         return streamService.findFileById(streamId)
             .flatMap(strm -> {
-                Mono<URL> streamUrlMono;
+                Mono<URL> streamUrlMono = getPresignedUrl(strm.object_key(), urlDuration);
+                Mono<String> authorMono = userService.findUsernameById(strm.authorId());
+                Mono<URL> thumbnailUrlMono = getPresignedUrl(strm.thumbnail_obj_key(), urlDuration);
 
-                if (strm.object_key() != null) {
-                    streamUrlMono = getPresignedUrl(strm.object_key(), urlDuration);
-                } else {
-                    streamUrlMono = Mono.fromCallable(() -> {
-                        try {
-                            return new URL(ivs.getChannel(req -> req.arn(strm.arn()).build()).channel().playbackUrl());
-                        } catch (MalformedURLException e) {
-                            throw new RuntimeException("Invalid playback URL: " + strm.arn(), e);
-                        }
-                    });
-                }
+                streamUrlMono.filter(url -> !url.equals(this.INVALIDURL))
+                    .switchIfEmpty(Mono.fromCallable(() -> {
+                                try {
+                                    return new URL(ivs.getChannel(req -> req.arn(strm.arn()).build()).channel().playbackUrl());
+                                } catch (MalformedURLException e) {
+                                    throw new RuntimeException("Invalid playback URL: " + strm.arn(), e);
+                                }
+                            }));
 
-                if (strm.thumbnail_obj_key() != null) {
-                    Mono<URL> thumbnailUrlMono = getPresignedUrl(strm.thumbnail_obj_key(), urlDuration);
-                    return Mono.zip(streamUrlMono, thumbnailUrlMono)
-                        .map(tuple -> new StreamingInfo(
-                            strm.title(), strm.category(),
-                            tuple.getT1(), tuple.getT2(),
-                            strm.authorId(), strm.desc(),
-                            strm.created_at()
+                return Mono.zip(streamUrlMono, thumbnailUrlMono, authorMono)
+                    .map(tuple -> new StreamingInfo(
+                        strm.streamId(), strm.title(),
+                        strm.category(), tuple.getT1(),
+                        (tuple.getT2().equals(this.INVALIDURL)) ? null : tuple.getT2(),
+                        tuple.getT3(), strm.authorId(),
+                        strm.desc(), strm.created_at()
                         ));
-                } else {
-                    return streamUrlMono.map(streamUrl -> new StreamingInfo(
-                        strm.title(), strm.category(),
-                        streamUrl, null,
-                        strm.authorId(), strm.desc(),
-                        strm.created_at()
-                    ));
-                }
             });
     }
 
@@ -157,10 +164,10 @@ public class FetchService {
      *
      * @param objectKey the S3 object key (e.g., video or thumbnail)
      * @param duration optional duration before link expires
-     * @return a Mono containing the presigned URL, or empty if the key is null
+     * @return a Mono containing the presigned URL, or a url == this.INVALIDURL (google.com).
      */
     private Mono<URL> getPresignedUrl(String objectKey, Optional<Duration> duration) {
-        if (objectKey == null) return Mono.empty();
+        if (objectKey == null) return Mono.just(INVALIDURL);
         return Mono.fromCallable(() -> {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(BUCKETNAME)

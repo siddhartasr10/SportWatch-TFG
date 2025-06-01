@@ -8,8 +8,6 @@ import { BaseCsrfService } from '../base-csrf-service/base-csrf-service.service'
 export class AuthService extends BaseCsrfService {
     // I really hope angular starts automatically taking the cookie and setting it as header
     // when i move to prod, bc this is ugly (it should do it btw but angular doesnt want to.)
-    private readonly apiUrl : string = "http://localhost:4200/api";
-
     constructor(http : HttpClient) {
         super(http)
     }

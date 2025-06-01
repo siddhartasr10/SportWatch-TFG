@@ -5,7 +5,10 @@ import { MatChipListbox, MatChipOption, MatChipsModule } from '@angular/material
 
 import { LoggedHeaderComponent } from '../../shared/components/logged-header/logged-header.component';
 import { VideoComponent } from '../../shared/components/video/video.component';
-import { Streaming } from '../../shared/interfaces/Streaming';
+import { StreamingInfo } from '../../shared/interfaces/StreamingInfo';
+// import { UploadService } from '../../shared/services/upload-service/upload-service.service';
+import { FetchService } from '../../shared/services/fetch-service/fetch-service.service';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-feed',
@@ -14,12 +17,14 @@ import { Streaming } from '../../shared/interfaces/Streaming';
   styleUrl: './feed.component.css'
 })
 export class FeedComponent {
-    constructor(router : Router) {}
+    constructor(private router : Router, private fetchService : FetchService ) {
+        this.loadVideos();
+    }
 
     search : WritableSignal<string | null> = signal('');
     selectedChips : WritableSignal<string[]> = signal([]);
 
-    videos : WritableSignal<Streaming[]> = signal([]);
+    videos : WritableSignal<StreamingInfo[]> = signal([]);
 
     // Me podría pasar los parámetros si quisiera del valor del .value del input si sacara el otro componente pero no sería escalable para funcionar en todos los componentes.
     onSearch(searchQuery : string) {
@@ -27,6 +32,14 @@ export class FeedComponent {
 
         // Después del search habría un get a la api y luego el @for se encargaría del resto.
 
+    }
+
+    loadVideos() : void {
+        this.fetchService.fetchAllStreams().subscribe({
+            next: (videos : StreamingInfo[]) => this.videos.set(videos),
+            error: (error : HttpErrorResponse) => console.log("Error ocurred loading videos: ", error),
+            complete: () => console.log(this.videos()),
+        });
     }
 
     updateSelectedChips(chipList : MatChipListbox) {

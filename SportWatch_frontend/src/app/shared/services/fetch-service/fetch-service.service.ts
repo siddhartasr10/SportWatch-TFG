@@ -9,22 +9,18 @@ import { BaseCsrfService } from '../base-csrf-service/base-csrf-service.service'
   providedIn: 'root',
 })
 export class FetchService extends BaseCsrfService {
-  private baseUrl = 'http://localhost:4200/api';
   constructor(http: HttpClient) {
-    super(http)
+    super(http);
   }
 
-  addCsrfTokenToCookies() : Observable<Object> {
-    return this.http.get(`${this.baseUrl}/csrf-token`, {withCredentials: true, responseType: 'text' });
-  }
   // GET /api/streams - returns both uploaded and non-uploaded streams concatenated
   fetchAllStreams(): Observable<StreamingInfo[]> {
-    return this.http.get<StreamingInfo[]>(`${this.baseUrl}streams`);
+      return this.http.get<StreamingInfo[]>(`${this.apiUrl}/streams`);
   }
 
   // POST /api/stream/{stream_id} - fetch stream info by id with optional urlDuration in hours
   fetchStreamById(streamId: number, urlDuration?: number): Observable<StreamingInfo> {
     const body = urlDuration ? { urlDuration: urlDuration.toString() } : {};
-    return this.http.post<StreamingInfo>(`${this.baseUrl}stream/${streamId}`, body);
+    return this.http.post<StreamingInfo>(`${this.apiUrl}stream/${streamId}`, body);
   }
 }
