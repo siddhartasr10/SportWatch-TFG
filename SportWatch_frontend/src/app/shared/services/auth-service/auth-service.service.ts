@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { BaseCsrfService } from '../base-csrf-service/base-csrf-service.service';
 
 
@@ -44,11 +44,20 @@ export class AuthService extends BaseCsrfService {
 
     logout() : Observable<Object> {
         return this.http.post(`${this.apiUrl}/logout`, "", {
-            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
 
+    }
+
+    // msg has the username.
+    checkUser() : Observable<{[msg: string] : string}> {
+        return this.http.get<{[msg: string] : string}>(`${this.apiUrl}/check-user`, {
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            withCredentials: true,
+            responseType: 'json',
+        });
     }
 
     // Component will have to catch errors in observable catch: () => and handle redirect with this.router.navigate().
