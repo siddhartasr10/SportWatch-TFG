@@ -1,0 +1,96 @@
+<app-logged-header></app-logged-header>
+<div class="flex flex-col bg-[#1E1E1E] w-screen h-[var(--h-screen-minus-navbar)]">
+    <!-- Profile Header Section -->
+    <div class="w-full h-[175px] bg-gradient-to-r from-[#1E1E1E] via-[#2C2C2C] to-[#1E1E1E]">
+        <!-- Banner Section - You can add a custom banner image here -->
+    </div>
+
+    <!-- Profile Info Section -->
+    <div class="flex items-start px-8 -mt-16 relative z-10">
+        <!-- Profile Picture -->
+        <div class="w-[128px] h-[128px] rounded-full bg-gray-800 overflow-hidden border-4 border-[#1E1E1E]">
+            <img [src]="'/shared/default_user.svg'" alt="Profile Picture" class="w-full h-full object-cover">
+        </div>
+
+        <!-- Profile Details -->
+        <div class="ml-6 mt-16 flex flex-col">
+            <h1 class="text-white text-2xl font-roboto-flex font-bold">{{profileUsername}}</h1>
+            <div class="flex items-center gap-4 mt-2 text-white">
+                <span class="text-white text-sm">{{profileUsername}}</span>
+                <span class="text-white text-sm">{{userFollowers?.length || 0}} seguidores</span>
+                <span class="text-white text-sm">{{userVideos?.length || 0}} videos</span>
+            </div>
+        </div>
+
+        <!-- Subscribe Button -->
+        <button mat-raised-button color="primary" class="ml-auto mt-16">
+            Seguir
+        </button>
+    </div>
+
+    <!-- Tabs Section -->
+    <mat-tab-group mat-stretch-tabs="false" class="mt-6 h-full w-screen overflow-y-hidden">
+        <!-- Videos Tab -->
+        <mat-tab label="VIDEOS">
+            <div class="grid grid-cols-4 gap-4 mt-6">
+                <ng-container *ngFor="let video of userVideos">
+                    <app-video
+                        [videoLink]="'/video/' + video.streamId"
+                        [videoImgUrl]="video.thumbnailUrl"
+                        [videoTitle]="video.title"
+                        [profileLink]="'/profile/' + video.author"
+                        [profileImgUrl]="'/shared/default_user.svg'"
+                        [streamer]="video.author"
+                        [viewers]="0">
+                    </app-video>
+                </ng-container>
+            </div>
+        </mat-tab>
+
+        <!-- Live Tab -->
+        <mat-tab label="DIRECTOS">
+            <div class="grid grid-cols-4 gap-4 mt-6">
+                <ng-container *ngFor="let video of userStreams">
+                    <app-video
+                        [videoLink]="'/video/' + video.streamId"
+                        [videoImgUrl]="video.thumbnailUrl"
+                        [videoTitle]="video.title"
+                        [profileLink]="'/profile/' + video.author"
+                        [profileImgUrl]="''"
+                        [streamer]="video.author"
+                        [viewers]="0">
+                    </app-video>
+                </ng-container>
+            </div>
+        </mat-tab>
+
+
+<!--        Playlists Tab
+    <!--      <mat-tab label="LISTAS DE REPRODUCCIÓN">
+          <!--  <div class="grid grid-cols-4 gap-4 mt-6">
+              <!--   <ng-container *ngFor="let playlist of playlists">
+                    <!-- You can create a playlist component or use the video component with modifications -->
+               <!--     <div class="bg-[#2C2C2C] rounded-lg overflow-hidden">
+                   <!--     <img [src]="playlist.thumbnailUrl" alt="Playlist thumbnail" class="w-full h-48 object-cover">
+                       <!-- <div class="p-4">
+                           <!-- <h3 class="text-white font-medium">{{playlist.name}}</h3>
+                            <!--<p class="text-gray-400 text-sm">{{playlist.videoCount}} videos</p>
+                        <!--</div>
+                    <!--</div>
+                <!--</ng-container>
+            <!--</div>
+        </mat-tab>
+
+        <!-- About Tab -->
+        <mat-tab label="INFORMACIÓN">
+            <div class="text-white m-6 h-2/3">
+                <div class="max-w-3xl">
+                    <h2 class="text-xl font-bold mb-4">Descripción</h2>
+                    <p class="text-gray-300 whitespace-pre-line">Profile Description</p><!-- {{profileDescription}} -->
+
+                    <div class="mt-8">
+                        <h3 class="text-lg font-bold mb-2">Estadísticas</h3>
+                        <p class="text-gray-300">Se unió el {{profileUser.created_at.split("T")[0] || 23}}</p>
+                        <p class="text-gray-300">0 visualizaciones totales</p>
+                    </div>
+

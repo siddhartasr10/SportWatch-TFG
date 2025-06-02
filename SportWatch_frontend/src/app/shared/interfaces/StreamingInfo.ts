@@ -8,4 +8,5 @@ export interface StreamingInfo {
   author: string;
   desc: string;
   createdAt: string;     // ISO date string (LocalDateTime -> string)
+  isLive: boolean;
 }

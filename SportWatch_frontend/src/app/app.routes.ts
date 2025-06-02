@@ -3,6 +3,7 @@ import { LandingComponent } from './views/landing/landing.component';
 import { LoginComponent } from './views/login/login.component';
 import { RegisterComponent } from './views/register/register.component';
 import { FeedComponent } from './views/feed/feed.component';
+import { ProfileComponent } from './views/profile/profile.component';
 
 
 export const routes: Routes = [
@@ -10,6 +11,7 @@ export const routes: Routes = [
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterComponent },
     { path: 'feed', component: FeedComponent },
+    { path: 'profile/:username', component: ProfileComponent },
     { path: '', redirectTo: '/welcome', pathMatch: 'full'},
     // NOTE: keep the wildcard as last route.
     { path: '**', redirectTo: '/welcome'},

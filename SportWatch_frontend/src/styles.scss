@@ -1,13 +1,16 @@
 /* You can add global styles to this file, and also import other style files */
-@import "tailwindcss";
+@use '@fontsource/roboto-mono';
+@use '@fontsource/roboto-serif';
+@use '@fontsource/inter';
 
-@import '@fontsource/roboto-mono';
-@import '@fontsource/roboto-serif';
-@import '@fontsource/inter';
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
 
 @import '@fontsource/roboto-flex';
-
-@plugin 'tailwind-scrollbar';
 
 @theme {
     --font-inter: 'Inter', sans-serif;
@@ -128,4 +131,36 @@ app-feed {
        overflow-x: auto;
        gap: 8px;
     }
+}
+
+app-profile {
+
+    /* Mat-Tab header container, forcing cyan orange to have azure-blue colors */
+    .mat-mdc-tab-label-container {
+        border-bottom-color: rgba(224 ,226 ,236, 0.25) !important;
+        overflow: hidden;
+        width: 100vw;
+    }
+    .mat-mdc-tab-header {
+        width:100vw;
+    }
+    /* Mat-Tab header labels */
+    .mat-mdc-tab .mdc-tab__text-label, .mat-mdc-tab .mdc-tab__text-label:active {
+        overflow-y: hidden;
+        // color:black !important;
+    }
+    /* mat-tab body selector. */
+    .mat-mdc-tab-body-wrapper {
+        overflow-y: hidden;
+        margin-left: 3rem;
+        margin-right: 3rem;
+        height: 100rem;
+        // height: 240px !important;
+    }
+
+    .mat-mdc-tab-body-content mat-tab-body-content-can-animate {
+        overflow: hidden;
+    }
+
+
 }
