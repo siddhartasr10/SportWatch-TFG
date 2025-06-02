@@ -1,10 +1,11 @@
 package com.reactive.SportWatch.services;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import com.reactive.SportWatch.models.ExtUser; import com.reactive.SportWatch.models.ExtUserDetails;
+import com.reactive.SportWatch.models.ExtUser;
+import com.reactive.SportWatch.models.ExtUserDetails;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 // TODO: En un futuro hará falta crear métodos para añadir seguidores, suscriptores y notificaciones.
@@ -43,13 +45,13 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
     // el momento no lo es.
     public Mono<ExtUserDetails> extFindByUsername(String username) {
         Mono<ExtUserDetails> user = dbClient.sql(
-                "SELECT username, password, email, created_at, streamer_id FROM users WHERE username = :username")
+                "SELECT username, password, email, created_at, user_id FROM users WHERE username = :username")
                 .bind("username", username).map((row, metadata) -> {
                     return ExtUser.extBuilder().username(row.get("username", String.class))
                             .password(row.get("password", String.class))
                             .email(row.get("email", String.class))
-                            .created_at(row.get("created_at", Timestamp.class))
-                            .streamerId(row.get("streamer_id", Integer.class))
+                            .created_at(row.get("created_at", LocalDateTime.class))
+                            .user_id(row.get("user_id", Integer.class))
                             .authorities("USER") // La db actual no tiene roles, todos son users.
                             .build();
 
@@ -107,10 +109,8 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                     return ExtUser.extBuilder().username(row.get("username", String.class))
                             .password(row.get("password", String.class))
                             .email(row.get("email", String.class))
-                            .created_at(row.get("created_at", Timestamp.class))
-                            .streamerId(row.get("streamer_id", Integer.class))
-                            .follows(row.get("follows", int[].class))
-                            .subscribed(row.get("subscribed", int[].class))
+                            .created_at(row.get("created_at", LocalDateTime.class))
+                            .user_id(row.get("user_id", Integer.class))
                             .notifications(row.get("notifications", char[][].class))
                             .authorities("USER") // La db actual no tiene roles, todos son users.
                             .build();
@@ -299,8 +299,38 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                     return Mono.empty();
                 });
 
+
     }
 
+
+    public Flux<Map<String, Object>> findFollowersOfUsername(String username) {
+        return findIdByUsername(username)
+                .flatMapMany(id -> dbClient.sql("SELECT * FROM followers_streamers WHERE streamer_id = :id")
+                        .bind("id", id)
+                        .fetch().all());
+    }
+
+    public Flux<Map<String, Object>> findUsernameFollows(String username) {
+        return findIdByUsername(username)
+                .flatMapMany(id -> dbClient.sql("SELECT * FROM followers_streamers WHERE follower_id = :id")
+                        .bind("id", id)
+                        .fetch().all());
+    }
+
+
+    public Flux<Map<String, Object>> findSuscribersOfUsername(String username) {
+        return findIdByUsername(username)
+                .flatMapMany(id -> dbClient.sql("SELECT * FROM suscribers_streamers WHERE streamer_id = :id")
+                        .bind("id", id)
+                        .fetch().all());
+    }
+
+    public Flux<Map<String, Object>> findUsernameSuscribed(String username) {
+        return findIdByUsername(username)
+                .flatMapMany(id -> dbClient.sql("SELECT * FROM suscribers_streamers WHERE suscriber_id = :id")
+                        .bind("id", id)
+                        .fetch().all());
+    }
     /**
      * DEBUG FUNCTION DON'T USE AT PROD
      *

@@ -1,6 +1,6 @@
 package com.reactive.SportWatch.models;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -15,11 +15,10 @@ import org.springframework.util.Assert;
 public class ExtUser extends User implements ExtUserDetails {
     // I use a different logger than the super class
     private static final Logger logger = Logger.getLogger(ExtUser.class.toString());
+
+    private final Integer user_id;
 	private final String email;
-    private final Timestamp created_at;
-    private final int streamerId;
-    private final List<Integer> follows;
-    private final List<Integer> subscribed;
+    private final LocalDateTime created_at;
     /*
      * @Tparam char[l] l=128 is what I setted on the db
      * some logic will have to be made to check the array until "\0" (null terminator)
@@ -33,24 +32,20 @@ public class ExtUser extends User implements ExtUserDetails {
 	 * @param accountNonLocked set to <code>true</code> if the account is not locked
 	 */
      // If built from the constructor it will only check null on username and password (this is intended, as only debug extUsers will be created using the constructor)
-    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, Timestamp created_at, int streamerId, List<Integer> follows, List<Integer> subscribed, List<char[]> notifications) {
+    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, LocalDateTime created_at, Integer user_id, List<char[]> notifications) {
         super(username, password, authorities);
         this.email = email;
         this.created_at = created_at;
-        this.streamerId = streamerId;
-        this.follows = follows;
-        this.subscribed = subscribed;
+        this.user_id = user_id;
         this.notifications = notifications;
     }
 
     // Constructor to allow builder to bypass internal builder's encoded password
-    public ExtUser(User user, String password, String email, Timestamp created_at, int streamerId, List<Integer> follows, List<Integer> subscribed, List<char[]> notifications) {
+    public ExtUser(User user, String password, String email, LocalDateTime created_at, Integer user_id, List<char[]> notifications) {
         super(user.getUsername(), password, user.getAuthorities());
         this.email = email;
         this.created_at = created_at;
-        this.streamerId = streamerId;
-        this.follows = follows;
-        this.subscribed = subscribed;
+        this.user_id = user_id;
         this.notifications = notifications;
     }
 
@@ -58,20 +53,12 @@ public class ExtUser extends User implements ExtUserDetails {
 		return email;
 	}
 
-    public Timestamp getCreated_at() {
+    public LocalDateTime getCreated_at() {
         return created_at;
     }
 
-    public int getStreamerId() {
-        return streamerId;
-    }
-
-    public List<Integer> getFollows() {
-        return follows;
-    }
-
-    public List<Integer> getSubscribed() {
-        return subscribed;
+    public Integer getuser_id() {
+        return user_id;
     }
 
     public List<char[]> getNotifications() {
@@ -83,14 +70,12 @@ public class ExtUser extends User implements ExtUserDetails {
         return  String.format("ExtUser: " +
                               "<Username: %s, Password: %s, "
                               + "Email: %s, authorities: %s, "
-                              + "created at: %s "
-                              + "streamerId: %s, follows: %s, "
-                              + "subscribed to: %s, with %s notifications>",
+                              + "created at: %s, user_id: %s,  "
+                              + "with %s notifications>",
                               this.getUsername(), this.getPassword(),
                               this.getEmail(), this.getAuthorities(),
-                              this.getCreated_at(),
-                              this.getStreamerId(), this.getFollows(),
-                              this.getSubscribed(), this.getNotifications());
+                              this.getCreated_at(), this.getuser_id(),
+                              this.getNotifications());
     }
 
     /* Copia de UserBuilder de User pero con email y más simple (cutre)
@@ -101,12 +86,9 @@ public class ExtUser extends User implements ExtUserDetails {
 
         private String email;
 
-        private Timestamp created_at;
+        private LocalDateTime created_at;
 
-        private int streamerId;
-
-        private List<Integer> follows;
-        private List<Integer> subscribed;
+        private Integer user_id;
 
         /*
         * @Tparam char[l] l=128 is what I setted on the db
@@ -180,57 +162,41 @@ public class ExtUser extends User implements ExtUserDetails {
 		 * additional attributes for this user)
 		 * It shouldn't be set at register time postgres does it for you.
 		 */
-        public UserBuilder created_at(Timestamp created_at) {
+        public UserBuilder created_at(LocalDateTime created_at) {
 			Assert.notNull(created_at, "created_at cannot be null");
 			this.created_at = created_at;
 			return this;
         }
 
+
 		/**
 		 * Populates the Streamer ID
-		 * @param streamerId can be null
+		 * @param user_id can be null
 		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
 		 * It shouldn't be set at register time
 		 * additional attributes for this user)
 		 */
-        public UserBuilder streamerId(int streamerId) {
-			// streamerId can be null
-			// Assert.notNull(streamerId, "... cannot be null");
-			this.streamerId = streamerId;
+        public UserBuilder user_id(Integer user_id) {
+			// user_id can be null
+			// Assert.notNull(user_id, "... cannot be null");
+			this.user_id = user_id;
 			return this;
         }
 
-        /**
-         * Populates the follows List.
-         * @param follows the StreamerIds of the streamers you follow
-         * it can be null and shouldn't be set at register time.
-         *  * */
-        public UserBuilder follows(List<Integer> follows) {
-            this.follows = follows;
-            return this;
+		/**
+		 * Populates the Streamer ID
+		 * @param user_id can be null
+		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
+		 * It shouldn't be set at register time
+		 * additional attributes for this user)
+		 */
+        public UserBuilder user_id(int user_id) {
+			// user_id can be null
+			// Assert.notNull(user_id, "... cannot be null");
+			this.user_id = user_id;
+			return this;
         }
 
-        public UserBuilder follows(int[] follows) {
-            List<Integer> list = new ArrayList<Integer>();
-            for (int i = 0; i < follows.length; i++) list.add(follows[i]);
-            return follows(list);
-        }
-
-
-        /**
-         * @param subscribed the StreamerIds of the streamers you're a member of
-         * it can be null.
-         *  * */
-        public UserBuilder subscribed(List<Integer> subscribed) {
-            this.subscribed = subscribed;
-            return this;
-        }
-
-        public UserBuilder subscribed(int[] subscribed) {
-            List<Integer> list = new ArrayList<Integer>();
-            for (int i = 0; i < subscribed.length; i++) list.add(subscribed[i]);
-            return subscribed(list);
-        }
 
         /**
          * @param notifications the text of the notifications you've got
@@ -246,13 +212,16 @@ public class ExtUser extends User implements ExtUserDetails {
         // Won't create a list and then call its overloaded method
         // As it would iterate two times per notification list.
         public UserBuilder notifications(char[][] notifications) {
-            List<char[]> list = new ArrayList<char[]>();
-            for (int i = 0; i < notifications.length; i++) {
-                Assert.isTrue(notifications[i].length == 128, "Invalid length of notification char, has to be 128");
-                list.add(notifications[i]);
+            if (notifications != null) {
+                List<char[]> list = new ArrayList<char[]>();
+                for (int i = 0; i < notifications.length; i++) {
+                    Assert.isTrue(notifications[i].length == 128, "Invalid length of notification char, has to be 128");
+                    list.add(notifications[i]);
+                }
+                this.notifications = list;
+                return this;
             }
-
-            this.notifications = list;
+            this.notifications = null;
             return this;
         }
 		/**
@@ -328,7 +297,7 @@ public class ExtUser extends User implements ExtUserDetails {
         // as its encoded and encoding in ExtUser is external not internal.
 		public ExtUserDetails build() {
             User internalUser = (User) this.internalBuilder.build();
-			return new ExtUser(internalUser, this.tmpPassword, this.email, this.created_at, this.streamerId, this.follows, this.subscribed, this.notifications);
+			return new ExtUser(internalUser, this.tmpPassword, this.email, this.created_at, this.user_id,  this.notifications);
 		}
 
 	}
@@ -375,7 +344,7 @@ public class ExtUser extends User implements ExtUserDetails {
             .authorities(extendedUserDetails.getAuthorities())
             .email(extendedUserDetails.getEmail())
             .created_at(extendedUserDetails.getCreated_at())
-            .streamerId(extendedUserDetails.getStreamerId());
+            .user_id(extendedUserDetails.getuser_id());
 
     }
 

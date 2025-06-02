@@ -87,7 +87,7 @@ public class FetchService {
 
                 return Mono.zip(streamUrlMono, thumbnailUrlMono, authorMono)
                     .map(tuple -> new StreamingInfo(
-                        strm.streamId(), strm.title(),
+                        strm.streamId(), false, strm.title(),
                         strm.category(), tuple.getT1(),
                         tuple.getT2(), tuple.getT3(),
                         strm.authorId(), strm.desc(),
@@ -112,7 +112,7 @@ public class FetchService {
 
                     return Mono.zip(thumbnailUrlMono, authorMono)
                         .map(tuple -> new StreamingInfo(
-                            strm.streamId(), strm.title(),
+                            strm.streamId(), true, strm.title(),
                             strm.category(), streamUrl,
                             tuple.getT1(), tuple.getT2(),
                             strm.authorId(), strm.desc(),
@@ -150,7 +150,7 @@ public class FetchService {
 
                 return Mono.zip(streamUrlMono, thumbnailUrlMono, authorMono)
                     .map(tuple -> new StreamingInfo(
-                        strm.streamId(), strm.title(),
+                        strm.streamId(), strm.object_key() == null, strm.title(),
                         strm.category(), tuple.getT1(),
                         (tuple.getT2().equals(this.INVALIDURL)) ? null : tuple.getT2(),
                         tuple.getT3(), strm.authorId(),

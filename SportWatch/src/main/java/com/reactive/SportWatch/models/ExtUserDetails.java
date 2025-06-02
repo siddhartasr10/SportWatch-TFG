@@ -1,6 +1,6 @@
 package com.reactive.SportWatch.models;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -16,12 +16,12 @@ public interface ExtUserDetails extends UserDetails {
 	 * Returns the time at which the user was created. Cannot return <code>null</code>.
 	 * @return the time at which the user was created.
 	 */
-    Timestamp getCreated_at();
+    LocalDateTime getCreated_at();
 
 	/**
 	 * Returns the streamer id or null saved to identify if the user can upload videos. Can return <code> null </code>
 	 * @return the streamer id or <code> null </code>
 	 */
-    int getStreamerId();
+    Integer getuser_id();
 
 }

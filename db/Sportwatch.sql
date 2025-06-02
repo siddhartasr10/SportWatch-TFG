@@ -5,9 +5,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"email" varchar(400) UNIQUE,
 	"created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"streamer_id" int UNIQUE,
-	"subscribed" int,
 	"notifications" varchar(128)[],
-	"follows" int,
 	PRIMARY KEY ("user_id")
 );
 
@@ -15,8 +13,6 @@ CREATE TABLE IF NOT EXISTS "streamer_details" (
 	"streamer_id" int NOT NULL UNIQUE,
 	"is_live" boolean NOT NULL DEFAULT false,
 	"sport_type" varchar(30) NOT NULL,
-	"followers" int,
-	"subscribers" int
 );
 
 CREATE TABLE IF NOT EXISTS "streams" (
