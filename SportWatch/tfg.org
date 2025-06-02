@@ -523,3 +523,14 @@ ivs/v1/123456789012/abcdEfghIJkl/2025/05/28/media/latest_thumbnail/thumb.jpg
 *   Termino FetchService (o por lo menos llego a un punto en el que es utilizable)
         FetchService ya es capaz de devolver todos los directos live, los que no están live y uno por id (este live o no), junto a todos sus datos.
         Ahora solo necesito rutas en la api para devolver todos los directos, debería darlos todos juntos y que el frontend según si la streamUrl es .m3u8 o .mp4 distinga.
+
+*** [30/05/25]
+*  Termino FetchController y UploadController
+
+*** [01/06/25]
+*  Conectado feed con backend y añadido soporte para el logout y filtros de los vídeos.
+
+
+*** [02/06/25]
+*  Añadida ruta checkUser para validar el usuario
+        Ya que en el frontend solo puedo mirarlo por la cookie 'user' que cualquiera puede cambiar, pero para cosas como subir un vídeo o detectar si el perfil X es el perfil de un usuario necesito algo más fiable.
