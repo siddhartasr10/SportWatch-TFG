@@ -7,11 +7,15 @@ import com.reactive.SportWatch.models.JsonResponse;
 import com.reactive.SportWatch.services.JwtService;
 import com.reactive.SportWatch.services.UserService;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.ResponseStatusException;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -59,10 +63,63 @@ public class UtilController {
         return userService.findUsernameFollows(username);
     }
 
-
     @GetMapping("suscribed/{username}")
     Flux<Map<String,Object>> getUsernameSuscribed(@PathVariable String username) {
         return userService.findUsernameSuscribed(username);
+    }
+
+    @PostMapping("follow/{follower}/{streamer}")
+    public Mono<Void> followUser(@PathVariable String follower, @PathVariable String streamer, ServerWebExchange exch) {
+        return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
+                .flatMap(token -> jwtService.getUsernameFromToken(token))
+                .filter(username -> username.equals(follower))
+                .flatMap(userIsFollower -> userService.followUser(follower, streamer))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You cannot follow a streamer if you aren't the user following!")));
+    }
+
+    @PostMapping("suscribe/{suscriber}/{streamer}")
+    public Mono<Void> suscribeUser(@PathVariable String suscriber, @PathVariable String streamer, ServerWebExchange exch) {
+        return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
+                .flatMap(token -> jwtService.getUsernameFromToken(token))
+                .filter(username -> username.equals(suscriber))
+                .flatMap(userIsFollower -> userService.suscribeUser(suscriber, streamer))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You cannot suscribe to a streamer if you aren't the user that's suscribing!")));
+    }
+
+    @DeleteMapping("unfollow/{follower}/{streamer}")
+    public Mono<Void> unfollowUser(@PathVariable String follower, @PathVariable String streamer, ServerWebExchange exch) {
+        return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
+                .flatMap(token -> jwtService.getUsernameFromToken(token))
+                .filter(username -> username.equals(follower))
+                .flatMap(userIsFollower -> userService.unfollowUser(follower, streamer))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You cannot unfollow a streamer if you aren't the user following!")));
+    }
+
+    @DeleteMapping("unsuscribe/{suscriber}/{streamer}")
+    public Mono<Void> unsuscribeUser(@PathVariable String suscriber, @PathVariable String streamer, ServerWebExchange exch) {
+        return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
+                .flatMap(token -> jwtService.getUsernameFromToken(token))
+                .filter(username -> username.equals(suscriber))
+                .flatMap(userIsFollower -> userService.unsuscribeUser(suscriber, streamer))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You cannot unsuscribe to a streamer if you aren't the user that's suscribing!")));
+    }
+
+    @GetMapping("follows/{follower}/{streamer}")
+    public Mono<Boolean> checkFollows(@PathVariable String follower, @PathVariable String streamer, ServerWebExchange exch) {
+        return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
+                .flatMap(token -> jwtService.getUsernameFromToken(token))
+                .filter(username -> username.equals(follower))
+                .flatMap(userIsFollower -> userService.checkUserFollowsStreamerByUsername(follower, streamer))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You cannot check if a user follows a streamer if you aren't the user that's following!")));
+    }
+
+    @GetMapping("suscribes/{suscriber}/{streamer}")
+    public Mono<Boolean> checkSuscribed(@PathVariable String suscriber, @PathVariable String streamer, ServerWebExchange exch) {
+        return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
+                .flatMap(token -> jwtService.getUsernameFromToken(token))
+                .filter(username -> username.equals(suscriber))
+                .flatMap(userIsFollower -> userService.checkUserSuscribedStreamerByUsername(suscriber, streamer))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You cannot check if a user is suscribed to a streamer if you aren't the user that's suscribed!")));
     }
 
 }

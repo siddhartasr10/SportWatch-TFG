@@ -539,9 +539,11 @@ ivs/v1/123456789012/abcdEfghIJkl/2025/05/28/media/latest_thumbnail/thumb.jpg
 *  Aplicados cambios en la base de datos
         He repasado la db y si los followers y suscribers se apuntan en tablas para la relacion M:M no hace falta mantener una cuenta ni en users ni en stream_details. Si quiero saber a quien estas suscrito lo miro por tu id en suscribers_streamers y viceversa
 *  Componente Profile
-        Le falta terminar parte del diseño y crear un botón de empezar directo solo cuando el profileUser sea el mismo que el usuario que hay ahora (usar checkUser).
 
-        PONLE A LAS TABS OVERFLOW HIDDEN POR DIOS
-        haz que el boton de seguir funcione y cambie de 'seguir' a 'dejar de seguir'
 
-        crea una tab de contenido premium con un dialog de suscribe.
+        [] Le falta terminar parte del diseño y crear un botón de empezar directo solo cuando el profileUser sea el mismo que el usuario que hay ahora (usar checkUser).
+
+        [✔] PONLE A LAS TABS OVERFLOW HIDDEN POR DIOS ️
+        [] haz que el boton de seguir funcione y cambie de 'seguir' a 'dejar de seguir' tendrá que ser opcional ( no va a salir el botón si es tu perfil )
+
+        [] crea una tab de contenido premium con un dialog de suscribe.

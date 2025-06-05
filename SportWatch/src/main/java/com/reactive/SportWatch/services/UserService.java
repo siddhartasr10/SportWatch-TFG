@@ -331,6 +331,171 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                         .bind("id", id)
                         .fetch().all());
     }
+
+    /**
+    * Checks if a user is following a given streamer by their usernames.
+    *
+    * @param followerUsername the username of the follower
+    * @param streamerUsername the username of the streamer
+    * @return a {@link Mono} emitting {@code true} if the user follows the streamer, {@code false} otherwise
+    */
+    public Mono<Boolean> checkUserFollowsStreamerByUsername(String followerUsername, String streamerUsername) {
+        Mono<Integer> followerIdMono = findIdByUsername(followerUsername);
+        Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
+        return Mono.zip(followerIdMono, streamerIdMono)
+                .flatMap(tuple -> dbClient.sql("SELECT * FROM followers_streamers WHERE follower_id = :follower_id AND streamer_id = :streamer_id")
+                        .bind("follower_id", tuple.getT1())
+                        .bind("streamer_id", tuple.getT2())
+                        .fetch().first())
+                .map(res -> true).defaultIfEmpty(false);
+    }
+
+
+    /**
+    * Checks if a user is subscribed to a given streamer by their usernames.
+    *
+    * @param suscriberUsername the username of the subscriber
+    * @param streamerUsername the username of the streamer
+    * @return a {@link Mono} emitting {@code true} if the user is subscribed to the streamer, {@code false} otherwise
+    */
+    public Mono<Boolean> checkUserSuscribedStreamerByUsername(String suscriberUsername, String streamerUsername) {
+        Mono<Integer> followerIdMono = findIdByUsername(suscriberUsername);
+        Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
+        return Mono.zip(followerIdMono, streamerIdMono)
+                .flatMap(tuple -> dbClient.sql("SELECT * FROM suscribers_streamers WHERE suscriber_id = :suscriber_id AND streamer_id = :streamer_id")
+                        .bind("suscriber_id", tuple.getT1())
+                        .bind("streamer_id", tuple.getT2())
+                        .fetch().first())
+                .map(res -> true).defaultIfEmpty(false);
+    }
+
+    /**
+    * Adds a follower to a streamer by their usernames, if not already following.
+    *
+    * @param followerUsername the username of the follower
+    * @param streamerUsername the username of the streamer
+    * @return a {@link Mono} signaling completion when the operation is done
+    */
+    public Mono<Void> followUser(String followerUsername, String streamerUsername) {
+        Mono<Integer> followerIdMono = findIdByUsername(followerUsername);
+        Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
+
+        return checkUserFollowsStreamerByUsername(followerUsername, streamerUsername)
+                .filter(userAlreadyFollows -> !userAlreadyFollows)
+                .flatMap(userDoesntFollow -> Mono.zip(followerIdMono, streamerIdMono))
+                .flatMap(tuple -> dbClient.sql("INSERT INTO followers_streamers (streamer_id, follower_id) VALUES (:streamer_id, :follower_id)")
+                        .bind("follower_id", tuple.getT1())
+                        .bind("streamer_id", tuple.getT2())
+                        .fetch().rowsUpdated())
+                        .flatMap(changes -> {
+                            switch (changes.intValue()) {
+                                case 0 -> logger.warning("No user was added to follows");
+                                case 1 -> logger.info("User added as follower");
+                            }
+
+                            if (changes > 1)
+                                logger.warning("More than one row affected inserting follower, something bad happened...");
+
+                            return Mono.empty();
+                        });
+    }
+
+    /**
+    * Subscribes a user to a streamer by their usernames, if not already subscribed.
+    *
+    * @param suscriberUsername the username of the subscriber
+    * @param streamerUsername the username of the streamer
+    * @return a {@link Mono} signaling completion when the operation is done
+    */
+    public Mono<Void> suscribeUser(String suscriberUsername, String streamerUsername) {
+        Mono<Integer> followerIdMono = findIdByUsername(suscriberUsername);
+        Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
+
+        return checkUserFollowsStreamerByUsername(suscriberUsername, streamerUsername)
+                .filter(userAlreadyFollows -> !userAlreadyFollows)
+                .flatMap(userDoesntFollow -> Mono.zip(followerIdMono, streamerIdMono))
+                .flatMap(tuple -> dbClient.sql("INSERT INTO suscribers_streamers (streamer_id, suscriber_id) VALUES (:streamer_id, :suscriber_id)")
+                        .bind("suscriber_id", tuple.getT1())
+                        .bind("streamer_id", tuple.getT2())
+                        .fetch().rowsUpdated())
+                        .flatMap(changes -> {
+                            switch (changes.intValue()) {
+                                case 0 -> logger.warning("No user was added to suscriber");
+                                case 1 -> logger.info("User suscribed succesfully");
+                            }
+
+                            if (changes > 1)
+                                logger.warning("More than one row affected inserting suscriber, something bad happened...");
+
+                            return Mono.empty();
+                        });
+    }
+
+
+
+    /**
+    * Removes a follower from a streamer by their usernames, if currently following.
+    *
+    * @param followerUsername the username of the follower
+    * @param streamerUsername the username of the streamer
+    * @return a {@link Mono} signaling completion when the operation is done
+    */
+    public Mono<Void> unfollowUser(String followerUsername, String streamerUsername) {
+        Mono<Integer> followerIdMono = findIdByUsername(followerUsername);
+        Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
+
+        return checkUserFollowsStreamerByUsername(followerUsername, streamerUsername)
+                .filter(userAlreadyFollows -> userAlreadyFollows)
+                .flatMap(userFollows -> Mono.zip(followerIdMono, streamerIdMono))
+                .flatMap(tuple -> dbClient.sql("DELETE FROM followers_streamers WHERE streamer_id = :streamer_id AND follower_id = :follower_id")
+                        .bind("follower_id", tuple.getT1())
+                        .bind("streamer_id", tuple.getT2())
+                        .fetch().rowsUpdated())
+                        .flatMap(changes -> {
+                            switch (changes.intValue()) {
+                                case 0 -> logger.warning("No user was unfollowed");
+                                case 1 -> logger.info("User unfollowed succesfully");
+                            }
+
+                            if (changes > 1)
+                                logger.warning("More than one row affected unfollowing user, something bad happened...");
+
+                            return Mono.empty();
+                        });
+    }
+
+
+    /**
+    * Unsubscribes a user from a streamer by their usernames, if currently subscribed.
+    *
+    * @param suscriberUsername the username of the subscriber
+    * @param streamerUsername the username of the streamer
+    * @return a {@link Mono} signaling completion when the operation is done
+    */
+    public Mono<Void> unsuscribeUser(String suscriberUsername, String streamerUsername) {
+        Mono<Integer> suscriberIdMono = findIdByUsername(suscriberUsername);
+        Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
+
+        return checkUserSuscribedStreamerByUsername(suscriberUsername, streamerUsername)
+                .filter(userAlreadySuscribed -> userAlreadySuscribed)
+                .flatMap(userSuscribed -> Mono.zip(suscriberIdMono, streamerIdMono))
+                .flatMap(tuple -> dbClient.sql("DELETE FROM suscribers_streamers WHERE streamer_id = :streamer_id AND suscriber_id = :suscriber_id")
+                        .bind("suscriber_id", tuple.getT1())
+                        .bind("streamer_id", tuple.getT2())
+                        .fetch().rowsUpdated())
+                        .flatMap(changes -> {
+                            switch (changes.intValue()) {
+                                case 0 -> logger.warning("No user was unsuscribed");
+                                case 1 -> logger.info("User unsuscribed succesfully");
+                            }
+
+                            if (changes > 1)
+                                logger.warning("More than one row affected unsuscribing user, something bad happened...");
+
+                            return Mono.empty();
+                        });
+    }
+
     /**
      * DEBUG FUNCTION DON'T USE AT PROD
      *
