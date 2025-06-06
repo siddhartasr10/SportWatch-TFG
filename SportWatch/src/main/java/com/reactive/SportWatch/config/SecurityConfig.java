@@ -52,7 +52,8 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange(exchanges -> exchanges
                                .pathMatchers("/api/register", "/api/login", "/api/csrf-token", "/api/logout").permitAll()
-                               .anyExchange().authenticated())
+                               .pathMatchers("/api/**").authenticated()
+                               .anyExchange().permitAll())
             .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
             // .csrf(csrf -> csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse()))
             .csrf(csrf -> csrf.disable())
