@@ -1,6 +1,7 @@
 package com.reactive.SportWatch.routes;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 import com.reactive.SportWatch.models.ExtUserDetails;
 import com.reactive.SportWatch.models.JsonResponse;
@@ -27,6 +28,8 @@ public class UtilController {
     JwtService jwtService;
     UserService userService;
 
+    private static Logger log = Logger.getLogger(UtilController.class.getName());
+
     UtilController(JwtService jwtService, UserService userService) {
         this.jwtService = jwtService;
         this.userService = userService;
@@ -46,7 +49,6 @@ public class UtilController {
     Mono<ExtUserDetails> getUserByUsername(@PathVariable String username) {
         return userService.findAllByUsername(username);
     }
-
     @GetMapping("followers/{username}")
     Flux<Map<String,Object>> getFollowersOfUsername(@PathVariable String username) {
         return userService.findFollowersOfUsername(username);
@@ -69,25 +71,29 @@ public class UtilController {
     }
 
     @PostMapping("follow/{follower}/{streamer}")
-    public Mono<Void> followUser(@PathVariable String follower, @PathVariable String streamer, ServerWebExchange exch) {
+    public Mono<Integer> followUser(@PathVariable String follower, @PathVariable String streamer, ServerWebExchange exch) {
         return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
                 .flatMap(token -> jwtService.getUsernameFromToken(token))
-                .filter(username -> username.equals(follower))
+                // .map(username -> {log.info("Username found in the token: " + username); return username;})
+                .doOnNext(username -> log.info("The username, from the controller: " + username))
+                .map(username -> username.equals(follower))
+                .filter(equalsFollower -> equalsFollower)
                 .flatMap(userIsFollower -> userService.followUser(follower, streamer))
+                .doOnNext(changes -> log.info("changes on followUser: " + changes))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You cannot follow a streamer if you aren't the user following!")));
     }
 
     @PostMapping("suscribe/{suscriber}/{streamer}")
-    public Mono<Void> suscribeUser(@PathVariable String suscriber, @PathVariable String streamer, ServerWebExchange exch) {
+    public Mono<Integer> suscribeUser(@PathVariable String suscriber, @PathVariable String streamer, ServerWebExchange exch) {
         return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
-                .flatMap(token -> jwtService.getUsernameFromToken(token))
+            .flatMap(token -> jwtService.getUsernameFromToken(token))
                 .filter(username -> username.equals(suscriber))
                 .flatMap(userIsFollower -> userService.suscribeUser(suscriber, streamer))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You cannot suscribe to a streamer if you aren't the user that's suscribing!")));
     }
 
     @DeleteMapping("unfollow/{follower}/{streamer}")
-    public Mono<Void> unfollowUser(@PathVariable String follower, @PathVariable String streamer, ServerWebExchange exch) {
+    public Mono<Integer> unfollowUser(@PathVariable String follower, @PathVariable String streamer, ServerWebExchange exch) {
         return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
                 .flatMap(token -> jwtService.getUsernameFromToken(token))
                 .filter(username -> username.equals(follower))
@@ -96,7 +102,7 @@ public class UtilController {
     }
 
     @DeleteMapping("unsuscribe/{suscriber}/{streamer}")
-    public Mono<Void> unsuscribeUser(@PathVariable String suscriber, @PathVariable String streamer, ServerWebExchange exch) {
+    public Mono<Integer> unsuscribeUser(@PathVariable String suscriber, @PathVariable String streamer, ServerWebExchange exch) {
         return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
                 .flatMap(token -> jwtService.getUsernameFromToken(token))
                 .filter(username -> username.equals(suscriber))

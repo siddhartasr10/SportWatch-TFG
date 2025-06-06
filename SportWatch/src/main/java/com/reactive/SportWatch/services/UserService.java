@@ -376,7 +376,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
     * @param streamerUsername the username of the streamer
     * @return a {@link Mono} signaling completion when the operation is done
     */
-    public Mono<Void> followUser(String followerUsername, String streamerUsername) {
+    public Mono<Integer> followUser(String followerUsername, String streamerUsername) {
         Mono<Integer> followerIdMono = findIdByUsername(followerUsername);
         Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
 
@@ -396,7 +396,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             if (changes > 1)
                                 logger.warning("More than one row affected inserting follower, something bad happened...");
 
-                            return Mono.empty();
+                            return Mono.just(changes.intValue());
                         });
     }
 
@@ -407,11 +407,11 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
     * @param streamerUsername the username of the streamer
     * @return a {@link Mono} signaling completion when the operation is done
     */
-    public Mono<Void> suscribeUser(String suscriberUsername, String streamerUsername) {
+    public Mono<Integer> suscribeUser(String suscriberUsername, String streamerUsername) {
         Mono<Integer> followerIdMono = findIdByUsername(suscriberUsername);
         Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
 
-        return checkUserFollowsStreamerByUsername(suscriberUsername, streamerUsername)
+        return checkUserSuscribedStreamerByUsername(suscriberUsername, streamerUsername)
                 .filter(userAlreadyFollows -> !userAlreadyFollows)
                 .flatMap(userDoesntFollow -> Mono.zip(followerIdMono, streamerIdMono))
                 .flatMap(tuple -> dbClient.sql("INSERT INTO suscribers_streamers (streamer_id, suscriber_id) VALUES (:streamer_id, :suscriber_id)")
@@ -427,7 +427,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             if (changes > 1)
                                 logger.warning("More than one row affected inserting suscriber, something bad happened...");
 
-                            return Mono.empty();
+                            return Mono.just(changes.intValue());
                         });
     }
 
@@ -440,7 +440,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
     * @param streamerUsername the username of the streamer
     * @return a {@link Mono} signaling completion when the operation is done
     */
-    public Mono<Void> unfollowUser(String followerUsername, String streamerUsername) {
+    public Mono<Integer> unfollowUser(String followerUsername, String streamerUsername) {
         Mono<Integer> followerIdMono = findIdByUsername(followerUsername);
         Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
 
@@ -460,7 +460,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             if (changes > 1)
                                 logger.warning("More than one row affected unfollowing user, something bad happened...");
 
-                            return Mono.empty();
+                            return Mono.just(changes.intValue());
                         });
     }
 
@@ -472,7 +472,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
     * @param streamerUsername the username of the streamer
     * @return a {@link Mono} signaling completion when the operation is done
     */
-    public Mono<Void> unsuscribeUser(String suscriberUsername, String streamerUsername) {
+    public Mono<Integer> unsuscribeUser(String suscriberUsername, String streamerUsername) {
         Mono<Integer> suscriberIdMono = findIdByUsername(suscriberUsername);
         Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
 
@@ -492,7 +492,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             if (changes > 1)
                                 logger.warning("More than one row affected unsuscribing user, something bad happened...");
 
-                            return Mono.empty();
+                            return Mono.just(changes.intValue());
                         });
     }
 

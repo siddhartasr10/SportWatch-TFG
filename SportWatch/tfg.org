@@ -547,3 +547,18 @@ ivs/v1/123456789012/abcdEfghIJkl/2025/05/28/media/latest_thumbnail/thumb.jpg
         [] haz que el boton de seguir funcione y cambie de 'seguir' a 'dejar de seguir' tendrá que ser opcional ( no va a salir el botón si es tu perfil )
 
         [] crea una tab de contenido premium con un dialog de suscribe.
+
+        [] añade en la db en usuario una descripcion, atributo en el modelo y read y update (no hagas create, pon default "" en la db)
+
+*** [05/06/25]
+*  Componente profile
+        [x] haz que el boton de seguir funcione y cambie de 'seguir' a 'dejar de seguir' tendrá que ser opcional ( no va a salir el botón si es tu perfil )
+        [x] Le falta terminar parte del diseño y crear un botón de empezar directo solo cuando el profileUser sea el mismo que el usuario que hay ahora (usar checkUser).
+
+        IMPORTANTE:
+        Apunta en el tfg que has usado fontsource para iconos faciles de implementar.
+
+        Mas cosas en el issue
+*** [06/06/25]
+*  Terminar el perfil
+        Termino lo que hay en el issue

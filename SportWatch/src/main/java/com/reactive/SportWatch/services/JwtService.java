@@ -56,6 +56,10 @@ public class JwtService {
         // MalformedJwtException: Thrown when the JWT structure is invalid.
     public Mono<String> getUsernameFromToken(String token) throws IllegalStateException {
         try {
+            logger.info("Subject: " + Jwts.parser().verifyWith(jwtConfig.publicKey())
+                    .build().parseSignedClaims(token)
+                    .getPayload().getSubject());
+
             return Mono.just(Jwts.parser().verifyWith(jwtConfig.publicKey())
                     .build().parseSignedClaims(token)
                     .getPayload().getSubject());
