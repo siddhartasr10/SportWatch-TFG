@@ -141,15 +141,6 @@ app-profile {
         overflow: hidden;
         width: 100vw;
     }
-    .mat-mdc-tab-header {
-        width:100vw;
-    }
-    /* Mat-Tab header labels */
-    .mat-mdc-tab .mdc-tab__text-label, .mat-mdc-tab .mdc-tab__text-label:active {
-        overflow-y: hidden;
-        // color:black !important;
-    }
-    /* mat-tab body selector. */
     .mat-mdc-tab-body-wrapper {
         overflow-y: hidden;
         margin-left: 3rem;
@@ -162,5 +153,21 @@ app-profile {
         overflow: hidden;
     }
 
+    /* Mat-Button selector */
+    .mat-mdc-button .mdc-button__label, & .mat-mdc-button .mat-icon, & .mat-mdc-unelevated-button .mdc-button__label, & .mat-mdc-unelevated-button .mat-icon, & .mat-mdc-raised-button .mdc-button__label, & .mat-mdc-raised-button .mat-icon, & .mat-mdc-outlined-button .mdc-button__label, & .mat-mdc-outlined-button .mat-icon {
+        // color: #003737;
+        font-family: var(--font-roboto-serif);
+        font-weight: 900;
+        letter-spacing: -0.5px !important;
+    }
+
+    .mdc-button {
+        // background-color: #00dddd !important;
+    }
+    /* Mat button selector too but works for color of text and backgorund */
+    button.font-black.mdc-button.mdc-button--raised.mat-mdc-raised-button.mat-unthemed.mat-mdc-button-base {
+        // color: #003737;
+        // background-color: #00dddd !important;
+    }
 
 }

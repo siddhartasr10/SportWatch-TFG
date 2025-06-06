@@ -1,31 +1,54 @@
 <app-logged-header></app-logged-header>
 <div class="flex flex-col bg-[#1E1E1E] w-screen h-[var(--h-screen-minus-navbar)]">
     <!-- Profile Header Section -->
-    <div class="w-full h-[175px] bg-gradient-to-r from-[#1E1E1E] via-[#2C2C2C] to-[#1E1E1E]">
-        <!-- Banner Section - You can add a custom banner image here -->
+
+    <div class="w-2/3 h-[275px] bg-gradient-to-r from-[#1E1E1E] via-[#2C2C2C] to-[#1E1E1E] self-center">
+        <!-- Banner Section (If i add one) -->
     </div>
-
     <!-- Profile Info Section -->
-    <div class="flex items-start px-8 -mt-16 relative z-10">
-        <!-- Profile Picture -->
-        <div class="w-[128px] h-[128px] rounded-full bg-gray-800 overflow-hidden border-4 border-[#1E1E1E]">
-            <img [src]="'/shared/default_user.svg'" alt="Profile Picture" class="w-full h-full object-cover">
-        </div>
+    <div class="flex justify-between items-start px-8 -mt-16 relative z-10">
 
-        <!-- Profile Details -->
-        <div class="ml-6 mt-16 flex flex-col">
-            <h1 class="text-white text-2xl font-roboto-flex font-bold">{{profileUsername}}</h1>
-            <div class="flex items-center gap-4 mt-2 text-white">
-                <span class="text-white text-sm">{{profileUsername}}</span>
-                <span class="text-white text-sm">{{userFollowers?.length || 0}} seguidores</span>
-                <span class="text-white text-sm">{{userVideos?.length || 0}} videos</span>
+    <!-- Profile Card -->
+        <div class="flex items-center gap-6 p-4 bg-black/50 text-white shadow-lg rounded-3xl shadow-3xl">
+            <!-- Profile Picture -->
+            <div class="w-[96px] h-[96px] rounded-full overflow-hidden border-4 border-[#1E1E1E] bg-gray-800">
+            <img [src]="'/shared/default_user.svg'" alt="Profile Picture" class="w-full h-full object-cover">
+            </div>
+
+            <!-- Channel Info -->
+            <div class="flex flex-col justify-center text-white">
+            <h1 class="text-2xl font-bold" [class.invisible]="this.profileUser === null">{{ profileUsername }}</h1>
+            <span class="flex text-sm font-inter my-3 ">
+                <b class="mr-1">{{ profileUsername }}</b>
+                <p class="text-sm tracking-tighter">
+                · {{ profileUserFollowers?.length || 0 }} seguidores · {{ profileUserSuscribers?.length || 0 }} miembros · {{ profileUserVideos?.length || 0 }} videos
+                </p>
+            </span>
+
+            <!-- Follow Button Row -->
+            <div class="flex tracking-[1px]! gap-x-3 mt-3">
+                <button #followBtn mat-stroked-button (click)="onFollowClick(followBtn)" [class.invisible]="this.actualUsername === this.profileUsername"
+                        class="bg-white rounded-full font-black! hover:bg-gray-200 w-auto px-4 h-[35px]! text-sm!">
+
+                <i class="far fa-bell fa-lg mr-2"></i>
+                {{this.followBtnMsg || "Seguir"}}
+                </button>
+
+                <button #suscribeBtn mat-stroked-button (click)="onSuscribeClick(suscribeBtn)" [class.invisible]="this.actualUsername === this.profileUsername"
+                        class="bg-white rounded-full text-sm hover:bg-gray-200 px-4 h-[35px]!">
+                {{this.suscribeBtnMsg || "Unirme"}}
+                </button>
+            </div>
             </div>
         </div>
 
-        <!-- Subscribe Button -->
-        <button mat-raised-button color="primary" class="ml-auto mt-16">
-            Seguir
-        </button>
+        <!-- Right-side Buttons -->
+        <div class="flex flex-col gap-3 mt-4" [class.invisible]="this.actualUsername !== this.profileUsername">
+            <button mat-raised-button class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-full">
+            Empezar Directo
+            </button>
+        </div>
+
     </div>
 
     <!-- Tabs Section -->
@@ -33,7 +56,7 @@
         <!-- Videos Tab -->
         <mat-tab label="VIDEOS">
             <div class="grid grid-cols-4 gap-4 mt-6">
-                <ng-container *ngFor="let video of userVideos">
+                <ng-container *ngFor="let video of profileUserVideos">
                     <app-video
                         [videoLink]="'/video/' + video.streamId"
                         [videoImgUrl]="video.thumbnailUrl"
@@ -50,7 +73,7 @@
         <!-- Live Tab -->
         <mat-tab label="DIRECTOS">
             <div class="grid grid-cols-4 gap-4 mt-6">
-                <ng-container *ngFor="let video of userStreams">
+                <ng-container *ngFor="let video of profileUserStreams">
                     <app-video
                         [videoLink]="'/video/' + video.streamId"
                         [videoImgUrl]="video.thumbnailUrl"
@@ -90,7 +113,7 @@
 
                     <div class="mt-8">
                         <h3 class="text-lg font-bold mb-2">Estadísticas</h3>
-                        <p class="text-gray-300">Se unió el {{profileUser.created_at.split("T")[0] || 23}}</p>
+                        <p class="text-gray-300">Se unió el {{profileUser?.created_at!.split("T")[0] || "Desconocido"}}</p>
                         <p class="text-gray-300">0 visualizaciones totales</p>
                     </div>
 

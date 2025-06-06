@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 
 import { NavbarComponent } from '../navbar/navbar.component';
 import { AuthService } from '../../services/auth-service/auth-service.service';
+import { CookieService } from '../../services/cookie-service/cookie-service.service';
 
 @Component({
   selector: 'app-logged-header',
@@ -11,9 +12,11 @@ import { AuthService } from '../../services/auth-service/auth-service.service';
   styleUrl: './logged-header.component.css'
 })
 export class LoggedHeaderComponent {
-    constructor(private router : Router, private authService : AuthService) {}
+    constructor(private router : Router, private authService : AuthService, private cookieService : CookieService) {
+        this.user = this.cookieService.getUser();
+    }
 
-    user : string = document.cookie.split("; ").filter(cookiePair => cookiePair.startsWith("user"))[0]?.split("=")[1];
+    user : string;
 
     // No le pongo 'search' porque (search)="" search es un evento experimental de chrome ;(
     // Output va de componente hijo -> padre Input de padre -> hijo.
