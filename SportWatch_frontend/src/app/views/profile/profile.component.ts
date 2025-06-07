@@ -50,42 +50,44 @@ export class ProfileComponent {
 
 
     constructor(private userService : UserService, private fetchService : FetchService, private authService : AuthService, private route : ActivatedRoute, private router : Router) {
-        route.params.subscribe((params : Params) => this.profileUsername = params['username']);
-
-        this.updateFollowerCount();
-        this.updateSuscriberCount();
     }
 
     async ngOnInit() : Promise<void>{
-        this.profileUser = await firstValueFrom(this.userService.getUserByUsername(this.profileUsername));
-
-        if (this.profileUser === null) this.router.navigate(["feed"]);
-
-        this.fetchService.fetchAllStreams().pipe(
-            map((streams : StreamingInfo[]) => streams.filter(stream => stream.authorId == this.profileUser?.user_id)))
-            .subscribe((streams : StreamingInfo[]) => {
-                this.profileUserVideos = streams.filter(stream => !stream.isLive);
-                this.profileUserStreams = streams.filter(stream => stream.isLive);
-            });
+        this.profileUsername = await firstValueFrom(this.route.params).then((params) => params["username"]);
+        console.log("Profile Username at the start: ", this.profileUsername);
+        this.actualUsername  = await firstValueFrom(this.authService.checkUser()).then((data) => data["msg"]);
         // I need to confirm the name of the current user, cannot trust the token to follow someone, (I cannot verify the signature on the frontend, as the keys are on the backend)
         // In the api call the JWT signature gets verified.
-        // Awesome func of rxjs
-        let json : {[msg:string] : string} = await firstValueFrom(this.authService.checkUser());
-        this.actualUsername = json["msg"];
+        this.profileUser = await firstValueFrom(this.userService.getUserByUsername(this.profileUsername));
+        // This observable emits everytime url parameter changes, I need to chain things inside this so
+        // every profile change i get all the streams of the current profile user
+        // Logic inside of this suscribe updates every profile change
+        this.route.params.subscribe((_ : Params) => {
+            this.updateFollowerCount();
+            this.updateSuscriberCount();
 
-        this.userService.checkFollows(this.actualUsername, this.profileUsername).subscribe((doesFollow) => {
-            this.actualUserFollowsProfileUser = doesFollow;
+            if (this.profileUser === null) this.router.navigate(["feed"]);
 
-            (doesFollow) ? this.followBtnMsg = "Siguiendo" : this.followBtnMsg = "Seguir";
+            this.fetchService.fetchAllStreams().pipe(
+                map((streams: StreamingInfo[]) => streams.filter(stream => stream.authorId == this.profileUser?.user_id)))
+                .subscribe((streams: StreamingInfo[]) => {
+                    this.profileUserVideos = streams.filter(stream => !stream.isLive);
+                    this.profileUserStreams = streams.filter(stream => stream.isLive);
+                });
+
+
+            this.userService.checkFollows(this.actualUsername, this.profileUsername).subscribe((doesFollow) => {
+                this.actualUserFollowsProfileUser = doesFollow;
+
+                (doesFollow) ? this.followBtnMsg = "Siguiendo" : this.followBtnMsg = "Seguir";
+            });
+
+            this.userService.checkSuscribed(this.actualUsername, this.profileUsername).subscribe((isSuscribed) => {
+                this.actualUserSuscribedProfileUser = isSuscribed;
+
+                (isSuscribed) ? this.suscribeBtnMsg = "Eres miembro" : this.suscribeBtnMsg = "Unirme";
+            });
         });
-
-        this.userService.checkSuscribed(this.actualUsername, this.profileUsername).subscribe((isSuscribed) => {
-            this.actualUserSuscribedProfileUser = isSuscribed;
-
-            (isSuscribed) ? this.suscribeBtnMsg = "Eres miembro" : this.suscribeBtnMsg = "Unirme";
-        });
-
-
 
     }
 
@@ -97,12 +99,7 @@ export class ProfileComponent {
                 error: () => undefined,
             });
         }
-        else {
-            this.userService.followUser(this.actualUsername, this.profileUsername).subscribe({
-                next:  () => this.updateFollowerCount(),
-                error: () => undefined,
-            });
-        }
+
 
         this.actualUserFollowsProfileUser = !this.actualUserFollowsProfileUser;
         (this.actualUserFollowsProfileUser)  ? this.followBtnMsg = "Siguiendo" : this.followBtnMsg = "Seguir";
