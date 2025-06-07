@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 
 import { map, firstValueFrom, catchError } from 'rxjs';
@@ -46,11 +46,9 @@ export class ProfileComponent {
     // Unirme | Eres miembro
     suscribeBtnMsg : String = "";
 
+    uploadStreamToggle : boolean = false;
 
-
-
-    constructor(private userService : UserService, private fetchService : FetchService, private authService : AuthService, private route : ActivatedRoute, private router : Router) {
-    }
+    constructor(private userService : UserService, private fetchService : FetchService, private authService : AuthService, private route : ActivatedRoute, private router : Router) {}
 
     async ngOnInit() : Promise<void>{
         this.profileUsername = await firstValueFrom(this.route.params).then((params) => params["username"]);
@@ -131,5 +129,12 @@ export class ProfileComponent {
     updateSuscriberCount() : void {
         this.userService.getSuscribersOfUsername(this.profileUsername).pipe(map((suscribersStreamers: SuscribersStreamers[]) => suscribersStreamers.map((suscriberStreamer: SuscribersStreamers) => suscriberStreamer.suscriber_id)))
             .subscribe((userIds : number[]) => this.profileUserSuscribers = userIds);
+    }
+
+    // If start stream popup is visible, and someone clicks outside of it, it will close.
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(ev : Event) : void {
+
+
     }
 }
