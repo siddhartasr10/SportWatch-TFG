@@ -562,3 +562,18 @@ ivs/v1/123456789012/abcdEfghIJkl/2025/05/28/media/latest_thumbnail/thumb.jpg
 *** [06/06/25]
 *  Terminar el perfil
         Termino lo que hay en el issue
+
+        Me falta añadir pa subir streams
+
+*** [07/06/25]
+*  Correccion errores perfil
+        La base de datos tenia claves foraneas que apuntaban a la id del streamer_details en follower_streamer y suscriber_streamer
+        Pero como se puede seguir a cualquier usuario debe de apuntar a la id de users.
+
+        Además había ciertas variables mal asignadas y para poder actualizar la informacion dependiendo del perfil que fuera, Es decir
+        si vas del perfil de alguien a otro perfil y no has cambiado de componente, hay que meter esa logica en el suscribe de ActiveRoute.params, que
+        actualiza cada vez que cambia la url                    .
+*  Añadir lo que falta en el perfil
+        NOTA PARA apuntar en el tfg y en el README: No se si añadiré subida de archivos para las miniaturas ya que hacerlo seguro es muy dificil y
+        tienen más prioridad funcionalidades más necesarias como comentarios. Para los que tendré que hacer un poller y explicar en mi tfg que no voy a
+        implementar ws porque no es necesario para tan pocos usuarios y me llevaría mucho tiempo. AÑADIR AL PDF COMO FUNCIONALIDADES A MEJORAR.
