@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
@@ -50,7 +52,7 @@ public class UserController {
         return userService.findAllByUsername(username);
     }
     @GetMapping("followers/{username}")
-    Flux<Map<String,Object>> getFollowersOfUsername(@PathVariable String username) {
+    Flux<Map<String, Object>> getFollowersOfUsername(@PathVariable String username) {
         return userService.findFollowersOfUsername(username);
 
     }
@@ -126,6 +128,19 @@ public class UserController {
                 .filter(username -> username.equals(suscriber))
                 .flatMap(userIsFollower -> userService.checkUserSuscribedStreamerByUsername(suscriber, streamer))
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You cannot check if a user is suscribed to a streamer if you aren't the user that's suscribed!")));
+    }
+
+
+    @PutMapping("description")
+    public Mono<JsonResponse> updateDescription(@RequestBody Mono<Map<String, String>> data, ServerWebExchange exch) {
+        return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
+                .flatMap(token -> jwtService.getUsernameFromToken(token))
+                .flatMap(username -> data
+                        .map(json -> json.get("description"))
+                        .filter(desc -> desc != null)
+                        .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Description is obligatory!")))
+                        .flatMap(desc -> userService.updateDescription(username, desc)))
+                .map(changes -> new JsonResponse("Changes: " + changes));
     }
 
 }

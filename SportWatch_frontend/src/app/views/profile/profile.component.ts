@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 
-import { map, firstValueFrom, catchError } from 'rxjs';
+import { map, firstValueFrom, catchError, zip } from 'rxjs';
 
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButton, MatButtonModule } from '@angular/material/button';
@@ -46,28 +46,39 @@ export class ProfileComponent {
     // Unirme | Eres miembro
     suscribeBtnMsg : String = "";
 
+    editDescriptionMode : boolean = false;
     uploadStreamToggle : boolean = false;
 
     constructor(private userService : UserService, private fetchService : FetchService, private authService : AuthService, private route : ActivatedRoute, private router : Router) {}
 
     async ngOnInit() : Promise<void>{
+        // Not needed but when angular updates changes doesnt run oninit again and testing is annoying.
+        this.editDescriptionMode = false;
         this.profileUsername = await firstValueFrom(this.route.params).then((params) => params["username"]);
         console.log("Profile Username at the start: ", this.profileUsername);
         this.actualUsername  = await firstValueFrom(this.authService.checkUser()).then((data) => data["msg"]);
+
         // I need to confirm the name of the current user, cannot trust the token to follow someone, (I cannot verify the signature on the frontend, as the keys are on the backend)
         // In the api call the JWT signature gets verified.
         this.profileUser = await firstValueFrom(this.userService.getUserByUsername(this.profileUsername));
+
+        console.log(this.profileUser);
+
         // This observable emits everytime url parameter changes, I need to chain things inside this so
         // every profile change i get all the streams of the current profile user
         // Logic inside of this suscribe updates every profile change
-        this.route.params.subscribe((_ : Params) => {
+        this.route.params.subscribe((params : Params) => {
+            // Lo vuelvo a setear para que si cambio de perfil las comparaciones entre
+            // actual user y profile user se actualicen.
+            this.profileUsername = params["username"];
+            // console.log("Profile User: ", this.profileUser);
             this.updateFollowerCount();
             this.updateSuscriberCount();
 
             if (this.profileUser === null) this.router.navigate(["feed"]);
 
             this.fetchService.fetchAllStreams().pipe(
-                map((streams: StreamingInfo[]) => streams.filter(stream => stream.authorId == this.profileUser?.user_id)))
+                map((streams: StreamingInfo[]) => streams.filter(stream => stream.authorId === this.profileUser?.userId)))
                 .subscribe((streams: StreamingInfo[]) => {
                     this.profileUserVideos = streams.filter(stream => !stream.isLive);
                     this.profileUserStreams = streams.filter(stream => stream.isLive);
@@ -90,7 +101,7 @@ export class ProfileComponent {
     }
 
     onFollowClick(matBtn : MatButton) : void {
-        const btn = matBtn._elementRef.nativeElement as HTMLButtonElement;
+        // const btn = matBtn._elementRef.nativeElement as HTMLButtonElement;
         if (this.actualUserFollowsProfileUser) {
             this.userService.unfollowUser(this.actualUsername, this.profileUsername).subscribe({
                 next:  () => this.updateFollowerCount(),
@@ -112,7 +123,7 @@ export class ProfileComponent {
 
 
     async onSuscribeClick(matBtn : MatButton) : Promise<void> {
-        const btn = matBtn._elementRef.nativeElement as HTMLButtonElement;
+        // const btn = matBtn._elementRef.nativeElement as HTMLButtonElement;
         if (this.actualUserSuscribedProfileUser) {
             this.userService.unsuscribeUser(this.actualUsername, this.profileUsername).subscribe(() => this.updateSuscriberCount());
         }
@@ -134,5 +145,20 @@ export class ProfileComponent {
     // If start stream popup is visible, and someone clicks outside of it, it will close.
     @HostListener('document:click', ['$event'])
     onDocumentClick(ev : Event) : void {
+    }
+
+    toggleEditProfileDescription() : void {
+        this.editDescriptionMode = !this.editDescriptionMode;
+    }
+
+    onProfileDescriptionEdit(textarea : HTMLTextAreaElement) : void {
+        const msg : string = textarea.value;
+        // this.userService TODO: Implementar update para la profile desc que si no existe una la cree como "".
+        this.editDescriptionMode = !this.editDescriptionMode;
+        // This func only can trigger when an element that is normally hidden
+        // is visible, that element is only visible when profileUser === actualUser
+        // So here profileUser is updated bc we know its the same.
+        this.profileUser.description = msg;
+        this.userService.updateDescription(msg).subscribe();
     }
 }

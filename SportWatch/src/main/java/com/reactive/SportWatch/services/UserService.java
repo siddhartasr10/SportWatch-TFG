@@ -57,7 +57,8 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
 
                 }).first();
 
-        user.switchIfEmpty(Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
+        user.switchIfEmpty(
+                Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
         return user;
     }
 
@@ -72,11 +73,11 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             .build();
                 }).first();
 
-        user.switchIfEmpty(Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
+        user.switchIfEmpty(
+                Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
 
         return user;
     }
-
 
     public Mono<Integer> findIdByUsername(String username) {
         Mono<Integer> id = dbClient.sql("SELECT user_id FROM users WHERE username = :username")
@@ -89,7 +90,6 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
 
         return id;
     }
-
 
     public Mono<String> findUsernameById(int userId) {
         Mono<String> id = dbClient.sql("SELECT username FROM users WHERE user_id = :user_id")
@@ -110,6 +110,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             .password(row.get("password", String.class))
                             .email(row.get("email", String.class))
                             .created_at(row.get("created_at", LocalDateTime.class))
+                            .description(row.get("description", String.class))
                             .userId(row.get("user_id", Integer.class))
                             .notifications(row.get("notifications", char[][].class))
                             .authorities("USER") // La db actual no tiene roles, todos son users.
@@ -117,7 +118,8 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
 
                 }).first();
 
-        user.switchIfEmpty(Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
+        user.switchIfEmpty(
+                Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
 
         return user;
     }
@@ -130,13 +132,16 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
     }
 
     /**
-     * <h1> Iterates over possible matches of username or email and returns the first one it finds. </h1>
-     * if both were found returns the first field it found arbitrarily (bc i don't care tbh).
+     * <h1>Iterates over possible matches of username or email and returns the first
+     * one it finds.</h1>
+     * if both were found returns the first field it found arbitrarily (bc i don't
+     * care tbh).
+     *
      * @return
-     * {@code Mono<0>} If no match <br>
-     * {@code Mono<1>} If username is matched <br>
-     * {@code Mono<2>} If email is matched
-     *  */
+     *         {@code Mono<0>} If no match <br>
+     *         {@code Mono<1>} If username is matched <br>
+     *         {@code Mono<2>} If email is matched
+     */
     public Mono<Integer> isUsernameOrEmailTaken(String username, String email) {
         return dbClient.sql("SELECT username, email FROM users WHERE username = :username OR email = :email")
                 .bind("username", username)
@@ -167,10 +172,13 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                 findByUsername(user.getUsername())
                         .doOnNext(u -> {
 
-                                if (u.getUsername() == "empty" && u.getPassword() == "empty" || u.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_empty")))
-                                    logger.warning("User doesn't exist, this should never happen as only authenticated users can change its password");
+                            if (u.getUsername() == "empty" && u.getPassword() == "empty"
+                                    || u.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_empty")))
+                                logger.warning(
+                                        "User doesn't exist, this should never happen as only authenticated users can change its password");
 
-                                logger.warning("No changes were made to the password but user exists, this should never happen, except same password its being set");
+                            logger.warning(
+                                    "No changes were made to the password but user exists, this should never happen, except same password its being set");
                         });
             }
         });
@@ -178,16 +186,17 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
         return Mono.just(user);
     }
     // public Mono<Short> updateTimezone(String username, short timezone) {
-    //     dbClient.sql("UPDATE users SET user_timezone = :timezone WHERE username = :username")
-    //             .bind("username", username)
-    //             .bind("timezone", timezone)
-    //             .fetch().rowsUpdated()
-    //             .doOnNext(changes -> {
-    //                     if (changes == 0) logger.warning("No timezone was changed");
-    //                     logger.info("Timezone changed successfully");
-    //             });
+    // dbClient.sql("UPDATE users SET user_timezone = :timezone WHERE username =
+    // :username")
+    // .bind("username", username)
+    // .bind("timezone", timezone)
+    // .fetch().rowsUpdated()
+    // .doOnNext(changes -> {
+    // if (changes == 0) logger.warning("No timezone was changed");
+    // logger.info("Timezone changed successfully");
+    // });
 
-    //     return Mono.just(timezone);
+    // return Mono.just(timezone);
     // }
 
     public Mono<UserDetails> createUser(UserDetails user) {
@@ -195,37 +204,43 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                 .flatMap(isTaken -> {
                     logger.info(isTaken.toString());
                     if (isTaken)
-                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username already taken"));
+                        return Mono.error(
+                                new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username already taken"));
 
                     return dbClient.sql("INSERT INTO users (username, password) VALUES (:username, :password)")
                             .bind("username", user.getUsername())
                             .bind("password", encoder.encode(user.getPassword()))
                             .fetch().rowsUpdated()
                             .doOnNext(changes -> {
-                                if (changes == 0) logger.warning("No user was created");
+                                if (changes == 0)
+                                    logger.warning("No user was created");
                                 logger.info("User created successfully");
                             })
-                            .flatMap(v -> {logger.info("User created."); return Mono.just(user);});
+                            .flatMap(v -> {
+                                logger.info("User created.");
+                                return Mono.just(user);
+                            });
                 });
-
 
     }
 
-
-    public Mono<ExtUserDetails> createUser(ExtUserDetails user)  {
+    public Mono<ExtUserDetails> createUser(ExtUserDetails user) {
 
         return isUsernameOrEmailTaken(user.getUsername(), user.getEmail())
                 .flatMap(takenCode -> {
                     if (takenCode == 1)
-                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username already taken"));
+                        return Mono.error(
+                                new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username already taken"));
 
                     if (takenCode == 2)
-                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Email already taken"));
+                        return Mono
+                                .error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Email already taken"));
 
                     StringBuilder columns = new StringBuilder("username, password");
                     StringBuilder values = new StringBuilder(":username, :password");
 
-                    // Null check has to be made to be perfectly sure im not messing up (and that someone registering by the API instead of the form doesn't crash the server)
+                    // Null check has to be made to be perfectly sure im not messing up (and that
+                    // someone registering by the API instead of the form doesn't crash the server)
                     if (user.getEmail() != null) {
                         columns.append(", email");
                         values.append(", :email");
@@ -238,60 +253,67 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             .bind("password", encoder.encode(user.getPassword()));
 
                     // Have to reassign because object is inmmutable, so a new copy is created.
-                    if (user.getEmail() != null) pausedSpec = pausedSpec.bind("email", user.getEmail());
+                    if (user.getEmail() != null)
+                        pausedSpec = pausedSpec.bind("email", user.getEmail());
 
                     return pausedSpec.fetch().rowsUpdated()
                             .doOnNext(changes -> {
-                                    if (changes == 0) logger.warning("No user was created");
-                                    logger.info("User created successfully");
+                                if (changes == 0)
+                                    logger.warning("No user was created");
+                                logger.info("User created successfully");
                             });
-                    })
+                })
 
                 .flatMap(v -> Mono.just(user));
 
         // return isUsernameTaken(user.getUsername())
-        //         .flatMap(isTaken -> {
-        //             if (isTaken)
-        //                 return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Username already taken"));
+        // .flatMap(isTaken -> {
+        // if (isTaken)
+        // return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE,
+        // "Username already taken"));
 
-        //             StringBuilder columns = new StringBuilder("username, password");
-        //             StringBuilder values = new StringBuilder(":username, :password");
+        // StringBuilder columns = new StringBuilder("username, password");
+        // StringBuilder values = new StringBuilder(":username, :password");
 
-        //             // Null check has to be made to be perfectly sure im not messing up (and that someone registering by the API instead of the form doesn't crash the server)
-        //             if (user.getEmail() != null) {
-        //                 columns.append(", email");
-        //                 values.append(", :email");
-        //             }
+        // // Null check has to be made to be perfectly sure im not messing up (and that
+        // someone registering by the API instead of the form doesn't crash the server)
+        // if (user.getEmail() != null) {
+        // columns.append(", email");
+        // values.append(", :email");
+        // }
 
-        //             String sql = String.format("INSERT INTO users (%s) VALUES (%s)", columns, values);
+        // String sql = String.format("INSERT INTO users (%s) VALUES (%s)", columns,
+        // values);
 
-        //             GenericExecuteSpec pausedSpec = dbClient.sql(sql)
-        //                     .bind("username", user.getUsername())
-        //                     .bind("password", encoder.encode(user.getPassword()));
+        // GenericExecuteSpec pausedSpec = dbClient.sql(sql)
+        // .bind("username", user.getUsername())
+        // .bind("password", encoder.encode(user.getPassword()));
 
-        //             // Have to reassign because object is inmmutable, so a new copy is created.
-        //             if (user.getEmail() != null) pausedSpec = pausedSpec.bind("email", user.getEmail());
+        // // Have to reassign because object is inmmutable, so a new copy is created.
+        // if (user.getEmail() != null) pausedSpec = pausedSpec.bind("email",
+        // user.getEmail());
 
-        //             return pausedSpec.fetch()
-        //                     .rowsUpdated()
-        //                     .doOnNext(changes -> {
-        //                             if (changes == 0)
-        //                                 logger.warning("No user was created");
-        //                             logger.info("User created successfully");
-        //                     })
-        //                     .flatMap(v -> Mono.just(user));
-        //         });
+        // return pausedSpec.fetch()
+        // .rowsUpdated()
+        // .doOnNext(changes -> {
+        // if (changes == 0)
+        // logger.warning("No user was created");
+        // logger.info("User created successfully");
+        // })
+        // .flatMap(v -> Mono.just(user));
+        // });
     }
 
     public Mono<Void> deleteUser(String username) {
         return dbClient.sql("DELETE FROM users WHERE username = :username")
                 .bind("username", username)
-                .fetch() .rowsUpdated()
+                .fetch().rowsUpdated()
                 .flatMap(changes -> {
 
-                    switch(changes.intValue()) {
+                    switch (changes.intValue()) {
                         case 0 -> logger.warning("No user was deleted");
-                        case 1 -> logger.info("User deleted succesfully");}
+                        case 1 -> logger.info("User deleted succesfully");
+                    }
 
                     if (changes > 1)
                         logger.warning("More than one row affected, something bad happened...");
@@ -299,9 +321,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                     return Mono.empty();
                 });
 
-
     }
-
 
     public Flux<Map<String, Object>> findFollowersOfUsername(String username) {
         return findIdByUsername(username)
@@ -316,7 +336,6 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                         .bind("id", id)
                         .fetch().all());
     }
-
 
     public Flux<Map<String, Object>> findSuscribersOfUsername(String username) {
         return findIdByUsername(username)
@@ -333,36 +352,39 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
     }
 
     /**
-    * Checks if a user is following a given streamer by their usernames.
-    *
-    * @param followerUsername the username of the follower
-    * @param streamerUsername the username of the streamer
-    * @return a {@link Mono} emitting {@code true} if the user follows the streamer, {@code false} otherwise
-    */
+     * Checks if a user is following a given streamer by their usernames.
+     *
+     * @param followerUsername the username of the follower
+     * @param streamerUsername the username of the streamer
+     * @return a {@link Mono} emitting {@code true} if the user follows the
+     *         streamer, {@code false} otherwise
+     */
     public Mono<Boolean> checkUserFollowsStreamerByUsername(String followerUsername, String streamerUsername) {
         Mono<Integer> followerIdMono = findIdByUsername(followerUsername);
         Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
         return Mono.zip(followerIdMono, streamerIdMono)
-                .flatMap(tuple -> dbClient.sql("SELECT * FROM followers_streamers WHERE follower_id = :follower_id AND streamer_id = :streamer_id")
+                .flatMap(tuple -> dbClient.sql(
+                        "SELECT * FROM followers_streamers WHERE follower_id = :follower_id AND streamer_id = :streamer_id")
                         .bind("follower_id", tuple.getT1())
                         .bind("streamer_id", tuple.getT2())
                         .fetch().first())
                 .map(res -> true).defaultIfEmpty(false);
     }
 
-
     /**
-    * Checks if a user is subscribed to a given streamer by their usernames.
-    *
-    * @param suscriberUsername the username of the subscriber
-    * @param streamerUsername the username of the streamer
-    * @return a {@link Mono} emitting {@code true} if the user is subscribed to the streamer, {@code false} otherwise
-    */
+     * Checks if a user is subscribed to a given streamer by their usernames.
+     *
+     * @param suscriberUsername the username of the subscriber
+     * @param streamerUsername  the username of the streamer
+     * @return a {@link Mono} emitting {@code true} if the user is subscribed to the
+     *         streamer, {@code false} otherwise
+     */
     public Mono<Boolean> checkUserSuscribedStreamerByUsername(String suscriberUsername, String streamerUsername) {
         Mono<Integer> followerIdMono = findIdByUsername(suscriberUsername);
         Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
         return Mono.zip(followerIdMono, streamerIdMono)
-                .flatMap(tuple -> dbClient.sql("SELECT * FROM suscribers_streamers WHERE suscriber_id = :suscriber_id AND streamer_id = :streamer_id")
+                .flatMap(tuple -> dbClient.sql(
+                        "SELECT * FROM suscribers_streamers WHERE suscriber_id = :suscriber_id AND streamer_id = :streamer_id")
                         .bind("suscriber_id", tuple.getT1())
                         .bind("streamer_id", tuple.getT2())
                         .fetch().first())
@@ -370,12 +392,12 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
     }
 
     /**
-    * Adds a follower to a streamer by their usernames, if not already following.
-    *
-    * @param followerUsername the username of the follower
-    * @param streamerUsername the username of the streamer
-    * @return a {@link Mono} signaling completion when the operation is done
-    */
+     * Adds a follower to a streamer by their usernames, if not already following.
+     *
+     * @param followerUsername the username of the follower
+     * @param streamerUsername the username of the streamer
+     * @return a {@link Mono} signaling completion when the operation is done
+     */
     public Mono<Integer> followUser(String followerUsername, String streamerUsername) {
         Mono<Integer> followerIdMono = findIdByUsername(followerUsername);
         Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
@@ -383,30 +405,32 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
         return checkUserFollowsStreamerByUsername(followerUsername, streamerUsername)
                 .filter(userAlreadyFollows -> !userAlreadyFollows)
                 .flatMap(userDoesntFollow -> Mono.zip(followerIdMono, streamerIdMono))
-                .flatMap(tuple -> dbClient.sql("INSERT INTO followers_streamers (streamer_id, follower_id) VALUES (:streamer_id, :follower_id)")
+                .flatMap(tuple -> dbClient.sql(
+                        "INSERT INTO followers_streamers (streamer_id, follower_id) VALUES (:streamer_id, :follower_id)")
                         .bind("follower_id", tuple.getT1())
                         .bind("streamer_id", tuple.getT2())
                         .fetch().rowsUpdated())
-                        .flatMap(changes -> {
-                            switch (changes.intValue()) {
-                                case 0 -> logger.warning("No user was added to follows");
-                                case 1 -> logger.info("User added as follower");
-                            }
+                .flatMap(changes -> {
+                    switch (changes.intValue()) {
+                        case 0 -> logger.warning("No user was added to follows");
+                        case 1 -> logger.info("User added as follower");
+                    }
 
-                            if (changes > 1)
-                                logger.warning("More than one row affected inserting follower, something bad happened...");
+                    if (changes > 1)
+                        logger.warning("More than one row affected inserting follower, something bad happened...");
 
-                            return Mono.just(changes.intValue());
-                        });
+                    return Mono.just(changes.intValue());
+                });
     }
 
     /**
-    * Subscribes a user to a streamer by their usernames, if not already subscribed.
-    *
-    * @param suscriberUsername the username of the subscriber
-    * @param streamerUsername the username of the streamer
-    * @return a {@link Mono} signaling completion when the operation is done
-    */
+     * Subscribes a user to a streamer by their usernames, if not already
+     * subscribed.
+     *
+     * @param suscriberUsername the username of the subscriber
+     * @param streamerUsername  the username of the streamer
+     * @return a {@link Mono} signaling completion when the operation is done
+     */
     public Mono<Integer> suscribeUser(String suscriberUsername, String streamerUsername) {
         Mono<Integer> followerIdMono = findIdByUsername(suscriberUsername);
         Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
@@ -414,32 +438,32 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
         return checkUserSuscribedStreamerByUsername(suscriberUsername, streamerUsername)
                 .filter(userAlreadyFollows -> !userAlreadyFollows)
                 .flatMap(userDoesntFollow -> Mono.zip(followerIdMono, streamerIdMono))
-                .flatMap(tuple -> dbClient.sql("INSERT INTO suscribers_streamers (streamer_id, suscriber_id) VALUES (:streamer_id, :suscriber_id)")
+                .flatMap(tuple -> dbClient.sql(
+                        "INSERT INTO suscribers_streamers (streamer_id, suscriber_id) VALUES (:streamer_id, :suscriber_id)")
                         .bind("suscriber_id", tuple.getT1())
                         .bind("streamer_id", tuple.getT2())
                         .fetch().rowsUpdated())
-                        .flatMap(changes -> {
-                            switch (changes.intValue()) {
-                                case 0 -> logger.warning("No user was added to suscriber");
-                                case 1 -> logger.info("User suscribed succesfully");
-                            }
+                .flatMap(changes -> {
+                    switch (changes.intValue()) {
+                        case 0 -> logger.warning("No user was added to suscriber");
+                        case 1 -> logger.info("User suscribed succesfully");
+                    }
 
-                            if (changes > 1)
-                                logger.warning("More than one row affected inserting suscriber, something bad happened...");
+                    if (changes > 1)
+                        logger.warning("More than one row affected inserting suscriber, something bad happened...");
 
-                            return Mono.just(changes.intValue());
-                        });
+                    return Mono.just(changes.intValue());
+                });
     }
 
-
-
     /**
-    * Removes a follower from a streamer by their usernames, if currently following.
-    *
-    * @param followerUsername the username of the follower
-    * @param streamerUsername the username of the streamer
-    * @return a {@link Mono} signaling completion when the operation is done
-    */
+     * Removes a follower from a streamer by their usernames, if currently
+     * following.
+     *
+     * @param followerUsername the username of the follower
+     * @param streamerUsername the username of the streamer
+     * @return a {@link Mono} signaling completion when the operation is done
+     */
     public Mono<Integer> unfollowUser(String followerUsername, String streamerUsername) {
         Mono<Integer> followerIdMono = findIdByUsername(followerUsername);
         Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
@@ -447,31 +471,32 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
         return checkUserFollowsStreamerByUsername(followerUsername, streamerUsername)
                 .filter(userAlreadyFollows -> userAlreadyFollows)
                 .flatMap(userFollows -> Mono.zip(followerIdMono, streamerIdMono))
-                .flatMap(tuple -> dbClient.sql("DELETE FROM followers_streamers WHERE streamer_id = :streamer_id AND follower_id = :follower_id")
+                .flatMap(tuple -> dbClient.sql(
+                        "DELETE FROM followers_streamers WHERE streamer_id = :streamer_id AND follower_id = :follower_id")
                         .bind("follower_id", tuple.getT1())
                         .bind("streamer_id", tuple.getT2())
                         .fetch().rowsUpdated())
-                        .flatMap(changes -> {
-                            switch (changes.intValue()) {
-                                case 0 -> logger.warning("No user was unfollowed");
-                                case 1 -> logger.info("User unfollowed succesfully");
-                            }
+                .flatMap(changes -> {
+                    switch (changes.intValue()) {
+                        case 0 -> logger.warning("No user was unfollowed");
+                        case 1 -> logger.info("User unfollowed succesfully");
+                    }
 
-                            if (changes > 1)
-                                logger.warning("More than one row affected unfollowing user, something bad happened...");
+                    if (changes > 1)
+                        logger.warning("More than one row affected unfollowing user, something bad happened...");
 
-                            return Mono.just(changes.intValue());
-                        });
+                    return Mono.just(changes.intValue());
+                });
     }
 
-
     /**
-    * Unsubscribes a user from a streamer by their usernames, if currently subscribed.
-    *
-    * @param suscriberUsername the username of the subscriber
-    * @param streamerUsername the username of the streamer
-    * @return a {@link Mono} signaling completion when the operation is done
-    */
+     * Unsubscribes a user from a streamer by their usernames, if currently
+     * subscribed.
+     *
+     * @param suscriberUsername the username of the subscriber
+     * @param streamerUsername  the username of the streamer
+     * @return a {@link Mono} signaling completion when the operation is done
+     */
     public Mono<Integer> unsuscribeUser(String suscriberUsername, String streamerUsername) {
         Mono<Integer> suscriberIdMono = findIdByUsername(suscriberUsername);
         Mono<Integer> streamerIdMono = findIdByUsername(streamerUsername);
@@ -479,21 +504,41 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
         return checkUserSuscribedStreamerByUsername(suscriberUsername, streamerUsername)
                 .filter(userAlreadySuscribed -> userAlreadySuscribed)
                 .flatMap(userSuscribed -> Mono.zip(suscriberIdMono, streamerIdMono))
-                .flatMap(tuple -> dbClient.sql("DELETE FROM suscribers_streamers WHERE streamer_id = :streamer_id AND suscriber_id = :suscriber_id")
+                .flatMap(tuple -> dbClient.sql(
+                        "DELETE FROM suscribers_streamers WHERE streamer_id = :streamer_id AND suscriber_id = :suscriber_id")
                         .bind("suscriber_id", tuple.getT1())
                         .bind("streamer_id", tuple.getT2())
                         .fetch().rowsUpdated())
-                        .flatMap(changes -> {
-                            switch (changes.intValue()) {
-                                case 0 -> logger.warning("No user was unsuscribed");
-                                case 1 -> logger.info("User unsuscribed succesfully");
-                            }
+                .flatMap(changes -> {
+                    switch (changes.intValue()) {
+                        case 0 -> logger.warning("No user was unsuscribed");
+                        case 1 -> logger.info("User unsuscribed successfully");
+                    }
 
-                            if (changes > 1)
-                                logger.warning("More than one row affected unsuscribing user, something bad happened...");
+                    if (changes > 1)
+                        logger.warning("More than one row affected unsuscribing user, something bad happened...");
 
-                            return Mono.just(changes.intValue());
-                        });
+                    return Mono.just(changes.intValue());
+                });
+    }
+
+    // Don't need to check if null bc is always '' at least.
+    public Mono<Integer> updateDescription(String username, String description) {
+        return dbClient.sql("UPDATE users SET description = :description WHERE username = :username")
+                .bind("description", description)
+                .bind("username", username)
+                .fetch().rowsUpdated()
+                .flatMap(changes -> {
+                    switch (changes.intValue()) {
+                        case 0 -> logger.warning("No description was updated");
+                        case 1 -> logger.info("Description updated successfully");
+                    }
+
+                    if (changes > 1)
+                        logger.warning("More than one row affected updating user description, something bad happened...");
+
+                    return Mono.just(changes.intValue());
+                });
     }
 
     /**
@@ -506,7 +551,5 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
     public void query(String sql) {
         dbClient.sql(sql).fetch().rowsUpdated().subscribe();
     }
-
-
 
 }

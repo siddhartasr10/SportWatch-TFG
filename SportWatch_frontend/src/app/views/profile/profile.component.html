@@ -44,7 +44,7 @@
 
         <!-- Right-side Buttons -->
         <div class="flex flex-col gap-3 mt-4" [class.invisible]="this.actualUsername !== this.profileUsername">
-            <button mat-raised-button class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-full">
+            <button mat-raised-button class="bg-red-600  text-white font-semibold py-2 px-4 rounded-full">
             Empezar Directo
             </button>
         </div>
@@ -107,13 +107,26 @@
         <!-- About Tab -->
         <mat-tab label="INFORMACIÓN">
             <div class="text-white m-6 h-2/3">
-                <div class="max-w-3xl">
+                <div class="max-w-3xl gap-y-8">
+                    <div class="mb-4!">
+                        <a *ngIf="this.actualUsername === this.profileUsername" (click)="toggleEditProfileDescription()" class="cursor-pointer mb-8! text-gray-400 font-lighter"> Cambiar Descripción... </a>
+                    </div>
+
                     <h2 class="text-xl font-bold mb-4">Descripción</h2>
-                    <p class="text-gray-300 whitespace-pre-line">Profile Description</p><!-- {{profileDescription}} -->
+                    <p [class.invisible]="editDescriptionMode" class="text-gray-300 whitespace-pre-line">{{profileUser?.description || 'No hay descripción'}}</p><!-- {{profileDescription}} -->
+
+                    <div [class.hidden]="!editDescriptionMode" class="flex flex-col gap-y-4">
+                        <textarea value="{{profileUser?.description || ''}}" #descriptionEdit
+                                  class="max-w-1/2 min-w-1/10 bg-white relative rounded-lg border-black/30 border-3 text-black p-4" maxlength="400"></textarea>
+
+                        <button mat-raised-button (click)="onProfileDescriptionEdit(descriptionEdit)" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-full w-3/10">
+                        Guardar Descripcion
+                        </button>
+                    </div>
 
                     <div class="mt-8">
                         <h3 class="text-lg font-bold mb-2">Estadísticas</h3>
                         <p class="text-gray-300">Se unió el {{profileUser?.created_at!.split("T")[0] || "Desconocido"}}</p>
                         <p class="text-gray-300">0 visualizaciones totales</p>
                     </div>
-
+                </div>
