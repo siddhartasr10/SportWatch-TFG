@@ -40,6 +40,7 @@ export class ProfileComponent {
     actualUsername! : string;
     actualUserFollowsProfileUser!: boolean;
     actualUserSuscribedProfileUser!: boolean;
+
     // Seguir | Siguiendo
     followBtnMsg : String = "";
     // Unirme | Eres miembro
@@ -72,14 +73,14 @@ export class ProfileComponent {
         let json : {[msg:string] : string} = await firstValueFrom(this.authService.checkUser());
         this.actualUsername = json["msg"];
 
-        this.userService.checkFollows(json["msg"], this.profileUsername).subscribe((doesFollow) => {
+        this.userService.checkFollows(this.actualUsername, this.profileUsername).subscribe((doesFollow) => {
             this.actualUserFollowsProfileUser = doesFollow;
 
             (doesFollow) ? this.followBtnMsg = "Siguiendo" : this.followBtnMsg = "Seguir";
         });
 
-        this.userService.checkSuscribed(json["msg"], this.profileUsername).subscribe((isSuscribed) => {
-            this.actualUserFollowsProfileUser = isSuscribed;
+        this.userService.checkSuscribed(this.actualUsername, this.profileUsername).subscribe((isSuscribed) => {
+            this.actualUserSuscribedProfileUser = isSuscribed;
 
             (isSuscribed) ? this.suscribeBtnMsg = "Eres miembro" : this.suscribeBtnMsg = "Unirme";
         });
