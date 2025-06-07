@@ -112,6 +112,7 @@ public class UploadController {
             .flatMap(tuple -> uploadService.findFreeChannel(tuple.getT1(), tuple.getT2().get("title"),
                                                             Optional.ofNullable(tuple.getT2().get("desc")), Optional.ofNullable(tuple.getT2().get("category")))
                      .flatMap(channelInfo -> {
+                             // if it doesnt Mono.empty defaultIfEmpty:
                              if (channelInfo.streamKey() != null && channelInfo.rtmpsUrl() != null)
                                  return Mono.just(channelInfo);
 
