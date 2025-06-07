@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"username" varchar(50) NOT NULL UNIQUE,
 	"password" varchar(72) NOT NULL,
 	"email" varchar(400) UNIQUE,
+	"desc" varchar(400),
 	"created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"streamer_id" int UNIQUE,
 	"notifications" varchar(128)[],

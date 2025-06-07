@@ -23,14 +23,14 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/")
-public class UtilController {
+public class UserController {
 
     JwtService jwtService;
     UserService userService;
 
-    private static Logger log = Logger.getLogger(UtilController.class.getName());
+    private static Logger log = Logger.getLogger(UserController.class.getName());
 
-    UtilController(JwtService jwtService, UserService userService) {
+    UserController(JwtService jwtService, UserService userService) {
         this.jwtService = jwtService;
         this.userService = userService;
     }

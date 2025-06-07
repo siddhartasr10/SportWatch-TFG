@@ -577,3 +577,12 @@ ivs/v1/123456789012/abcdEfghIJkl/2025/05/28/media/latest_thumbnail/thumb.jpg
         NOTA PARA apuntar en el tfg y en el README: No se si añadiré subida de archivos para las miniaturas ya que hacerlo seguro es muy dificil y
         tienen más prioridad funcionalidades más necesarias como comentarios. Para los que tendré que hacer un poller y explicar en mi tfg que no voy a
         implementar ws porque no es necesario para tan pocos usuarios y me llevaría mucho tiempo. AÑADIR AL PDF COMO FUNCIONALIDADES A MEJORAR.
+
+
+*  Añadido favicon, Logo y hero section de la landing.
+
+*  Añadir descripcion a los usuarios y conectarla con el perfil (da la opcion de cambiarla).
+Ya que hago esto y me meto en el backend hago el crud de los comentarios y a lo mejor el de las notificaciones
+Además corrijo el backend, ya que no necesito un follows ni suscribed en la tabla de usuario, he optado por hacerlo en sus propias tablas M:M
+
+*  Panel de subir vídeo con titulo, categoria y desc para enviar, que una vez que se pasen los datos te da la info para empezar directo
