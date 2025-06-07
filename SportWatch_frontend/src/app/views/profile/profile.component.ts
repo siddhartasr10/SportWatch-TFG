@@ -134,7 +134,5 @@ export class ProfileComponent {
     // If start stream popup is visible, and someone clicks outside of it, it will close.
     @HostListener('document:click', ['$event'])
     onDocumentClick(ev : Event) : void {
-
-
     }
 }

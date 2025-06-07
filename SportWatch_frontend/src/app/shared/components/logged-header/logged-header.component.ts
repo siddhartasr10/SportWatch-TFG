@@ -1,4 +1,4 @@
-import { Component, output, Output, OutputEmitterRef, WritableSignal, signal, OnInit, OnDestroy } from '@angular/core';
+import { Component, output, Output, OutputEmitterRef, WritableSignal, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -31,7 +31,11 @@ export class LoggedHeaderComponent {
         this.searchEv.emit(search);
     }
 
-    updateProfileModal() {
+    updateProfileModal(ev : Event) {
+        // Tengo un evento en document que tapa el dropdown si haces click, si se propaga
+        // tan pronto como se abra el modal se cerrará.
+        ev.stopPropagation();
+
         this.profileModalState.update(state => !state);
         if (!this.profileModalState()) return clearInterval(this.currentIntervalId);
 
@@ -58,5 +62,11 @@ export class LoggedHeaderComponent {
 
     ngOnDestroy() {
         clearInterval(this.currentIntervalId);
+    }
+
+
+    @HostListener('document:click', ['$event'])
+    onDocumentClick(ev : Event) {
+        this.profileModalState.set(false);
     }
 }

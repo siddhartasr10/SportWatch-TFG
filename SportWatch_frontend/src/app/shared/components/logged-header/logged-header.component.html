@@ -7,7 +7,7 @@
         <img src="/shared/search.svg" class="w-[45px] h-[45px] justify-self-center opacity-75 cursor-pointer" (click)="handleSearch(searchBar.value)"  alt="Una lupa de búsqueda" />
     </div>
 
-    <div class="w-[70px] h-[70px] rounded-[20cm] select-none mr-11" (click)="updateProfileModal()">
+    <div class="w-[70px] h-[70px] rounded-[20cm] select-none mr-11" (click)="updateProfileModal($event)">
         <img src="/shared/default_user.svg" alt="SportWatch Logo" class="w-full h-full rounded-[20cm] focus:outline-blue-200 cursor-pointer">
     </div>
 
