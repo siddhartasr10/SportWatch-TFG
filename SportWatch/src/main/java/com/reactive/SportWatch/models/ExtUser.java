@@ -21,7 +21,7 @@ public class ExtUser extends User implements ExtUserDetails {
     private final Integer userId;
 	private final String email;
     private final LocalDateTime created_at;
-    private final String desc;
+    private final String description;
     /*
      * @Tparam char[l] l=128 is what I setted on the db
      * some logic will have to be made to check the array until "\0" (null terminator)
@@ -35,21 +35,21 @@ public class ExtUser extends User implements ExtUserDetails {
 	 * @param accountNonLocked set to <code>true</code> if the account is not locked
 	 */
      // If built from the constructor it will only check null on username and password (this is intended, as only debug extUsers will be created using the constructor)
-    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, LocalDateTime created_at, String desc, Integer userId, List<char[]> notifications) {
+    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, LocalDateTime created_at, String description, Integer userId, List<char[]> notifications) {
         super(username, password, authorities);
         this.email = email;
         this.created_at = created_at;
-        this.desc = desc;
+        this.description = description;
         this.userId = userId;
         this.notifications = notifications;
     }
 
     // Constructor to allow builder to bypass internal builder's encoded password
-    public ExtUser(User user, String password, String email, LocalDateTime created_at, String desc, Integer userId, List<char[]> notifications) {
+    public ExtUser(User user, String password, String email, LocalDateTime created_at, String description, Integer userId, List<char[]> notifications) {
         super(user.getUsername(), password, user.getAuthorities());
         this.email = email;
         this.created_at = created_at;
-        this.desc = desc;
+        this.description = description;
         this.userId = userId;
         this.notifications = notifications;
     }
@@ -62,8 +62,8 @@ public class ExtUser extends User implements ExtUserDetails {
         return created_at;
     }
 
-    public String getDesc() {
-        return desc;
+    public String getDescription() {
+        return description;
     }
 
     public Integer getuserId() {
@@ -83,7 +83,7 @@ public class ExtUser extends User implements ExtUserDetails {
                               + "userId: %s,  with %s notifications>",
                               this.getUsername(), this.getPassword(),
                               this.getEmail(), this.getAuthorities(),
-                              this.getCreated_at(), this.getDesc(),
+                              this.getCreated_at(), this.getDescription(),
                               this.getuserId(), this.getNotifications());
     }
 
@@ -97,7 +97,7 @@ public class ExtUser extends User implements ExtUserDetails {
 
         private LocalDateTime created_at;
 
-        private String desc;
+        private String description;
 
         private Integer userId;
 
@@ -161,7 +161,7 @@ public class ExtUser extends User implements ExtUserDetails {
 		 * additional attributes for this user)
 		 */
 		public UserBuilder email(String email) {
-			// Assert.notNull(email, "email cannot be null");
+			// Assert.notNull(email, "ema_il cannot be null");
 			this.email = email;
 			return this;
 		}
@@ -181,13 +181,13 @@ public class ExtUser extends User implements ExtUserDetails {
 
 		/**
 		 * Populates the user description.
-		 * @param desc can be null
+		 * @param description can be null
 		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
 		 * additional attributes for this user)
 		 * It shouldn't be set at register time postgres does it for you.
 		 */
-        public UserBuilder desc(String desc) {
-            this.desc = desc;
+        public UserBuilder description(String description) {
+            this.description = description;
             return this;
         }
 
@@ -319,7 +319,7 @@ public class ExtUser extends User implements ExtUserDetails {
         // as its encoded and encoding in ExtUser is external not internal.
 		public ExtUserDetails build() {
             User internalUser = (User) this.internalBuilder.build();
-			return new ExtUser(internalUser, this.tmpPassword, this.email, this.created_at, this.desc, this.userId, this.notifications);
+			return new ExtUser(internalUser, this.tmpPassword, this.email, this.created_at, this.description, this.userId, this.notifications);
 		}
 
 	}

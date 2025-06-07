@@ -24,6 +24,6 @@ public interface ExtUserDetails extends UserDetails {
 	 */
     Integer getuserId();
 
-    String getDesc();
+    String getDescription();
 
 }

@@ -4,7 +4,7 @@ export interface ExtUser {
   password: string;
   email: string;
   created_at: string; // ISO string representation of LocalDateTime
-  desc: string;
+  description: string;
   notifications: string[] | null; // each string represents a char[128]
   authorities: string[]; // Spring Security authorities, only can be "USER"
 }
