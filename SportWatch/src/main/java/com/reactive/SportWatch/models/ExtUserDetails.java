@@ -22,6 +22,8 @@ public interface ExtUserDetails extends UserDetails {
 	 * Returns the streamer id or null saved to identify if the user can upload videos. Can return <code> null </code>
 	 * @return the streamer id or <code> null </code>
 	 */
-    Integer getuser_id();
+    Integer getuserId();
+
+    String getDesc();
 
 }

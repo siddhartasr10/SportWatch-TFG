@@ -51,7 +51,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             .password(row.get("password", String.class))
                             .email(row.get("email", String.class))
                             .created_at(row.get("created_at", LocalDateTime.class))
-                            .user_id(row.get("user_id", Integer.class))
+                            .userId(row.get("user_id", Integer.class))
                             .authorities("USER") // La db actual no tiene roles, todos son users.
                             .build();
 
@@ -110,7 +110,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             .password(row.get("password", String.class))
                             .email(row.get("email", String.class))
                             .created_at(row.get("created_at", LocalDateTime.class))
-                            .user_id(row.get("user_id", Integer.class))
+                            .userId(row.get("user_id", Integer.class))
                             .notifications(row.get("notifications", char[][].class))
                             .authorities("USER") // La db actual no tiene roles, todos son users.
                             .build();

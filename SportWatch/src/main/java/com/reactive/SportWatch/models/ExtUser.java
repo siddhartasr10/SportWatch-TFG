@@ -12,13 +12,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.util.Assert;
 
 // Info: El encoding de la contraseña se hace aparte del builder por cuestiones de seguridad
+// Se guarda la id obligatoriamente ya que esta entidad se usa solo para sacar de la db perfiles
+// no para crear nuevos. Pa eso esta la interfaz
 public class ExtUser extends User implements ExtUserDetails {
     // I use a different logger than the super class
     private static final Logger logger = Logger.getLogger(ExtUser.class.toString());
 
-    private final Integer user_id;
+    private final Integer userId;
 	private final String email;
     private final LocalDateTime created_at;
+    private final String desc;
     /*
      * @Tparam char[l] l=128 is what I setted on the db
      * some logic will have to be made to check the array until "\0" (null terminator)
@@ -32,20 +35,22 @@ public class ExtUser extends User implements ExtUserDetails {
 	 * @param accountNonLocked set to <code>true</code> if the account is not locked
 	 */
      // If built from the constructor it will only check null on username and password (this is intended, as only debug extUsers will be created using the constructor)
-    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, LocalDateTime created_at, Integer user_id, List<char[]> notifications) {
+    public ExtUser(String username, String password, String email, Collection<? extends GrantedAuthority> authorities, LocalDateTime created_at, String desc, Integer userId, List<char[]> notifications) {
         super(username, password, authorities);
         this.email = email;
         this.created_at = created_at;
-        this.user_id = user_id;
+        this.desc = desc;
+        this.userId = userId;
         this.notifications = notifications;
     }
 
     // Constructor to allow builder to bypass internal builder's encoded password
-    public ExtUser(User user, String password, String email, LocalDateTime created_at, Integer user_id, List<char[]> notifications) {
+    public ExtUser(User user, String password, String email, LocalDateTime created_at, String desc, Integer userId, List<char[]> notifications) {
         super(user.getUsername(), password, user.getAuthorities());
         this.email = email;
         this.created_at = created_at;
-        this.user_id = user_id;
+        this.desc = desc;
+        this.userId = userId;
         this.notifications = notifications;
     }
 
@@ -57,8 +62,12 @@ public class ExtUser extends User implements ExtUserDetails {
         return created_at;
     }
 
-    public Integer getuser_id() {
-        return user_id;
+    public String getDesc() {
+        return desc;
+    }
+
+    public Integer getuserId() {
+        return userId;
     }
 
     public List<char[]> getNotifications() {
@@ -70,12 +79,12 @@ public class ExtUser extends User implements ExtUserDetails {
         return  String.format("ExtUser: " +
                               "<Username: %s, Password: %s, "
                               + "Email: %s, authorities: %s, "
-                              + "created at: %s, user_id: %s,  "
-                              + "with %s notifications>",
+                              + "created at: %s, description: %s, "
+                              + "userId: %s,  with %s notifications>",
                               this.getUsername(), this.getPassword(),
                               this.getEmail(), this.getAuthorities(),
-                              this.getCreated_at(), this.getuser_id(),
-                              this.getNotifications());
+                              this.getCreated_at(), this.getDesc(),
+                              this.getuserId(), this.getNotifications());
     }
 
     /* Copia de UserBuilder de User pero con email y más simple (cutre)
@@ -88,7 +97,9 @@ public class ExtUser extends User implements ExtUserDetails {
 
         private LocalDateTime created_at;
 
-        private Integer user_id;
+        private String desc;
+
+        private Integer userId;
 
         /*
         * @Tparam char[l] l=128 is what I setted on the db
@@ -168,32 +179,43 @@ public class ExtUser extends User implements ExtUserDetails {
 			return this;
         }
 
+		/**
+		 * Populates the user description.
+		 * @param desc can be null
+		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
+		 * additional attributes for this user)
+		 * It shouldn't be set at register time postgres does it for you.
+		 */
+        public UserBuilder desc(String desc) {
+            this.desc = desc;
+            return this;
+        }
 
 		/**
 		 * Populates the Streamer ID
-		 * @param user_id can be null
+		 * @param userId can be null
 		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
 		 * It shouldn't be set at register time
 		 * additional attributes for this user)
 		 */
-        public UserBuilder user_id(Integer user_id) {
-			// user_id can be null
-			// Assert.notNull(user_id, "... cannot be null");
-			this.user_id = user_id;
+        public UserBuilder userId(Integer userId) {
+			// userId can be null
+			// Assert.notNull(userId, "... cannot be null");
+			this.userId = userId;
 			return this;
         }
 
 		/**
 		 * Populates the Streamer ID
-		 * @param user_id can be null
+		 * @param userId can be null
 		 * @return the {@link UserBuilder} for method chaining (i.e. to populate
 		 * It shouldn't be set at register time
 		 * additional attributes for this user)
 		 */
-        public UserBuilder user_id(int user_id) {
-			// user_id can be null
-			// Assert.notNull(user_id, "... cannot be null");
-			this.user_id = user_id;
+        public UserBuilder userId(int userId) {
+			// userId can be null
+			// Assert.notNull(userId, "... cannot be null");
+			this.userId = userId;
 			return this;
         }
 
@@ -297,7 +319,7 @@ public class ExtUser extends User implements ExtUserDetails {
         // as its encoded and encoding in ExtUser is external not internal.
 		public ExtUserDetails build() {
             User internalUser = (User) this.internalBuilder.build();
-			return new ExtUser(internalUser, this.tmpPassword, this.email, this.created_at, this.user_id,  this.notifications);
+			return new ExtUser(internalUser, this.tmpPassword, this.email, this.created_at, this.desc, this.userId, this.notifications);
 		}
 
 	}
@@ -344,7 +366,7 @@ public class ExtUser extends User implements ExtUserDetails {
             .authorities(extendedUserDetails.getAuthorities())
             .email(extendedUserDetails.getEmail())
             .created_at(extendedUserDetails.getCreated_at())
-            .user_id(extendedUserDetails.getuser_id());
+            .userId(extendedUserDetails.getuserId());
 
     }
 
