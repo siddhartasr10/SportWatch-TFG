@@ -1,5 +1,5 @@
 import { Component, WritableSignal, signal, } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { MatChipListbox, MatChipOption, MatChipsModule } from '@angular/material/chips';
 
@@ -17,8 +17,13 @@ import { HttpErrorResponse } from '@angular/common/http';
   styleUrl: './feed.component.css'
 })
 export class FeedComponent {
-    constructor(private router : Router, private fetchService : FetchService ) {
+    constructor(private router : Router, private fetchService : FetchService, private route : ActivatedRoute) {
         this.loadVideos();
+
+        this.route.queryParams.subscribe((params) => {
+            console.log(params);
+            this.search = signal(params["s"]);
+        });
     }
 
     search : WritableSignal<string> = signal('');
@@ -29,8 +34,8 @@ export class FeedComponent {
 
 
     // Me podría pasar los parámetros si quisiera del valor del .value del input si sacara el otro componente pero no sería escalable para funcionar en todos los componentes.
-    onSearch(searchQuery : string) {
-        this.search.set(searchQuery);
+    onSearch(searchQuery : WritableSignal<string>) {
+        this.search = searchQuery;
         this.filteredVideos.set(this.filterBySearch(this.videos()));
         this.filteredVideos.set(this.filterByCategory(this.filteredVideos()));
         // Después del search habría un get a la api y luego el @for se encargaría del resto.
@@ -42,7 +47,11 @@ export class FeedComponent {
             next: (videos : StreamingInfo[]) => this.videos.set(videos),
             error: (error : HttpErrorResponse) => console.log("Error ocurred loading videos: ", error),
             complete: () => {
+                console.log("current search:", this.search());
+                console.log("Videos before search filtering: ", this.filteredVideos());
                 this.filteredVideos.set(this.filterBySearch(this.videos()));
+
+                console.log("Videos after search filtering: ", this.filteredVideos());
                 this.filteredVideos.set(this.filterByCategory(this.filteredVideos()));
             }
         });
@@ -67,17 +76,19 @@ export class FeedComponent {
         this.filteredVideos.set(this.filterByCategory(this.videos()));
         this.filteredVideos.set(this.filterBySearch(this.filteredVideos()));
         // usaria update en vez de set pero no se porque no funciona.
-        // Me imagino que aquí filtraría la vista o llamaría a un filter con los videos que hay.
-    }
+        }
 
-    filterByCategory(videos : StreamingInfo[]) : StreamingInfo[] {
+
+    filterByCategory(videos: StreamingInfo[]) : StreamingInfo[] {
         if (this.selectedChips().length === 0) return videos;
         return videos.filter(video => this.selectedChips().filter(category => (video.category.toLowerCase()) === category.toLowerCase()).length !== 0);
     }
 
     filterBySearch(videos : StreamingInfo[]) : StreamingInfo[] {
         if (this.search() === "") return videos;
-        return videos.filter(video => this.search()!.split(" ")!.filter(word => new RegExp(`\\b${word}\s`, "i").test(video.title)).length !== 0)
+        const searchWords : string[] = this.search()?.split(" ");
+
+        return videos?.filter(video => searchWords?.filter(word => new RegExp(`${word}`, "i").test(video.title)).length !== 0);
     }
 
 }

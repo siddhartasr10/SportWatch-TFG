@@ -1,4 +1,4 @@
-import { Component, output, Output, OutputEmitterRef, WritableSignal, signal, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, output, Output, OutputEmitterRef, WritableSignal, signal, OnInit, OnDestroy, HostListener, viewChild, ViewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -12,15 +12,18 @@ import { CookieService } from '../../services/cookie-service/cookie-service.serv
   styleUrl: './logged-header.component.css'
 })
 export class LoggedHeaderComponent {
+    @ViewChild("searchBar") searchBar!: HTMLInputElement;
+
     constructor(private router : Router, private authService : AuthService, private cookieService : CookieService) {
         this.user = this.cookieService?.getUser();
+        this.searchEv.emit(signal(this.searchBar?.value || ""));
     }
 
     user : string | undefined;
 
     // No le pongo 'search' porque (search)="" search es un evento experimental de chrome ;(
     // Output va de componente hijo -> padre Input de padre -> hijo.
-    searchEv: OutputEmitterRef<string> = output<string>();
+    searchEv: OutputEmitterRef<WritableSignal<string>> = output<WritableSignal<string>>();
     profileModalState : WritableSignal<boolean> = signal(false);
 
     previousScrollY : number  = 0;
@@ -28,7 +31,7 @@ export class LoggedHeaderComponent {
 
     handleSearch(search : string) {
         this.router.navigate(["/feed"], {queryParams: {"s": search}});
-        this.searchEv.emit(search);
+        this.searchEv.emit(signal(search));
     }
 
     updateProfileModal(ev : Event) {

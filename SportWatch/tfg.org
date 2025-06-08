@@ -594,3 +594,8 @@ ivs/v1/123456789012/abcdEfghIJkl/2025/05/28/media/latest_thumbnail/thumb.jpg
 
     NOTA IMPORTANTE PARA AÑADIR AL PDF DEL TFG: No añado validacion compleja para desasignarle un canal (caducarlo) a alguien que no empiece directo al tiempo porque para
     un prototipo me parece innecesario.
+
+    Poner en el tfg que la pagina se inspirado en el diseño de yt y hbo sports (max) entre otros.
+*  Correcion rapida busqueda feed ahora que hay mas de un directo y copia pega a subscriptions
+        Corregido y añadida logica en el logo para variar el a donnde te lleva.
+        falta copia pega subs y videos.

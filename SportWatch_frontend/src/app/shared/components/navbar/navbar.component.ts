@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink, UrlSegment } from '@angular/router';
 
 @Component({
   selector: 'app-navbar',
@@ -8,5 +8,16 @@ import { RouterLink } from '@angular/router';
   styleUrl: './navbar.component.css'
 })
 export class NavbarComponent {
+    private nonLoggedPaths : string[] = ["welcome", "login", "register"];
+    logoRedirects : string = "";
+
+    constructor(private route : ActivatedRoute) {
+        route.url.subscribe((url : UrlSegment[]) => {
+            this.logoRedirects =
+                (this.nonLoggedPaths.some(path => path === url[0].path))
+                ? "/welcome"
+                : "/feed"
+        });
+    }
 
 }
