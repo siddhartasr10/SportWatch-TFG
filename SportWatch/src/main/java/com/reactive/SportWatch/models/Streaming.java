@@ -115,5 +115,12 @@ public class Streaming {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "Streaming [streamId=" + streamId + ", authorId=" + authorId + ", arn=" + arn + ", object_key="
+                + object_key + ", title=" + title + ", category=" + category + ", desc=" + desc + ", created_at="
+                + created_at + ", thumbnail_obj_key=" + thumbnail_obj_key + "]";
+    }
+
 
 }

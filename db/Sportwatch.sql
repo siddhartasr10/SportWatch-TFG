@@ -18,12 +18,12 @@ CREATE TABLE IF NOT EXISTS "streamer_details" (
 
 CREATE TABLE IF NOT EXISTS "streams" (
 	"stream_id" serial NOT NULL UNIQUE,
-	"author_id" int NOT NULL UNIQUE,
+	"author_id" int NOT NULL,
 	"title" varchar(32),
 	"arn" varchar(2048),
 	"object_key" varchar(160) UNIQUE,
 	"category" varchar(30) NOT NULL,
-	"desc" varchar(512),
+	"description" varchar(512),
 	"created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
  	"thumbnail_obj_key" varchar(160) UNIQUE,
 	PRIMARY KEY ("stream_id")

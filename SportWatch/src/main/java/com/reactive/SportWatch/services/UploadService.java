@@ -139,12 +139,13 @@ public class UploadService {
                                 .filter(isLive -> !isLive)
                                  // here goes the db logic, which is key
                                 .map(notLive -> channel.arn())
-                                .map(arn -> streamService.createStream(new Streaming().authorId(user_id)
+                                .flatMap(arn -> streamService.createStream(new Streaming().authorId(user_id)
                                         .category(category.orElse("Desconocido"))
                                         .arn(arn)
                                         .title(title)
                                         .desc(desc.orElse("")))
                                      )
+                                 .map(streamingObj -> {log.info("Streaming created: " + streamingObj); return streamingObj;})
 
                                 .flatMap(streamingObj -> getStreamKey(streamKeySummary.arn())
                                         .map(key -> new IvsChannelInfo(key.value(), "rtmps:://" + channel.ingestEndpoint() + ":443/app/")))))

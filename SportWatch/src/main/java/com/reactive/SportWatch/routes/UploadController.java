@@ -11,6 +11,7 @@ import com.reactive.SportWatch.services.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -91,7 +92,7 @@ public class UploadController {
      *
      * @param exch the {@link ServerWebExchange} used to extract cookies for JWT
      *             token lookup
-     * @param json a {@link Mono} containing a JSON map with the channel metadata
+     * @param json a {@link Map} containing a JSON map with the channel metadata
      *             (title, desc, category) <br>
      * @return a {@link Mono} that emits an {@link IvsChannelInfo} representing the
      *         found or newly created channel,
@@ -99,16 +100,19 @@ public class UploadController {
      *         validation fails or limits are reached
      */
 
+    // Note: Mono<Map<String,String>> gives problems as it expects the mono chain to keep the values
+    // until they get parsed, but that doesnt happen in my case (maybe the filters maybe other thing idk)
     @PostMapping("request-channel")
-    Mono<IvsChannelInfo> findFreeChannelOrNew(ServerWebExchange exch, @RequestBody Mono<Map<String, String>> json) {
+    Mono<IvsChannelInfo> findFreeChannelOrNew(ServerWebExchange exch, @RequestBody Map<String, String> json) {
+        log.info(json.toString());
         // I don't need to validate token, as filter already does, and it must exist.
         // All created tokens have subject so
-        return json.filter(data -> data.get("title") != null)
+        return Mono.just(json).filter(data -> data.get("title") != null)
             .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "A title is required")))
             .flatMap(title -> jwtService.extractTokenFromCookies(exch.getRequest().getCookies()))
             .flatMap(token -> jwtService.getUsernameFromToken(token))
             .flatMap(username -> userService.findIdByUsername(username))
-            .flatMap(userId -> Mono.zip(Mono.just(userId), json))
+            .flatMap(userId -> Mono.zip(Mono.just(userId), Mono.just(json)))
             .flatMap(tuple -> uploadService.findFreeChannel(tuple.getT1(), tuple.getT2().get("title"),
                                                             Optional.ofNullable(tuple.getT2().get("desc")), Optional.ofNullable(tuple.getT2().get("category")))
                      .flatMap(channelInfo -> {
@@ -128,6 +132,5 @@ public class UploadController {
                          })
                      );
     }
-   
 
 }

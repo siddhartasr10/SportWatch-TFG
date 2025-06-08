@@ -75,9 +75,9 @@ public class FetchController {
  */
     // Duration gets passed by hours as in the service.
     @PostMapping("stream/{stream_id}")
-    Mono<StreamingInfo> fetchById(@PathVariable Integer stream_id, @RequestBody Mono<Map<String, String>> json) {
+    Mono<StreamingInfo> fetchById(@PathVariable Integer stream_id, @RequestBody Map<String, String> json) {
         if (stream_id < 1) return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "stream_id cannot be 0 bro you're kidding"));
-        return json.flatMap(data -> {
+        return Mono.just(json).flatMap(data -> {
                 try {
                     Optional<Duration> urlDuration = Optional.ofNullable(Duration.ofHours(Integer.parseInt(data.get("urlDuration"))));
                     return fetchService.fetchStreamById(stream_id, urlDuration);

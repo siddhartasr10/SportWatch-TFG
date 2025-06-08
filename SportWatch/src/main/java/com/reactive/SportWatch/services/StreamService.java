@@ -67,12 +67,12 @@ public class StreamService {
     // Leaves object_key empty so it gets completed after, and completes arn so the row can be searched after.
     public Mono<Streaming> createStream(Streaming streaming) {
         Mono<Streaming> stream = dbClient.sql
-            ("INSERT INTO streams (author_id, arn, title, category, desc) VALUES (:author_id, :arn, :title, :category, :desc)")
+            ("INSERT INTO streams (author_id, arn, title, category, description) VALUES (:author_id, :arn, :title, :category, :description)")
             .bind("author_id", streaming.authorId())
+            .bind("title", streaming.title())
             .bind("arn", streaming.arn())
-            .bind("arn", streaming.title())
             .bind("category", streaming.category())
-            .bind("desc", streaming.desc())
+            .bind("description", streaming.desc())
             .fetch().rowsUpdated()
             .map(changes -> {
                     switch(changes.intValue()) {
