@@ -1,0 +1,41 @@
+<div class="absolute left-[30vw] flex flex-col gap-2 px-4 py-2 border-1 border-[rgb(224_227_226)]/[0.25] w-[700px] h-[550px] bg-black/30
+               box-content rounded-xl justify-start items-center text-white" (click)="onModalClick($event)">
+
+    <div class="flex flex-col gap-2 justify-start items-center text-white" [class.hidden]="isRequestingChannelInfo">
+        <h1 class="text-[55px] tracking-wider font-roboto-serif font-bold mt-[40px] mb-[10px]"> Empieza un directo </h1>
+       <h6 class="text-[22px] text-gray-100/[0.7] font-roboto-serif font-thin" [class.mb-4]="false" [class.mb-8]="true"> Empieza a emitir un directo </h6>
+
+       <mat-error *ngIf="false" class="mb-4">
+           <b> {{ 'Aqui iria un error si lo acabo usando' }} </b>
+       </mat-error>
+
+       <mat-form-field hideRequiredMarker="true" (keydown.enter)="handleUpload()" class="w-5/6">
+           <mat-label> Título </mat-label>
+           <input matInput required (input)="updateFormValidity()" (input)="updateErrorMsg('title', this.title)" (focus)="updateErrorMsg('title', this.title)" [formControl]="title"/>
+            <mat-error *ngIf="this.title.invalid && (this.title.dirty || this.title.touched)">{{titleErrMsg()}}</mat-error>
+       </mat-form-field>
+
+       <mat-form-field hideRequiredMarker="true" (keydown.enter)="handleUpload()" class="w-5/6 mb-4">
+           <mat-label> Categoria </mat-label>
+           <input matInput required (input)="updateFormValidity()" (input)="updateErrorMsg('category', this.category)" (focus)="updateErrorMsg('category', this.category)" [formControl]="category"/>
+               <mat-error *ngIf="this.category.invalid && (this.category.dirty || this.category.touched)">{{categoryErrMsg()}}</mat-error>
+       </mat-form-field>
+
+       <mat-form-field hideRequiredMarker="true" (keydown.enter)="handleUpload()" class="w-5/6 mb-4">
+           <mat-label> Descripcion </mat-label>
+           <textarea matInput maxlength=512 cdkAutosizeMaxRows="5"
+                     cdkAutosizeMaxColumns="3" [formControl]="description"
+                     class="max-h-8" > </textarea>
+       </mat-form-field>
+
+       <button mat-flat-button class="w-3/6 rounded-lg! mb-4" [disabled]="isFormInvalid" (click)="handleUpload()" > Inicia directo </button>
+    </div>
+
+    <div [class.hidden]="!channelInfo">
+        <p> URL: {{channelInfo?.rtmpsUrl || ""}}</p>
+        <p> Key: {{channelInfo?.streamKey || ""}}</p>
+        <mat-error *ngIf="!channelInfo?.rtmpsUrl || !channelInfo?.streamKey">
+            <b> "ERROR: No hay canales disponibles, espera y vuelve a intentarlo." </b>
+        </mat-error>
+    </div>
+</div>

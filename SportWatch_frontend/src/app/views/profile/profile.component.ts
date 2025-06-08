@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 
 import { map, firstValueFrom, catchError, zip } from 'rxjs';
@@ -17,10 +17,11 @@ import { AuthService } from '../../shared/services/auth-service/auth-service.ser
 
 import { VideoComponent } from '../../shared/components/video/video.component';
 import { LoggedHeaderComponent } from '../../shared/components/logged-header/logged-header.component';
+import { UploadFormComponent } from '../../shared/components/upload-form/upload-form.component';
 
 @Component({
   selector: 'app-profile',
-  imports: [LoggedHeaderComponent, VideoComponent, MatTabsModule, MatButtonModule, CommonModule],
+    imports: [LoggedHeaderComponent, VideoComponent, MatTabsModule, MatButtonModule, CommonModule, UploadFormComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
@@ -47,6 +48,7 @@ export class ProfileComponent {
     suscribeBtnMsg : String = "";
 
     editDescriptionMode : boolean = false;
+    // signal to send to other component.
     uploadStreamToggle : boolean = false;
 
     constructor(private userService : UserService, private fetchService : FetchService, private authService : AuthService, private route : ActivatedRoute, private router : Router) {}
@@ -145,6 +147,7 @@ export class ProfileComponent {
     // If start stream popup is visible, and someone clicks outside of it, it will close.
     @HostListener('document:click', ['$event'])
     onDocumentClick(ev : Event) : void {
+        this.uploadStreamToggle = false;
     }
 
     toggleEditProfileDescription() : void {
@@ -153,12 +156,16 @@ export class ProfileComponent {
 
     onProfileDescriptionEdit(textarea : HTMLTextAreaElement) : void {
         const msg : string = textarea.value;
-        // this.userService TODO: Implementar update para la profile desc que si no existe una la cree como "".
         this.editDescriptionMode = !this.editDescriptionMode;
         // This func only can trigger when an element that is normally hidden
         // is visible, that element is only visible when profileUser === actualUser
         // So here profileUser is updated bc we know its the same.
         this.profileUser.description = msg;
         this.userService.updateDescription(msg).subscribe();
+    }
+
+    toggleUploadForm(ev : Event) : void {
+        ev.stopPropagation();
+        this.uploadStreamToggle = !this.uploadStreamToggle;
     }
 }

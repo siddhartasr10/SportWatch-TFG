@@ -18,7 +18,7 @@ export class CookieService {
 
     }
 
-    getUser() : string {
+    getUser() : string | undefined {
         return document.cookie.split("; ").filter(cookiePair => cookiePair.startsWith("user"))[0]?.split("=")[1];
     }
 }

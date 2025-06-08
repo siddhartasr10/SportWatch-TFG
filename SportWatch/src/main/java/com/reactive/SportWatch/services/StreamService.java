@@ -36,7 +36,7 @@ public class StreamService {
                         .object_key(row.get("object_key", String.class))
                         .title(row.get("title", String.class))
                         .category(row.get("category", String.class))
-                        .desc(row.get("desc", String.class))
+                        .desc(row.get("description", String.class))
                         .created_at(row.get("created_at", LocalDateTime.class))
                         .thumbnail_obj_key(row.get("thumbnail_obj_key", String.class)))
                 .all();
@@ -55,7 +55,7 @@ public class StreamService {
                         .arn(row.get("arn", String.class))
                         .title(row.get("title", String.class))
                         .category(row.get("category", String.class))
-                        .desc(row.get("desc", String.class))
+                        .desc(row.get("description", String.class))
                         .created_at(row.get("created_at", LocalDateTime.class))
                         .thumbnail_obj_key(row.get("thumbnail_obj_key", String.class)))
                 .all();

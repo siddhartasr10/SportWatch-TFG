@@ -13,10 +13,10 @@ import { CookieService } from '../../services/cookie-service/cookie-service.serv
 })
 export class LoggedHeaderComponent {
     constructor(private router : Router, private authService : AuthService, private cookieService : CookieService) {
-        this.user = this.cookieService.getUser();
+        this.user = this.cookieService?.getUser();
     }
 
-    user : string;
+    user : string | undefined;
 
     // No le pongo 'search' porque (search)="" search es un evento experimental de chrome ;(
     // Output va de componente hijo -> padre Input de padre -> hijo.

@@ -12,6 +12,7 @@ export class FetchService extends BaseCsrfService {
   constructor(http: HttpClient) {
     super(http);
   }
+    // IF ANY URL IS INVALID, IT WILL RETURN "https://google.com".
 
   // GET /api/streams - returns both uploaded and non-uploaded streams concatenated
   fetchAllStreams(): Observable<StreamingInfo[]> {
