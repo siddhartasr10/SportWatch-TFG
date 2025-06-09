@@ -134,28 +134,30 @@ public class FetchService {
      */
     public Mono<StreamingInfo> fetchStreamById(int streamId, Optional<Duration> urlDuration) {
         return streamService.findFileById(streamId)
-            .flatMap(strm -> {
-                Mono<URL> streamUrlMono = getPresignedUrl(strm.object_key(), urlDuration);
-                Mono<String> authorMono = userService.findUsernameById(strm.authorId());
-                Mono<URL> thumbnailUrlMono = getPresignedUrl(strm.thumbnail_obj_key(), urlDuration);
+            .flatMap(stream -> {
+                Mono<URL> streamUrlMono = getPresignedUrl(stream.object_key(), urlDuration);
+                Mono<String> authorMono = userService.findUsernameById(stream.authorId());
+                Mono<URL> thumbnailUrlMono = getPresignedUrl(stream.thumbnail_obj_key(), urlDuration);
 
-                streamUrlMono.filter(url -> !url.equals(this.INVALIDURL))
-                    .switchIfEmpty(Mono.fromCallable(() -> {
+                streamUrlMono = streamUrlMono.filter(url -> !url.equals(this.INVALIDURL))
+                            .switchIfEmpty(Mono.fromCallable(() -> {
                                 try {
-                                    return new URL(ivs.getChannel(req -> req.arn(strm.arn()).build()).channel().playbackUrl());
+                                    return new URL(ivs.getChannel(req -> req.arn(stream.arn()).build()).channel().playbackUrl());
                                 } catch (MalformedURLException e) {
-                                    throw new RuntimeException("Invalid playback URL: " + strm.arn(), e);
+                                    throw new RuntimeException("Invalid playback URL: " + stream.arn(), e);
                                 }
                             }));
 
                 return Mono.zip(streamUrlMono, thumbnailUrlMono, authorMono)
+                    .map(tuple -> {log.info("All:" + tuple.getT1() + tuple.getT2() + tuple.getT3()); return tuple;})
                     .map(tuple -> new StreamingInfo(
-                        strm.streamId(), strm.object_key() == null, strm.title(),
-                        strm.category(), tuple.getT1(),
+                        stream.streamId(), stream.object_key() == null, stream.title(),
+                        stream.category(), tuple.getT1(),
                         (tuple.getT2().equals(this.INVALIDURL)) ? null : tuple.getT2(),
-                        tuple.getT3(), strm.authorId(),
-                        strm.desc(), strm.created_at()
-                        ));
+                        tuple.getT3(), stream.authorId(),
+                        stream.desc(), stream.created_at()))
+                    .map((strm) -> {log.info("Stream fetched by id: " + strm + "with streamUrl: " + strm.streamUrl()); return strm;});
+
             });
     }
 
@@ -180,7 +182,10 @@ public class FetchService {
                 .build();
 
             URL presignedUrl = presigner.presignGetObject(presignRequest).url();
-            log.info("Presigned URL (valid for " + duration.orElse(Duration.ofHours(2)).toMinutes() + " minutes): " + presignedUrl);
+            log.info("Presigned URL (valid for " +
+                     duration.orElse(Duration.ofHours(2)).toMinutes() +
+                     " minutes): " + presignedUrl.toString().substring(0, 10));
+
             return presignedUrl;
         });
     }

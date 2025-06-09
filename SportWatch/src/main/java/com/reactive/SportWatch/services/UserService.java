@@ -57,7 +57,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
 
                 }).first();
 
-        user.switchIfEmpty(
+        user = user.switchIfEmpty(
                 Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
         return user;
     }
@@ -73,8 +73,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             .build();
                 }).first();
 
-        user.switchIfEmpty(
-                Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
+        user = user.switchIfEmpty(Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
 
         return user;
     }
@@ -86,7 +85,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                     return row.get("user_id", Integer.class);
                 }).first();
 
-        id.switchIfEmpty(Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
+        id = id.switchIfEmpty(Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
 
         return id;
     }
@@ -98,7 +97,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                     return row.get("username", String.class);
                 }).first();
 
-        id.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")));
+        id = id.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")));
 
         return id;
     }
@@ -110,7 +109,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                             .password(row.get("password", String.class))
                             .email(row.get("email", String.class))
                             .created_at(row.get("created_at", LocalDateTime.class))
-                            .description(row.get("description", String.class))
+                        .description(row.get("description", String.class))
                             .userId(row.get("user_id", Integer.class))
                             .notifications(row.get("notifications", char[][].class))
                             .authorities("USER") // La db actual no tiene roles, todos son users.
@@ -118,7 +117,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
 
                 }).first();
 
-        user.switchIfEmpty(
+        user = user.switchIfEmpty(
                 Mono.error(new UsernameNotFoundException(String.format("Username: %s not found", username))));
 
         return user;
@@ -167,7 +166,7 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                 .bind("password", user.getPassword())
                 .fetch().rowsUpdated();
 
-        changes.doOnSuccess((res) -> {
+        changes = changes.doOnSuccess((res) -> {
             if (res == 0) {
                 findByUsername(user.getUsername())
                         .doOnNext(u -> {

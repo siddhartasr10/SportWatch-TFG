@@ -148,7 +148,7 @@ public class UploadService {
                                  .map(streamingObj -> {log.info("Streaming created: " + streamingObj); return streamingObj;})
 
                                 .flatMap(streamingObj -> getStreamKey(streamKeySummary.arn())
-                                        .map(key -> new IvsChannelInfo(key.value(), "rtmps:://" + channel.ingestEndpoint() + ":443/app/")))))
+                                        .map(key -> new IvsChannelInfo(key.value(), "rtmps://" + channel.ingestEndpoint() + ":443/app/")))))
                 .next() // take the first free channel found
                 .defaultIfEmpty(new IvsChannelInfo(null, null));
     }

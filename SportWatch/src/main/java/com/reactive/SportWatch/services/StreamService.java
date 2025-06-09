@@ -6,6 +6,8 @@ import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
@@ -134,13 +136,21 @@ public class StreamService {
     // if no object_key and thumbnail_obj_key was found it will return empty stream
     // if one of them was found it will return almost empty stream with the field.
     public Mono<Streaming> findFileById(int id) {
-        return dbClient.sql("SELECT object_key, thumbnail_obj_key, arn FROM streams WHERE stream_id = :stream_id")
+        log.info("Id passed to findFileById: " + Integer.toString(id));
+        return dbClient.sql("SELECT * FROM streams WHERE stream_id = :stream_id")
             .bind("stream_id", id)
             .fetch().first()
             .map(res -> new Streaming()
+                 .streamId(id)
+                 .title((String) res.get("title"))
+                 .arn(((String) res.get("arn")))
                  .object_key((String) res.get("object_key"))
                  .thumbnail_obj_key(((String) res.get("thumbnail_obj_key")))
-                 .arn(((String) res.get("arn"))))
-            .defaultIfEmpty(new Streaming());
+                 .created_at((LocalDateTime) res.get("created_at"))
+                 .category((String) res.get("category"))
+                 .desc((String) res.get("description"))
+                 .authorId(((Integer) res.get("author_id"))))
+            .map(strm -> {log.info("Found strm: " + strm.toString()); return strm;})
+            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No stream with that Id could be found")));
     };
 }

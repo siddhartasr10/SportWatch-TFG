@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS "followers_streamers" (
 
 ALTER TABLE "users" ADD CONSTRAINT "users_fk5" FOREIGN KEY ("streamer_id") REFERENCES "streamer_details"("streamer_id");
 ALTER TABLE "streamer_details" ADD CONSTRAINT "streamer_details_fk0" FOREIGN KEY ("streamer_id") REFERENCES "users"("user_id");
-ALTER TABLE "streams" ADD CONSTRAINT "streams_fk1" FOREIGN KEY ("author_id") REFERENCES "streamer_details"("streamer_id");
+ALTER TABLE "streams" ADD CONSTRAINT "streams_fk1" FOREIGN KEY ("author_id") REFERENCES "users"("user_id");
 
 ALTER TABLE "comments" ADD CONSTRAINT "comments_fk1" FOREIGN KEY ("author_id") REFERENCES "users"("user_id");
 ALTER TABLE "comments" ADD CONSTRAINT "comments_fk2" FOREIGN KEY ("stream_id") REFERENCES "streams"("stream_id");
