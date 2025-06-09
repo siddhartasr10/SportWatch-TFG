@@ -26,8 +26,8 @@ export class FetchService extends BaseCsrfService {
   // POST /api/stream/{stream_id} - fetch stream info by id with optional urlDuration in hours
   fetchStreamById(streamId: number, urlDuration?: number): Observable<StreamingInfo> {
       const body = urlDuration ? { urlDuration: urlDuration.toString() } : {};
-      return this.http.post<StreamingInfo>(`${this.apiUrl}stream/${streamId}`, body, {
-            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.getXsrfToken() }),
+      return this.http.post<StreamingInfo>(`${this.apiUrl}/stream/${streamId}`, body, {
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
       }).pipe(map(this.validUrlFilter)) as Observable<StreamingInfo>;

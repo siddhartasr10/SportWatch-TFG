@@ -48,7 +48,7 @@ export class FeedComponent {
             error: (error : HttpErrorResponse) => console.log("Error ocurred loading videos: ", error),
             complete: () => {
                 console.log("current search:", this.search());
-                console.log("Videos before search filtering: ", this.filteredVideos());
+                console.log("Videos before search filtering: ", this.videos());
                 this.filteredVideos.set(this.filterBySearch(this.videos()));
 
                 console.log("Videos after search filtering: ", this.filteredVideos());

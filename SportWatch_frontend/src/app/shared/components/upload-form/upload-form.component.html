@@ -1,5 +1,7 @@
 <div class="absolute left-[30vw] flex flex-col gap-2 px-4 py-2 border-1 border-[rgb(224_227_226)]/[0.25] w-[700px] h-[550px] bg-black/30
-               box-content rounded-xl justify-start items-center text-white" (click)="onModalClick($event)">
+               box-content rounded-xl justify-start items-center text-white
+            "
+     [class.h-100!]="channelInfo" (click)="onModalClick($event)">
 
     <div class="flex flex-col gap-2 justify-start items-center text-white" [class.hidden]="isRequestingChannelInfo">
         <h1 class="text-[55px] tracking-wider font-roboto-serif font-bold mt-[40px] mb-[10px]"> Empieza un directo </h1>
@@ -31,7 +33,8 @@
        <button mat-flat-button class="w-3/6 rounded-lg! mb-4" [disabled]="isFormInvalid" (click)="handleUpload()" > Inicia directo </button>
     </div>
 
-    <div [class.hidden]="!channelInfo">
+    <div [class.hidden]="!channelInfo" class="text-white flex flex-col items-center justify-center h-full gap-y-12">
+        <h1 class="text-[40px] tracking-wider font-roboto-serif font-bold"> Credenciales del directo: </h1>
         <p> URL: {{channelInfo?.rtmpsUrl || ""}}</p>
         <p> Key: {{channelInfo?.streamKey || ""}}</p>
         <mat-error *ngIf="!channelInfo?.rtmpsUrl || !channelInfo?.streamKey">

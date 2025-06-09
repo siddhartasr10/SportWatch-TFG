@@ -2,7 +2,16 @@
   "/api": {
     "target": "http://localhost:8080",
     "secure": false,
-     "changeOrigin": true,
+    "changeOrigin": true,
     "logLevel": "debug"
+  },
+  "/stream-proxy": {
+    "target": "https://streams-ivs.s3.eu-west-1.amazonaws.com",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/stream-proxy": ""
+    }
   }
 }

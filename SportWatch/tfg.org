@@ -599,3 +599,13 @@ ivs/v1/123456789012/abcdEfghIJkl/2025/05/28/media/latest_thumbnail/thumb.jpg
 *  Correcion rapida busqueda feed ahora que hay mas de un directo y copia pega a subscriptions
         Corregido y añadida logica en el logo para variar el a donnde te lleva.
         falta copia pega subs y videos.
+
+
+        AÑADE AL TFG cuando hables del bucket que usa notificacion de eventos.
+
+        NOTA TFG: LA CARPETA SECRETS SE MANTIENE IGNORADA PARA MANTERNER LA CLAVES PUBLICAS Y PRIVADAS PROTEGIDASopenssl genpkey -algorithm RSA -out private-key.pem
+        #+begin_src bash
+                openssl rsa -pubout -in private-key.pem -out public-key.pem
+                openssl pkcs8 -topk8 -inform PEM -outform PEM -in private-key.pem -out private-key.pem -nocrypt
+                # Y reemplaza la key privada del primer paso con la key en formato pcks
+        #+end_src#

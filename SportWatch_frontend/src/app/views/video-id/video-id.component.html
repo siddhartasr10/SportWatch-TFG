@@ -1,0 +1,98 @@
+<app-logged-header></app-logged-header>
+
+<div class="flex flex-col md:flex-row p-4 gap-6 bg-[#1E1E1E]">
+  <!-- Main Content -->
+  <div class="flex-1 text-white" *ngIf="mainVideo !== undefined">
+    <!-- Video Player -->
+    <div class="aspect-video bg-black rounded-lg overflow-hidden">
+      <video #videoPlayer controls src="{{mainVideo.streamUrl}}" class="w-full h-full"></video>
+    </div>
+
+
+    <!-- Video Title -->
+    <h1 class="mt-4 text-xl font-bold text-white">{{ mainVideo.title }}</h1>
+
+    <!-- Channel Info + Follow/Subscribe -->
+    <div class="flex justify-between items-center mt-3 text-sm text-white">
+
+    <div class="flex items-center gap-3">
+        <!-- Avatar -->
+        <a [routerLink]="'/profile/' + mainVideo.author" ><img
+        [src]="'/shared/default_user.svg'"
+        alt="{{ mainVideo.author }}"
+        class="w-10 h-10 rounded-full object-cover" />
+        </a>
+
+        <!-- Channel Name & View Info -->
+        <div class="flex flex-col">
+        <a [routerLink]="'/profile/' + mainVideo.author" class="font-semibold text-white hover:underline">
+            {{ mainVideo.author }}
+        </a>
+        <span class="text-xs text-white">0 visualizaciones · {{mainVideo.createdAt}}</span>
+        </div>
+    </div>
+
+    <!-- Follow & Subscribe Buttons -->
+    <div class="flex gap-x-3" [class.invisible]="actualUsername === mainVideo.author">
+        <button mat-stroked-button (click)="onFollowClick(followBtn)"
+                class="bg-white rounded-full font-black hover:bg-gray-200 px-4 h-[35px] text-sm"
+                #followBtn>
+        <i class="far fa-bell fa-lg mr-2"></i>
+        {{ followBtnMsg || "Seguir" }}
+        </button>
+
+        <button mat-stroked-button (click)="onSuscribeClick(suscribeBtn)"
+                class="bg-white rounded-full text-sm hover:bg-gray-200 px-4 h-[35px]"
+                #suscribeBtn>
+        {{ suscribeBtnMsg || "Unirme" }}
+        </button>
+    </div>
+    </div>
+
+    <!-- Video Description -->
+    <div class="mt-4 text-sm text-white whitespace-pre-wrap">
+    {{ mainVideo.desc}}
+    </div>
+
+    <!-- Comments -->
+    <div class="mt-6">
+      <h3 class="text-lg font-semibold mb-2">Comments</h3>
+      <div *ngFor="let comment of comments()" class="mb-4 border-b pb-2">
+        <div class="text-sm font-medium ">{{ comment.username }}</div>
+        <div class="text-sm">{{ comment.text }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="w-full md:w-80">
+    <h3 class="text-md font-semibold mb-2">Up Next</h3>
+    <div *ngFor="let video of videos()" class="mb-4">
+      <app-video
+        [videoLink]="'/video/' + video.streamId"
+        [videoImgUrl]="video.thumbnailUrl"
+        [videoTitle]="video.title"
+        [profileLink]="'/profile/' + video.author"
+        [profileImgUrl]="''"
+        [streamer]="video.author"
+        [viewers]="0"
+      ></app-video>
+    </div>
+  </div>
+</div>
+
+<!-- HLS.js Script -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script> -->
+<!-- <script> -->
+<!-- document.addEventListener('DOMContentLoaded', function () { -->
+    <!-- const video = document.querySelector('video'); -->
+<!-- const videoSrc = ''; // Replace this dynamically in your component -->
+    <!-- if (Hls.isSupported()) { -->
+    <!-- const hls = new Hls(); -->
+    <!-- hls.loadSource(videoSrc); -->
+    <!-- hls.attachMedia(video); -->
+    <!-- } else if (video.canPlayType('application/vnd.apple.mpegurl')) { -->
+    <!-- video.src = videoSrc; -->
+    <!-- } -->
+<!-- }); -->
+<!-- </script> -->

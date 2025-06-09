@@ -110,6 +110,12 @@ export class ProfileComponent {
                 error: () => undefined,
             });
         }
+        else {
+            this.userService.followUser(this.actualUsername, this.profileUsername).subscribe({
+                next:  () => this.updateFollowerCount(),
+                error: () => undefined,
+            })
+        }
 
 
         this.actualUserFollowsProfileUser = !this.actualUserFollowsProfileUser;
