@@ -22,9 +22,27 @@ export class FetchService extends BaseCsrfService {
           .pipe(map(this.validUrlFilter)) as Observable<StreamingInfo[]>;
 
   }
+ // POST /api/streams - returns both uploaded and non-uploaded streams concatenated
+  fetchAllStreamsCustomDuration(urlDuration: number): Observable<StreamingInfo[]> {
+    const body = { urlDuration: urlDuration.toString() };
+    return this.http.post<StreamingInfo[]>(`${this.apiUrl}/streams`, body, {
+      headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+      withCredentials: true,
+      responseType: 'json',
+    }).pipe(map(this.validUrlFilter)) as Observable<StreamingInfo[]>;
+  }
 
-  // POST /api/stream/{stream_id} - fetch stream info by id with optional urlDuration in hours
-  fetchStreamById(streamId: number, urlDuration?: number): Observable<StreamingInfo> {
+
+  // GET /api/stream/{streamId} - fetch stream info by id without duration
+  fetchStreamById(streamId: number): Observable<StreamingInfo> {
+        return this.http.get<StreamingInfo>(`${this.apiUrl}/stream/${streamId}`, {
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            withCredentials: true,
+            responseType: 'json',
+        }).pipe(map(this.validUrlFilter)) as Observable<StreamingInfo>;
+    }
+    // POST /api/stream/{stream_id} - fetch stream info by id with optional urlDuration in hours
+  fetchStreamByIdCustomDuration(streamId: number, urlDuration?: number): Observable<StreamingInfo> {
       const body = urlDuration ? { urlDuration: urlDuration.toString() } : {};
       return this.http.post<StreamingInfo>(`${this.apiUrl}/stream/${streamId}`, body, {
             headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
@@ -35,7 +53,6 @@ export class FetchService extends BaseCsrfService {
 
     // I need to cast bc function can return both types, but only returns the type that gets passed to it.
     // if you passed one obj it will return one.
-
 
     // El indice lo pasa map tambien, no se que es pero lo pasa a la funcion.
     // La funcion: (project: (value: StreamingInfo[], index: number) => StreamingInfo[])
@@ -62,5 +79,5 @@ export class FetchService extends BaseCsrfService {
       // and when i fetchById I want to see an obj not an array.
       return (!isStreamsList) ? filteredStreams[0] : filteredStreams;
 
-}
+  }
 }
