@@ -1,0 +1,611 @@
+
+#+title:  Tfg
+#+author: Siddharta Morión Suárez
+
+*** 23/03/25 dom
+*   Trabajando en implementar una base de datos de postgres que funcione con el servidor
+        Primero añadi la config en application.properties y luego borre postgres/data y lo recree con initdb porque una nueva version de postgres habia salido
+        y tenia datos de proyectos antiguos que no servian, por lo que no iba a dumpear y restaurar
+        asi que un buen rm /var/lib/postgres/data/* y initdb /var/lib/postgres/data y palante
+*   Creando una implementación de User
+        Extendí la implementación por defecto que trae spring security, ya que no traía campo de email
+
+
+*** 24/03/25 lun
+*   Continuo implementación de User
+        Se alarga la tarea debido a poco tiempo y a que la implementación de user tiene bastantes métodos státicos que no puedo sobreescribir, además
+        a los que me veo forzado a returnear el builder antiguo, y a no poder returnear el mío. Pero ya queda bastante poco.
+
+*** 29/03/25 sab
+*   Termino implementación de User
+        Añado métodos personalizados de with* y un extBuilder. Además de crear un ExtUserDetails para poder crear un extWithUserDetails
+*   Implementación de un PasswordEncoder
+        Me informo de como funcionan los password encoders en spring security y de su uso de SecureRandom
+        #+BEGIN_SRC java
+            {@link java.security.SecureRandom}
+        #+END_SRC
+        Posiblemente utilizo la implementación de BcryptPasswordEncoder
+        Al final lo que voy a usar es basicamente eso
+        #+BEGIN_SRC java
+            PasswordEncoder encoder = new BCryptPasswordEncoder();
+            String pw = "JuanSecreto";
+
+            pw = encoder.encode(pw);
+            ExtUser user = (ExtUser) ExtUser.extWithUsername("Juan")
+            .email("Juan@elmejor.com")
+            // aquí se usaria un passwordEncoder
+            .password(pw)
+            .roles("Admin")
+            .build();
+
+
+            System.out.println(user);
+        #+END_SRC
+*   Estableciendo configuración específica de la db
+        Establezco la versión de los contenedores de docker (postgres y adminer) a una versión fija para evitar problemas
+        y reestablezco la base de datos, ya que estaba dando problemas al crearse una nueva versión de postgres
+        el esquema ER lo tengo en db designer y lo puedo descargar en un .SQL que puedo importar.
+
+        Igualmente cada vez que lo descargo tengo que cambiar las primary keys de datatype porque se ponen en cualquier cosa menos int
+        y no quiero ni short ni bigint y cambiar "with timezone" por without ya que, ya tengo user_timezone, un shortint que representa la diferencia de UTC (+1+2-1-2...)
+
+*   Implementación de un UserRep (para despues usarlo con un reactiveUserDetailService)
+        He creado una clase de @configuration jdbcConfig para crear un jdbc template creado con el datasource establecido en el application.properties
+        Luego he implementado un @Repository UserRep para poder hacer de DAO con los usuarios y usarlo después para un reactiveuserdetailservice
+
+        Al implementarlo me he dado cuenta de que mi clase modelo ExtUser y (por lo tanto su interfaz ExtUserDetails) no tenían soporte para el resto de campos de la base de datos
+        como created_at timezone o streamer_id
+
+        por lo que he implementado ese soporte también y el metodo findByUsername en UserRep
+
+        He añadido la dependencia spring-boot-starter-data-jdbc para que el jdbcConfig se cree automaticamente cogiendo el datasource de application.properties, por lo que
+        JdbcConfig.java ya no es necesario para nada.
+
+**  01/04/25 (hay dias que no apunto y sobreescribo en lo que hay)
+*   Modificación de userService, los métodos que requiere para el contrato UserDetailService deberían recoger el mínimo de info
+        Las tablas de las bases de datos se me están quedando muy grandes, no debería coger todas las columnas para buscar por usuario en el userdetailservice
+        ya que ese usuario se usa para la autenticación, para esa operación el usuario, la contraseña y las autoridades sobran la verdad.
+
+*   Expansión de ExtUser para añadir notificaciones, suscripciones y seguidores.
+
+**  02/04/25
+*   Creación de un ReactiveAuthManager
+        En webflux se utiliza como authmanager y authprovider un reactiveAuthManager.
+        He usado la impl concreta de un UserDetailsRepositoryReactiveAuthenticationManager;
+        #+BEGIN_SRC java
+            @Bean
+  59 + │    public ReactiveAuthenticationManager authenticationProvider() {
+       │        authProvider = new DaoAuthenticationProvider(passwordEncoder());
+  60 + │        UserDetailsRepositoryReactiveAuthenticationManager authManager = new UserDetailsRepositoryReactiveAuthenticationManager(CustomUserDetailService);
+  61 + │        authManager.setPasswordEncoder(passwordEncoder());
+  62 + │        return authManager;
+        #+END_SRC
+
+**  04/04/25
+*   Modificaciones base de datos
+        Sabías que las contraseñas encriptadas por bcrypt miden hasta 72 carácterres? yo no, la base de datos menos ajajja varchar(50) no hace el avio aquí
+        además si no pones serial no hay autoincremento de las id en postgres, a no ser que hagas una sequence a mano que es lentísimo la verdad
+*   Cambio de dependencias
+        JDBC no está hecho para Webflux porque es bloqueante no asíncrono, hace falta RDBC, así que he cambiado las dependencias en el pom y estoy cambiando JDBCTemplate por DatabaseClient
+*   Prueba index.html generado con Angular
+        La página va a ser una SPA que a lo mejor tiene el login y eso por SSR pero el resto no.
+
+**  05/04/25
+*   Implementación de RDBC por JDBC
+        Cambiado application properties, UserService ya no requiere de UserRepository, ya que los métodos del Dao directamente returnean el objeto Mono<>
+*   Implementación de JWT (empezamos)
+        Voy a implementar JWT para no necesitar preguntarle al servidor por la identidad del usuario cada vez que necesito su "username"
+        además es bastante seguro y las utilidades que voy a implementar pueden utilizarse después para implementar oauth2 si lo quisiera.
+        Permite una autenticación "stateless". (aunque por el momento voy a conservar los tokens de sesión también)
+        1. Crear unas keys publicas y privadas en una carpeta /certs dentro de resources
+            Además un archivo config para poder acceder a estos archivos como una clase de java que pueda usar.
+            Creo el archivo JwtConfig e inicializo las claves con los comandos mencionados en el issue #8
+            luego además creo los archivos en formato .der para que keyFactory pueda detectarlo.
+
+        Usando @values y ClassPathResource cargo el path de las claves desde un archivo config "JwtConfig"
+        y usando java.security cargo las claves del path y las convierto en una clase de java con la que puedo hacer de interfaz
+
+        2. Para gestionar la creación y verificación de JWS (voy a usar JWS por si no habia quedado claro cuando he hablado de crear un par de claves no es para JWE)
+            La librería en cuestión es jjwt (java jwt) https://github.com/jwtk/jjwt
+            Y voy a implementar una clase muy simple que utilice esta librería para crear y verficar JWS.
+            La clase creada es JwtService.
+            Despúes de esto voy a implementar un filtro src_java[:exports code]{code}class JwtAuthenticationFilter extends OncePerRequestFilter}
+
+        3. Crear filtro pero esto ya para mañana, son las 21:30 un sábado y estoy en pijama otra vez
+**  06/04/25
+*   Implementación de filtro de SecurityWebFilterChain
+        En Spring webflux la clase OncePerRequestFilter no se usa, se usa la interfaz WebFilter, pero hace lo mismo, en vez de pasarle como parámetros al metodo principal
+        (Que en WebFilter se llama filter() en vez de doFilterInternal) request y response se le pasa ServerWebExchange (que es el objeto que representa el intercambio request response)
+        y contiene la request, cookies y todo basicamente y la filter chain (como en Oncerper..)  pero se llama webfilterchain, y se hace lo mismo de al final usar la filterchain con filter
+        para pasar al siguiente filtro.
+
+       - Implementación de un token de authenticacion JwtAuthenticationToken
+        He tenido que implementar un JwtAuthenticationToken, que extiende de abstractAuthentication token y lo único que hace es guardar el token y el usuario (extraido del token)
+        ya que en los filtros para que spring boot pueda tomar a un usuario por "autentificado" hay que añadir una implementación Authorization. Lo mismo que via a tener que hacer en login vamos.
+        Esto en laravel era más facil, porque usabas Auth::Attempt y no implementabas manager ninguno pa el token se usaba  $token = $request->user()->createToken($request->token_name);
+        y a chuparla. pero bueno aquí hay que implementar el token si no quieres usar oauth.
+
+
+       Una vez implementado el filtro y el token necesito ponerlo en la cadena de filtros, para eso uso en http.addFilterBefore(elfiltro, SecurityWebFilterOrder.AUTHENTICATION)
+       el securitywebfilterorder es un enum que tiene todas las fases. (menos mal no quería implementar nada más)
+
+
+        - Eliminación de la sesión
+        Una vez creado un token y un filtro voy a desactivar totalmente las sesiones de spring para que el servidor funcione de verdad sin estado (stateless). Esto en spring boot es muy facil de hacer
+        por que puedes poner literalmente .session(STATELESS) pero en webflux hay un issue de github https://github.com/spring-projects/spring-security/issues/6552#issuecomment-519398510 en el que recomiendan cambiar el securityContextRepository a un NoOpServerContextRepository. Eso es lo que he hecho y para que la protección de csrf se pueda seguir usando he cambiado el repositorio de csrf a un CookieServerCsrfTokenRepository con httponly.false()  para que lo pueda coger por js cuando esté usando angular.
+
+        De esta forma la página de login por defecto no funciona porque no puede guardar la información de autenticación en ningún lado. Cuando haga la página por mi cuenta habra que coger el token por las cookies y o pasarlo como header si hago /login por ajax o añadirlo a un input hidden si hago un login por formulario (bloqueante)
+
+**  07/04/25
+*   Implementación de ruta /login
+        Creación de un controlador mapeado a la ruta "/login" que realice autenticación y si es exitosa cree un token jwt
+
+**  12/04/25
+*   Adaptación no bloqueante JwtService y JwtAuthenticationFilter
+        Durante este tiempo he estado ignorando en ciertas clases que estoy usando webflux y todo lo que utilizo debería se no bloqueante desde el principio, así voy a hacer eso.
+        Lo que es bloqueante por naturaleza se puede correr en un hilo aparte y lo más recomendado es Mono.fromCallable(funcbloqueante).subscribeOn(Schedulers.boundedElastic()).
+
+        Para hacer un filtro realmente no bloqueante que añada al contexto de seguridad no vale con usar SecurityContextHolder, sino que hay que usar ReactiveSecurityContextHolder.
+
+        Y por lo que se vé lo recomendado es hacerlo después de chain.filter(), a ese mono se le encadena .contextWrite (método de un Mono que añade al contexto de la rutina por así decirlo) y ReactiveSecurityContextHolder.withSecurityContext(ctx) siendo ctx un new SecurityContextImpl(auth). tiene withAuthorization pero supuestamente es más fiel a spring webflux añadir una impl entera.
+
+**  13/04/25
+*   Ruta Login totalmente asíncrona
+        Pues eso, crea la cookie y la añade a la respuesta, y si falla o la autenticación no se puede determinar hace un backflip (returnea 401 unauthorized para verlo con el fetch y hacer .catch)
+
+*
+*   Ponerlo todo en orden y hacer rutas /api/login /api/register y /api/logout para angular.
+        Cuando me sucedio el bug hice un git reset --hard y los cambios anteriores los guardé en una carpeta aparte, voy a restaurarlos ahora que ya he arreglado que fallaba y a darle caña.
+        Archivos restaurados y borrados archivos inútiles
+
+*   Ruta genérica
+        Creado un "GlobalController" que forwardee todo a index.html (webflux no tiene forward, así que cargar manualmente el archivo).
+        Como no hay forma de usar un regex que afecte a todos las secciones / / / /. He usado un wildcard y parseados los archivos .css .js, etc manualmente como ClassPathResources
+        que se encuentran en static/
+
+        Para las rutas api, crear controladores más específicos hace que tengan prioridad.
+
+*   Creados métodos createUser(UserDetails) updateTimezone(username, timezone) en UserService
+        Hacían falta para register y eso, updateTimezone es para ir quitando camino.
+        createUser asume que el email puede ser nulo y solo lo añade al query SQL si el user que se pasa lo tiene. (en el createUser(ExtUserDetails))
+
+*   Creadas rutas api/login y api/register
+        Hacen lo que se supone que tienen que hacer pero hay que testearlas para ver si no explotan.
+        He cambiado el JwtService para que la cookie de authToken se cree en un método y evitar repetirme en los controladores.
+
+
+        Hay que probarlas y hacer el logout también.
+
+        ACTUALIZACIÓN, no funcionan en principio porque el token de csrf se genera con synchronizer pattern, y sin sesion (stateless), esa cookie tiene un valor diferente cada vez si la borras
+        sino no te da otra pero el valor cambia.
+
+        La otra forma de hacer protección csrf es con el double submit pattern, aunque spring security no lo suportea por su cuenta (no se porque si es mas simple que el caliz).
+        (El approach simple)
+        Aquí se explica porque este approach no es seguro del todo para casos en los que un atacante hace MITM, se apodera de un subdominio o encuentra un XSS en un subdominio.
+        https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#naive-double-submit-cookie-pattern-discouraged
+        #+begin_src java
+                @Bean
+                public WebFilter csrfCookieGeneratorFilter() {
+                        return (exchange, chain) -> {
+                                String csrfToken = UUID.randomUUID().toString();
+
+                                ResponseCookie cookie = ResponseCookie.from("XSRF-TOKEN", csrfToken)
+                                .httpOnly(false)
+                                .path("/")
+                                .sameSite("Lax")
+                                .build();
+
+                                exchange.getResponse().addCookie(cookie);
+
+                                // Store it in a request attribute for validation later
+                                exchange.getAttributes().put("XSRF_TOKEN", csrfToken);
+
+                                return chain.filter(exchange);
+                        };
+                }
+        #+end_src
+
+        Esto envia un nuevo token con cada request. Pero como la valida con la del header da igual, aquí no va a validarla con una interna
+        por lo que no va a dar fallo
+
+        #+begin_src java
+                @Bean
+                public WebFilter csrfValidatorFilter(exchange, chain) {
+                        ServerHttpRequest request = exchange.getRequest();
+
+                        if (request.getMethod().matches("POST|PUT|DELETE")) {
+                        String headerToken = request.getHeaders().getFirst("X-XSRF-TOKEN");
+                        String cookieToken = request.getCookies().getFirst("XSRF-TOKEN") != null
+                                ? request.getCookies().getFirst("XSRF-TOKEN").getValue()
+                                : null;
+
+                        if (headerToken == null || cookieToken == null || !headerToken.equals(cookieToken)) {
+                            return Mono.error(new AccessDeniedException("Invalid CSRF token"));
+                        }
+
+                        return chain.filter(exchange);
+                };
+        }
+
+        #+end_src
+        El cliente simplemente guarda el valor de la cookie y lo manda por el header
+
+
+
+*** [15-16/04/25]
+*   Arregladas rutas paras que funcionen por completo (no estaban creando correctamente las cookies de auth) y además creados tests de integración para poder probar el registro y el login.
+        Basicamente eso, se me olvido ir apuntándolo a medida que lo hacía, además limpie un poco los métodos para que fueran más claros y estuvieran menos identados.
+        Me pelee bastante con spring tests pero he conseguido aprender a usarlo. Ahora hay tests que validen la necesidad de un token csrf, tests para comprobar que un registro
+        de un usuario ya existente de error, etc.
+*   Creada config de seguridad secundaria
+        Arreglando el registro me di cuenta de que la contraseña no se subia encriptada y al arreglarlo (añadiendo el encoder a el servicio de usuario), me encontré con un problema de
+        dependencias circulares, userService -> SecurityConfig[BCryptPasswordEncoder] -> userService(para el authManager) ->...
+
+        Por lo que cree una config de seguridad diferente y puse el encoder ahí.
+
+***  [18/04/25]
+
+*   Creada ruta de logout que sustituye las cookies de user y authtoken por cookies vacias que caducan al segundo.
+        Además creados tests para esa ruta. Que estaban fallando para la ruta logout que requiere auth por el siguiente punto.
+
+*   Corregido JwtAuthenticationFilter:
+        Faltaba poner que al crear la auth en mi jwtAuthenticationFilter, se pusiera esa auth como valida con auth.setAuthorized(true). Con un authmanager va solo eso, pero para mi jwtAuthenticationToken
+        no hay. así spring boot permite acceso a las rutas que requieren autorización incluso con noOpContextRepository.
+
+*   Añadido test de logout con un JWT válido.
+        El test es el que me ha permitido arreglar bastantes errores.
+
+*   Creado User flow
+        Me falta hacer el wireframe de las páginas más importantes  (welcomepage, feed, login/registro), pensando en el uso de
+        componentes de Angular Material y alomejor angular ng
+
+        y poco más de diseño. el resto rutas, un design system adaptado a la pagina y eso.
+        Dios me haga el usar Angular menos pesado que Spring Security 🤞🤞🤞
+
+***  [19/04/25]
+*   Creado wireframe detallado de la página de inicio:
+       https://www.figma.com/design/MOY6o8cLVlmN2LrbGbcnAh/Wireframe?node-id=0-1&p=f&t=VCdnnoY2PxkawkQr-0
+       Tengo que añadir una imagen a una sección pero por lo demás esta decente. (Probablemente cambie la otra por una de mejor calidad pero no hay cojones a encontrar una con varios deportistas diferentes y más de 3 píxeles).
+
+
+*   Creado wireframe intermediamente detallado Login y registro
+        mismo link para que lo voy a poner otra vez
+
+***   [26/04/25]
+*   Creado componente navbar, config Angular proxy y establecidas fuentes.
+        Descripción? Trivago.
+
+***   [27/04/25]
+*   Avanzado Landing page y añadidos componentes de angular material (tarjeta y lista)
+        He añadido esos componentes prefabricados de angular material, los cuales no tengo otra que estilizarlos mediante estilos globales (puedes usar el nombre del componente en los selectores ya que contiene al resto de elementos.)
+
+***   [03/05/25]
+*   Practicamente terminada la landing page, añadido componente 'tabs' para las preguntas frecuentes y contacto
+        No hice mucho el sabado la verdad, añadi el componente lo complete al principio con unos <detail> para los extensibles y luego para quitar el marcador que se queda (en principio se puede quitar con un selector pero no funciona hoy en día con la mayoría de los navegadores) lo refactorice en unos divs con la misma funcionalidad.
+***   [04/05/25]
+*   Cambiado estilo general de Angular Material
+        Ahora uso el estilo cyan orange (oscuro) y en el landing he modificado los componentes para conservar tarjetas blancas y otros elementos claros.
+*   Hecho diseño register
+        Usado componente mat-form-field y mat-button. Voy a intentar hacer la interacción con el backend del registro y aparte el login con la interacción también
+
+*   Creado controlador "debug" CsrfController
+        Creado controlador que da acceso a un endpoint de la api con método GET para poder conseguir un token de csrf desde el servidor de desarrollo de angular.
+
+*   Empezados validadores de formulario registro.
+
+*   Hecho servicio de autenticación angular que permite registrar y logear, aparte de coger un token csrf
+
+***   [07/05/25]
+*   Terminados validadores registro
+        Sin usar form group y haciendo un validador personalizado que valida que el campo de repetir contraseña sea igual a la contraseña,
+        aparte necesita una función especial para que el campo repetir contraseña actualice su estado cada vez que el de contraseña cambia.
+
+***   [08/05/25]
+*   Añadida muestra de errores como usuario que ya existe
+        Literalmente cogiendo el error que devuelve el servidor y mostrándolo.
+
+***   [09/05/25]
+*   Creado Login
+        Creado el login copiando y pegando del registro y cambiando márgenes y tamaño del formulario básicamente.
+*   Añadida comprobación de la existencia del email en el backend
+        Al igual que el usuario se comprueba que el email exista en el backend antes de crear un nuevo usuario, para evitar duplicados que den errores de SQL
+        (ya que el email es un campo único).
+*   Arreglado error que evitaba que funcionarán los redirects al registrarse y logearse
+        El backend devolvia los errores como json y responseEntity como texto, mientras que HTTPClient solo soporta un tipo de respuesta a la vez (no ambos)
+        por lo que en las respuestas exitosas httpclient crasheaba sigilosamente, por lo que (next) no se ejecutaba nunca. Ahora el backend devuelve un nuevo objeto
+        'JsonResponse' y los controladores son @RestController, detectando que se está devolviendo un solo objeto y convirtiendolo a json (una string la devolvia como content-type text).
+        El objeto es una dataclass (record) con un solo campo.
+
+***   [10/05/25]
+*   Empezamos feed
+        A darle caña no?
+        Hecho el header, que utilizara rutas dinámicas para pasar la información al feed. (No voy a meter su lógica en el feed porque el header va a servir para muchos componentes).
+
+        Hecho el header que es un componente compartido que outputea por un evento lo que el usuario busque en la barra y redirecciona a /feed?s=loquesea.
+
+        Hechas chips falta margen
+
+***** [TODO] Hay que añadir categorias a la db, el approach de una columna metadata para tan pocos datos realmente no es necesario.
+Lo hago otro día, primero via a terminar el frontend del feed.
+
+
+***   [14/05/25]
+*   Creado componente vídeo dentro de feed
+        Se usará para otras partes como en el perfíl.
+
+***   [15/05/25]
+*   Terminada conexión componente padre hijo entre vídeo y feed
+        Usando @Input, Además he conectado con output el panel desplegable de la foto de perfil con el header. Una vez termine este desplegable la vista la daré como terminada.
+
+
+***   [17/05/25]
+*   Terminado modal perfil
+        Me estaba dando problemas el modal del perfil porque se mueve con la scrollbar pero si no lo intento centrar y lo pongo como youtube cogiendo una esquina del icono del perfil da bastante igual el tema de la scrollbar.
+
+        Además esta hecho para que con position fixed (no se porque) siga a la navbar que es sticky y que bloquee el scroll mientras está abierta (lo hace yt no se porque tampoco)
+***   [25/05/25]
+*   Creado cubo s3 y configuración de canal de IVS que destina todos los directos resubidos a un cubo s3
+*   Empezado servicio Aws que facilite a la api usar canales de IVS y cubos S3
+
+
+***   [26/05/25]
+*   Trabajando en el servicio para hacerle seguimiento a aquellos directos que se han terminado
+        Usando una cola de amazon (SQS) y añadiendo un evento en el cubo en el que se suben los directos una vez se ha terminado de streamear, puedo pollear a esa cola desde el backend sucesivamente y hacer seguimiento a que canal termina y la id de stream que tiene. Y estos datos puedo guardarlos en la db local.
+
+        El flujo es el siguiente:
+                Usuario -> Subir Directo -> Se apunta su id y la id del canal que usa (identificador único) -> Una vez el directo termina un evento del s3 manda a una cola SQS el object key (usado para encontrar el directo en el bucket)  -> El backend pollea cada 2-3 minutos la info y el nuevo object_key se guarda en la fila de la db con el mismo id del canal más reciente
+
+        Example:
+
+        Channel ARN:
+        arn:aws:ivs:eu-west-1:123456789012:channel/AbCDeFGh1234
+
+        The folder prefix in S3 will be:
+        AbCDeFGh1234/<stream-id>/media.mp4
+
+# TODO Cuando se cree o se busque un canal libre, haz que se guarde la id del canal que se usa (ejemplo ID justo detras) en la db, junto al usuario y eso, cambia la estructura de la tabla stream para esto
+# AÑADE A LA TABLA STREAMS: channel_id y object_key
+# Haz que el poller por cada mensaje busque en la db por id del canal (sacandola de la key del objeto) y complete el último registro que tenga la id del mismo canal y no tenga object key.
+***   [27/05/25]
+*  Se crea un StreamService y una clase de datos Streaming para poder interactuar con la tabla 'streams' de la db
+        Este servicio simplemente permite hacer lo que he comentado antes, crear directo con id del usuario y del canal de ivs que usa, buscar un directo con esa id de canal sin object_key y añadirlo
+        y buscar un object_key de un directo dependiendo de la id del directo que necesite.
+
+        Este servicio es clave ya que es un crud muy específico con muy poco código pero tiene muchísimo uso.
+
+*  Se modifica la tabla streams
+        Se añade titulo, object_key y channel_id (que esta contenida guardando el arn, literalmente split("/")[1]), que junto a la author_id son los datos mas importantes. **enseñar sql en el tfg**
+       #+begin_src sql
+                CREATE TABLE IF NOT EXISTS "users" (
+                        "user_id" serial NOT NULL UNIQUE,
+                        "username" varchar(50) NOT NULL UNIQUE,
+                        "password" varchar(72) NOT NULL,
+                        "email" varchar(400) UNIQUE,
+                        "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        "streamer_id" int UNIQUE,
+                        "subscribed" int,
+                        "notifications" varchar(128) DEFAULT '[]',
+                        "follows" int,
+                        PRIMARY KEY ("user_id")
+                );
+
+                CREATE TABLE IF NOT EXISTS "streamer_details" (
+                        "streamer_id" int NOT NULL UNIQUE,
+                        "is_live" boolean NOT NULL DEFAULT false,
+                        "sport_type" varchar(30) NOT NULL DEFAULT '[]',
+                        "followers" int,
+                        "subscribers" int
+                );
+
+                CREATE TABLE IF NOT EXISTS "streams" (
+                        "stream_id" serial NOT NULL UNIQUE,
+                        "author_id" int NOT NULL UNIQUE,
+                        "title" varchar(32),
+                        "channel_arn" varchar(2048),
+                        "object_key" varchar(160) UNIQUE,
+                        "category" varchar(30) NOT NULL,
+                        "desc" varchar(512),
+                        "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        "thumbnail_obj_key" varchar(160) UNIQUE
+                        PRIMARY KEY ("stream_id")
+                );
+
+                CREATE TABLE IF NOT EXISTS "comments" (
+                        "comment_id" serial NOT NULL UNIQUE,
+                        "author_id" int NOT NULL UNIQUE,
+                        "stream_id" int NOT NULL UNIQUE,
+                        "comment" varchar(512) NOT NULL,
+                        "created_at" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        PRIMARY KEY ("comment_id")
+                );
+
+                CREATE TABLE IF NOT EXISTS "suscribers_streamers" (
+                        "suscriber_id" int NOT NULL,
+                        "streamer_id" int NOT NULL,
+                        PRIMARY KEY ("suscriber_id")
+                );
+
+                CREATE TABLE IF NOT EXISTS "followers_streamers" (
+                        "follower_id" int NOT NULL,
+                        "streamer_id" int NOT NULL,
+                        PRIMARY KEY ("follower_id")
+                );
+
+                ALTER TABLE "users" ADD CONSTRAINT "users_fk5" FOREIGN KEY ("streamer_id") REFERENCES "streamer_details"("streamer_id");
+                ALTER TABLE "streamer_details" ADD CONSTRAINT "streamer_details_fk0" FOREIGN KEY ("streamer_id") REFERENCES "users"("user_id");
+                ALTER TABLE "streams" ADD CONSTRAINT "streams_fk1" FOREIGN KEY ("author_id") REFERENCES "streamer_details"("streamer_id");
+                ALTER TABLE "comments" ADD CONSTRAINT "comments_fk1" FOREIGN KEY ("author_id") REFERENCES "users"("user_id");
+
+                ALTER TABLE "comments" ADD CONSTRAINT "comments_fk2" FOREIGN KEY ("stream_id") REFERENCES "streams"("stream_id");
+                ALTER TABLE "suscribers_streamers" ADD CONSTRAINT "suscribers_streamers_fk0" FOREIGN KEY ("suscriber_id") REFERENCES "users"("user_id");
+
+                ALTER TABLE "suscribers_streamers" ADD CONSTRAINT "suscribers_streamers_fk1" FOREIGN KEY ("streamer_id") REFERENCES "streamer_details"("streamer_id");
+                ALTER TABLE "followers_streamers" ADD CONSTRAINT "followers_streamers_fk0" FOREIGN KEY ("follower_id") REFERENCES "users"("user_id");
+
+                ALTER TABLE "followers_streamers" ADD CONSTRAINT "followers_streamers_fk1" FOREIGN KEY ("streamer_id") REFERENCES "streamer_details"("streamer_id");
+       #+end_src
+
+       Guardo como estaba el sql en ese momento para luego enseñarlo.
+
+       Así es como se guarda una object key, (lo tengo arriba pero esta lejos). Usando la id
+       MENTIRA, CHATGPT ME HA MENTIDO ;()
+        auto-record/<channel-id>/<recording-session-id>/recording.mp4
+        ES ASÍ:
+        ivs/v1/173473165842/64TnBPjBxLH9/2025/5/29/18/48/DlB7WDw9nkVU/media/hls/720p30/playlist.m3u8
+        la channel id es lo que empieza por 64
+        Recorded stream	ivs/v1/173473165842/64TnBPjBxLH9/2025/5/29/18/48/DlB7WDw9nkVU/media/hls/720p30/playlist.m3u8
+        Thumbnail images	ivs/v1/173473165842/64TnBPjBxLH9/2025/5/29/18/48/DlB7WDw9nkVU/media/thumbnails/thumb0.jpg
+
+*    Terminando AwsService y renombrandolo a UploadService (Hay que hacer un FetchService)
+        He metido SqsPoller dentro de AwsService ya que solo se usará aquí y muchas constantes que usa AwsService también las usa el poller.
+        No me basta con permitir que el s3 mande mensajes en la politica de acceso de la cola:
+       #+begin_src json
+        {
+        "Version": "2012-10-17",
+        "Id": "__default_policy_ID",
+        "Statement": [
+                {
+                "Sid": "__owner_statement",
+                "Effect": "Allow",
+                "Principal": {
+                        "AWS": "arn:aws:iam::173473165842:root"
+                },
+                "Action": "SQS:*",
+                "Resource": "arn:aws:sqs:eu-west-1:173473165842:stream-upload-queue"
+                },
+                {
+                "Sid": "AllowS3SendMessage",
+                "Effect": "Allow",
+                "Principal": {
+                        "Service": "s3.amazonaws.com"
+                },
+                "Action": "sqs:SendMessage",
+                "Resource": "arn:aws:sqs:eu-west-1:173473165842:stream-upload-queue",
+                "Condition": {
+                        "ArnLike": {
+                        "aws:SourceArn": "arn:aws:s3:::streams-ivs"
+                        }
+                    }
+                }
+                ]
+        }
+       #+end_src
+       Sino que también tengo que añadir en la politica de usuario (IAM) para darme permiso como usuario a recibir mensajes:
+       #+begin_src json
+{
+        "Version": "2012-10-17",
+        "Statement": [
+                {
+                "Effect": "Allow",
+                "Action": [
+                        "sqs:ReceiveMessage",
+                        "sqs:DeleteMessage",
+                        "sqs:GetQueueAttributes"
+                ],
+                "Resource": "arn:aws:sqs:eu-west-1:173473165842:stream-upload-queue"
+                }
+        ]
+}
+        #+end_src
+        Creo esta política y se la añado a mi usuario: 'sportwatch-user'
+***   [28/05/25]
+*   Añado thumbnail_url a la db que coja la primera imagen que le llegue para el mismo channel id que no tenga stream_key ni thumbnail
+        Actualizo el sql de atras para que muestre la versión más moderna, en el mismo sqs poller hay que añadir logica para añadirla a la db. Además un array en memoria en el sqs poller de channelIds que una vez que se guarde una miniatura para un directo, añada esa channelId hasta que se añada la object key para esa misma channel Id en la db. Durante el tiempo que se mantiene la channelId en el array, si llega un .jpg
+        TODO: LO QUE ACABO DE MENCIONAR Y TERMINAR EL FETCHSERVICE
+
+        formato una object key de una imagen:
+ivs/v1/<aws_account_id>/<channel_id>/<year>/<month>/<day>/<hour>/<minute>/<recording_id>/media/thumbnails/<timestamp>.jpg
+ivs/v1/173473165842/64TnBPjBxLH9/2025/5/29/18/48/DlB7WDw9nkVU/media/thumbnails/thumb0.jpg
+
+ivs/v1/123456789012/abcdEfghIJkl/2025/05/28/media/latest_thumbnail/thumb.jpg
+
+***   [29/05/25]
+*   Termino FetchService (o por lo menos llego a un punto en el que es utilizable)
+        FetchService ya es capaz de devolver todos los directos live, los que no están live y uno por id (este live o no), junto a todos sus datos.
+        Ahora solo necesito rutas en la api para devolver todos los directos, debería darlos todos juntos y que el frontend según si la streamUrl es .m3u8 o .mp4 distinga.
+
+*** [30/05/25]
+*  Termino FetchController y UploadController
+
+*** [01/06/25]
+*  Conectado feed con backend y añadido soporte para el logout y filtros de los vídeos.
+
+
+*** [02/06/25]
+*  Añadida ruta checkUser para validar el usuario
+        Ya que en el frontend solo puedo mirarlo por la cookie 'user' que cualquiera puede cambiar, pero para cosas como subir un vídeo o detectar si el perfil X es el perfil de un usuario necesito algo más fiable.
+*  Creado componente Profile
+        Además se han creado un servicio de usuarios y una interfaz que los represente
+*  Aplicados cambios en la base de datos
+        He repasado la db y si los followers y suscribers se apuntan en tablas para la relacion M:M no hace falta mantener una cuenta ni en users ni en stream_details. Si quiero saber a quien estas suscrito lo miro por tu id en suscribers_streamers y viceversa
+*  Componente Profile
+
+
+        [] Le falta terminar parte del diseño y crear un botón de empezar directo solo cuando el profileUser sea el mismo que el usuario que hay ahora (usar checkUser).
+
+        [✔] PONLE A LAS TABS OVERFLOW HIDDEN POR DIOS ️
+        [] haz que el boton de seguir funcione y cambie de 'seguir' a 'dejar de seguir' tendrá que ser opcional ( no va a salir el botón si es tu perfil )
+
+        [] crea una tab de contenido premium con un dialog de suscribe.
+
+        [] añade en la db en usuario una descripcion, atributo en el modelo y read y update (no hagas create, pon default "" en la db)
+
+*** [05/06/25]
+*  Componente profile
+        [x] haz que el boton de seguir funcione y cambie de 'seguir' a 'dejar de seguir' tendrá que ser opcional ( no va a salir el botón si es tu perfil )
+        [x] Le falta terminar parte del diseño y crear un botón de empezar directo solo cuando el profileUser sea el mismo que el usuario que hay ahora (usar checkUser).
+
+        IMPORTANTE:
+        Apunta en el tfg que has usado fontsource para iconos faciles de implementar.
+
+        Mas cosas en el issue
+*** [06/06/25]
+*  Terminar el perfil
+        Termino lo que hay en el issue
+
+        Me falta añadir pa subir streams
+
+*** [07/06/25]
+*  Correccion errores perfil
+        La base de datos tenia claves foraneas que apuntaban a la id del streamer_details en follower_streamer y suscriber_streamer
+        Pero como se puede seguir a cualquier usuario debe de apuntar a la id de users.
+
+        Además había ciertas variables mal asignadas y para poder actualizar la informacion dependiendo del perfil que fuera, Es decir
+        si vas del perfil de alguien a otro perfil y no has cambiado de componente, hay que meter esa logica en el suscribe de ActiveRoute.params, que
+        actualiza cada vez que cambia la url.
+*  Añadir lo que falta en el perfil
+        NOTA PARA apuntar en el tfg y en el README: No se si añadiré subida de archivos para las miniaturas ya que hacerlo seguro es muy dificil y
+        tienen más prioridad funcionalidades más necesarias como comentarios. Para los que tendré que hacer un poller y explicar en mi tfg que no voy a
+        implementar ws porque no es necesario para tan pocos usuarios y me llevaría mucho tiempo. AÑADIR AL PDF COMO FUNCIONALIDADES A MEJORAR.
+
+
+*  Añadido favicon, Logo y hero section de la landing.
+
+*  Añadir descripcion a los usuarios y conectarla con el perfil (da la opcion de cambiarla).
+        Ya que hago esto y me meto en el backend hago el crud de los comentarios y a lo mejor el de las notificaciones
+        Además corrijo el backend, ya que no necesito un follows ni suscribed en la tabla de usuario, he optado por hacerlo en sus propias tablas M:M
+
+*  Panel de subir vídeo con titulo, categoria y desc para enviar, que una vez que se pasen los datos te da la info para empezar directo
+        El panel le falta la descripción y que funcione, no pilla el json ;(((
+        tengo miedo
+
+*** [08/06/25]
+    El json no lo pillaba porque @RequestBody de Mono<..> es rarillo y consume el objeto antes de parsearlo, por eso me decia no requestbody found.
+
+    NOTA IMPORTANTE PARA AÑADIR AL PDF DEL TFG: No añado validacion compleja para desasignarle un canal (caducarlo) a alguien que no empiece directo al tiempo porque para
+    un prototipo me parece innecesario.
+
+    Poner en el tfg que la pagina se inspirado en el diseño de yt y hbo sports (max) entre otros.
+*  Correcion rapida busqueda feed ahora que hay mas de un directo y copia pega a subscriptions
+        Corregido y añadida logica en el logo para variar el a donnde te lleva.
+        falta copia pega subs y videos.
+
+
+        AÑADE AL TFG cuando hables del bucket que usa notificacion de eventos.
+
+        NOTA TFG: LA CARPETA SECRETS SE MANTIENE IGNORADA PARA MANTERNER LA CLAVES PUBLICAS Y PRIVADAS PROTEGIDASopenssl genpkey -algorithm RSA -out private-key.pem
+        #+begin_src bash
+                openssl rsa -pubout -in private-key.pem -out public-key.pem
+                openssl pkcs8 -topk8 -inform PEM -outform PEM -in private-key.pem -out private-key.pem -nocrypt
+                # Y reemplaza la key privada del primer paso con la key en formato pcks
+        #+end_src#
