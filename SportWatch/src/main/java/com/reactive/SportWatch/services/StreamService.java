@@ -153,10 +153,12 @@ public class StreamService {
     };
 
     public Mono<Void> viewAStream(Integer streamId, Integer userId) {
-        return dbClient.sql("INSERT INTO viewers_streams (stream_id, viewer_id) VALUES (:stream_id, :viewer_id)")
+        // If videois Already viewed it will return mono.empty.
+        return isVideoAlreadyViewed(streamId, userId).filter(isIt -> !isIt)
+            .flatMap(isIt -> dbClient.sql("INSERT INTO viewers_streams (stream_id, viewer_id) VALUES (:stream_id, :viewer_id)")
             .bind("stream_id", streamId)
             .bind("viewer_id", userId)
-            .fetch().rowsUpdated()
+            .fetch().rowsUpdated())
             .flatMap(changes -> {
                     switch (changes.intValue()) {
                         case 0 -> log.warning("View wasn't added for some unknown reason");
@@ -172,6 +174,12 @@ public class StreamService {
             .fetch().one().map(map -> (Integer) map.get("count"));
     }
 
+    public Mono<Boolean> isVideoAlreadyViewed(Integer streamId, Integer userId) {
+        return dbClient.sql("SELECT * FROM viewers_streams WHERE stream_id = :stream_id AND viewer_id = :viewer_id")
+            .bind("stream_id", streamId)
+            .bind("viewer_id", userId)
+            .fetch().first().map(map -> map.get("viewer_id") != null);
+    }
 
 
 }
