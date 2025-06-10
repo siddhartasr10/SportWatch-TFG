@@ -265,42 +265,6 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
 
                 .flatMap(v -> Mono.just(user));
 
-        // return isUsernameTaken(user.getUsername())
-        // .flatMap(isTaken -> {
-        // if (isTaken)
-        // return Mono.error(new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE,
-        // "Username already taken"));
-
-        // StringBuilder columns = new StringBuilder("username, password");
-        // StringBuilder values = new StringBuilder(":username, :password");
-
-        // // Null check has to be made to be perfectly sure im not messing up (and that
-        // someone registering by the API instead of the form doesn't crash the server)
-        // if (user.getEmail() != null) {
-        // columns.append(", email");
-        // values.append(", :email");
-        // }
-
-        // String sql = String.format("INSERT INTO users (%s) VALUES (%s)", columns,
-        // values);
-
-        // GenericExecuteSpec pausedSpec = dbClient.sql(sql)
-        // .bind("username", user.getUsername())
-        // .bind("password", encoder.encode(user.getPassword()));
-
-        // // Have to reassign because object is inmmutable, so a new copy is created.
-        // if (user.getEmail() != null) pausedSpec = pausedSpec.bind("email",
-        // user.getEmail());
-
-        // return pausedSpec.fetch()
-        // .rowsUpdated()
-        // .doOnNext(changes -> {
-        // if (changes == 0)
-        // logger.warning("No user was created");
-        // logger.info("User created successfully");
-        // })
-        // .flatMap(v -> Mono.just(user));
-        // });
     }
 
     public Mono<Void> deleteUser(String username) {
@@ -539,6 +503,12 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
                     return Mono.just(changes.intValue());
                 });
     }
+
+    // Hacer en la db un notificaciones para poder guardar cuenta que lo emite (o canal mas bien)
+    // Mensaje y createdAt (para que salga el tiempo que hace que se mando con fechaService.)
+    // public Mono<String> pushNotification()
+
+
 
     /**
      * DEBUG FUNCTION DON'T USE AT PROD

@@ -41,13 +41,20 @@ CREATE TABLE IF NOT EXISTS "comments" (
 CREATE TABLE IF NOT EXISTS "suscribers_streamers" (
 	"suscriber_id" int NOT NULL,
 	"streamer_id" int NOT NULL,
-	PRIMARY KEY ("suscriber_id")
+	PRIMARY KEY ("suscriber_id, streamer_id")
 );
 
 CREATE TABLE IF NOT EXISTS "followers_streamers" (
 	"follower_id" int NOT NULL,
 	"streamer_id" int NOT NULL,
-	PRIMARY KEY ("follower_id")
+	PRIMARY KEY ("follower_id, streamer_id")
+);
+
+
+CREATE TABLE IF NOT EXISTS "viewers_streams" (
+	"stream_id" int NOT NULL,
+	"viewer_id" int NOT NULL,
+	PRIMARY KEY ("stream_id, viewer_id")
 );
 
 ALTER TABLE "users" ADD CONSTRAINT "users_fk5" FOREIGN KEY ("streamer_id") REFERENCES "streamer_details"("streamer_id");
@@ -62,3 +69,6 @@ ALTER TABLE "suscribers_streamers" ADD CONSTRAINT "suscribers_streamers_fk1" FOR
 
 ALTER TABLE "followers_streamers" ADD CONSTRAINT "followers_streamers_fk0" FOREIGN KEY ("follower_id") REFERENCES "users"("user_id");
 ALTER TABLE "followers_streamers" ADD CONSTRAINT "followers_streamers_fk1" FOREIGN KEY ("streamer_id") REFERENCES "users"("user_id");
+
+ALTER TABLE "viewers_streams" ADD CONSTRAINT "viewers_streams_fk0" FOREIGN KEY ("stream_id") REFERENCES "streams"("stream_id");
+ALTER TABLE "viewers_streams" ADD CONSTRAINT "viewers_streams_fk1" FOREIGN KEY ("viewer_id") REFERENCES "users"("user_id");

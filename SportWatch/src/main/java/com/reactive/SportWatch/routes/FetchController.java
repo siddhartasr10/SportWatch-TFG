@@ -47,6 +47,22 @@ public class FetchController {
                 .concatWith(fetchService.fetchNonUploadedStreams(Optional.empty()));
     }
 
+    // fetch uploaded and non uploaded streams
+    @PostMapping("streams")
+    Flux <StreamingInfo> fetchAllStreamsCustomDuration(@RequestBody Map<String, String> json) {
+        Optional<Duration> optionalDuration;
+        try {
+            optionalDuration = Optional.ofNullable(Duration.ofHours(Integer.parseInt(json.get("urlDuration"))));
+        }
+        catch (NumberFormatException e) {
+            return (json.get("urlDuration") == null) ? fetchAllStreams() :
+                Flux.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Url duration must be number of hours!"));
+        }
+        // By default optional duration is 2h.
+        return fetchService.fetchUploadedStreams(optionalDuration)
+                .concatWith(fetchService.fetchNonUploadedStreams(optionalDuration));
+    }
+
  /**
  * Fetches streaming information for the given stream ID.
  * This endpoint accepts a JSON request body containing optional settings such as how long the
@@ -88,5 +104,11 @@ public class FetchController {
             });
     }
 
+    // Duration gets passed by hours as in the service.
+    @GetMapping("stream/{stream_id}")
+    Mono<StreamingInfo> fetchById(@PathVariable Integer stream_id) {
+        if (stream_id < 1) return Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "stream_id cannot be 0 bro you're kidding"));
+        return fetchService.fetchStreamById(stream_id, Optional.empty());
+    }
 
 }
