@@ -6,11 +6,9 @@ import { Observable } from 'rxjs';
 @Injectable({
   providedIn: 'root'
 })
-export class StreamService extends BaseCsrfService {
-
-    constructor(http: HttpClient) {
-        super(http);
-    }
+export class StreamService {
+    protected readonly apiUrl : string = 'http://localhost:4200/api';
+    constructor(private http: HttpClient, private csrf: BaseCsrfService) {}
 
   /**
    * POST /api/view/{stream_id}
@@ -19,7 +17,7 @@ export class StreamService extends BaseCsrfService {
    */
     viewStream(streamId: number): Observable<{msg:string}> {
       return this.http.post<{msg:string}>(`${this.apiUrl}/view/${streamId}`, null, {
-      headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+      headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
       withCredentials: true,
       responseType: 'json',
     });

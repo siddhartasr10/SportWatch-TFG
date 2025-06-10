@@ -10,11 +10,10 @@ import { BaseCsrfService } from '../base-csrf-service/base-csrf-service.service'
 @Injectable({
   providedIn: 'root'
 })
-export class UserService extends BaseCsrfService {
+export class UserService  {
+    protected readonly apiUrl : string = 'http://localhost:4200/api';
 
-    constructor(http : HttpClient) {
-        super(http);
-    }
+    constructor(private http : HttpClient, private csrf: BaseCsrfService) {}
 
   /**
    * Fetches extended user details for the given username.
@@ -23,7 +22,7 @@ export class UserService extends BaseCsrfService {
    */
     getUserByUsername(username : string) : Observable<ExtUser> {
         return this.http.get<ExtUser>(`${this.apiUrl}/user/${username}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -37,7 +36,7 @@ export class UserService extends BaseCsrfService {
    */
     getFollowersOfUsername(username : string) : Observable<FollowersStreamers[]> {
         return this.http.get<FollowersStreamers[]>(`${this.apiUrl}/followers/${username}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -51,7 +50,7 @@ export class UserService extends BaseCsrfService {
    */
     getSuscribersOfUsername(username : string) : Observable<SuscribersStreamers[]> {
         return this.http.get<SuscribersStreamers[]>(`${this.apiUrl}/suscribers/${username}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -65,7 +64,7 @@ export class UserService extends BaseCsrfService {
    */
     getUsernameFollows(username : string) : Observable<FollowersStreamers[]> {
         return this.http.get<FollowersStreamers[]>(`${this.apiUrl}/follows/${username}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -79,7 +78,7 @@ export class UserService extends BaseCsrfService {
    */
     getUsernameSuscribed(username : string) : Observable<SuscribersStreamers[]> {
         return this.http.get<SuscribersStreamers[]>(`${this.apiUrl}/suscribed/${username}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -93,7 +92,7 @@ export class UserService extends BaseCsrfService {
     */
     followUser(follower: string, streamer: string): Observable<void> {
         return this.http.post<void>(`${this.apiUrl}/follow/${follower}/${streamer}`, null, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true
         });
     }
@@ -105,7 +104,7 @@ export class UserService extends BaseCsrfService {
     */
     suscribeUser(suscriber: string, streamer: string): Observable<void> {
         return this.http.post<void>(`${this.apiUrl}/suscribe/${suscriber}/${streamer}`, null, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true
         });
     }
@@ -117,7 +116,7 @@ export class UserService extends BaseCsrfService {
     */
     unfollowUser(follower: string, streamer: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/unfollow/${follower}/${streamer}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true
         });
     }
@@ -129,7 +128,7 @@ export class UserService extends BaseCsrfService {
     */
     unsuscribeUser(suscriber: string, streamer: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/unsuscribe/${suscriber}/${streamer}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true
         });
     }
@@ -142,7 +141,7 @@ export class UserService extends BaseCsrfService {
     */
     checkFollows(follower: string, streamer: string): Observable<boolean> {
         return this.http.get<boolean>(`${this.apiUrl}/follows/${follower}/${streamer}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json'
         });
@@ -156,7 +155,7 @@ export class UserService extends BaseCsrfService {
     */
     checkSuscribed(suscriber: string, streamer: string): Observable<boolean> {
         return this.http.get<boolean>(`${this.apiUrl}/suscribes/${suscriber}/${streamer}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json'
         });
@@ -164,7 +163,7 @@ export class UserService extends BaseCsrfService {
 
     updateDescription(description : string): Observable<{[msg: string]: number}> {
         return this.http.put<{[msg: string]: number}>(`${this.apiUrl}/description`, {"description": description}, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json'
         });

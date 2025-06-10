@@ -16,6 +16,8 @@ import { VideoComponent } from '../../shared/components/video/video.component';
 import { AuthService } from '../../shared/services/auth-service/auth-service.service';
 import { MatButton, MatButtonModule } from '@angular/material/button';
 import { FechaService } from '../../shared/services/fecha-service/fecha-service.service';
+import { CommentService } from '../../shared/services/comment-service/comment-service.service';
+import { StreamService } from '../../shared/services/stream-service/stream-service.service';
 
 @Component({
   selector: 'app-video-id',
@@ -42,8 +44,8 @@ export class VideoIdComponent {
     // Unirme | Eres miembro
     suscribeBtnMsg : String = "";
 
-    constructor(private fetchService: FetchService, private userService : UserService, private authService: AuthService,
-                private route : ActivatedRoute, private router : Router, private fechaService : FechaService) {
+    constructor(private fetchService: FetchService, private userService : UserService, private authService: AuthService, private streamService: StreamService,
+                private route : ActivatedRoute, private router : Router, private fechaService : FechaService, private commentService: CommentService) {
 
         this.route.params.subscribe((params : Params) => {
             const id = params["id"] as string;
@@ -56,6 +58,9 @@ export class VideoIdComponent {
                 next: (stream) => {
                     this.mainVideo = stream;
                     this.mainVideo!.createdAt = this.fechaService.getTimeAgo(stream.createdAt);
+
+                    // Añado el view al stream si no lo tiene.
+                    this.streamService.viewStream(stream.streamId).subscribe();
                     this.fetchService.fetchAllStreams().subscribe({
                         next: (videos: StreamingInfo[]) => this.videos.set(videos.filter((video) => video.streamId !== this.mainVideo!.streamId)),
                         error: (error: HttpErrorResponse) => console.log("Error ocurred loading videos: ", error),

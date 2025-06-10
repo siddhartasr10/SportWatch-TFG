@@ -7,10 +7,9 @@ import { Comment } from '../../interfaces/Comment';
 @Injectable({
     providedIn: 'root'
 })
-export class CommentService extends BaseCsrfService {
-
-    constructor(http: HttpClient) {
-        super(http);
+export class CommentService {
+    protected readonly apiUrl : string = 'http://localhost:4200/api';
+    constructor(private http: HttpClient, private csrf: BaseCsrfService) {
     }
 
     /**
@@ -19,7 +18,7 @@ export class CommentService extends BaseCsrfService {
       */
     createComment(comment: Comment): Observable<{ msg: string }> {
         return this.http.post<{ msg: string }>(`${this.apiUrl}/comment`, comment, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -42,7 +41,7 @@ export class CommentService extends BaseCsrfService {
     */
     updateCommentMsg(commentId: number, message: string): Observable<{ msg: string }> {
         return this.http.put<{ msg: string }>(`${this.apiUrl}/comment/${commentId}`, message, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken(), 'Content-Type': 'text/plain' }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken(), 'Content-Type': 'text/plain' }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -54,7 +53,7 @@ export class CommentService extends BaseCsrfService {
     */
     deleteComment(commentId: number): Observable<{ msg: string }> {
         return this.http.delete<{ msg: string }>(`${this.apiUrl}/comment/${commentId}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });

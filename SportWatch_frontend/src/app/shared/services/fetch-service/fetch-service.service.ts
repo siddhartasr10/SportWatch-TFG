@@ -8,13 +8,11 @@ import { BaseCsrfService } from '../base-csrf-service/base-csrf-service.service'
 @Injectable({
   providedIn: 'root',
 })
-export class FetchService extends BaseCsrfService {
-  constructor(http: HttpClient) {
-      super(http);
-      this.INVALIDURL = "https://google.com";
-  }
+export class FetchService {
+   protected readonly apiUrl : string = 'http://localhost:4200/api';
+  constructor(private http: HttpClient, private csrf: BaseCsrfService) {}
     // IF ANY URL IS INVALID, IT WILL RETURN "https://google.com".
-  INVALIDURL : string;
+  private readonly INVALIDURL : string = "https://google.com";
 
   // GET /api/streams - returns both uploaded and non-uploaded streams concatenated
   fetchAllStreams(): Observable<StreamingInfo[]> {
@@ -26,7 +24,7 @@ export class FetchService extends BaseCsrfService {
   fetchAllStreamsCustomDuration(urlDuration: number): Observable<StreamingInfo[]> {
     const body = { urlDuration: urlDuration.toString() };
     return this.http.post<StreamingInfo[]>(`${this.apiUrl}/streams`, body, {
-      headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+      headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
       withCredentials: true,
       responseType: 'json',
     }).pipe(map(this.validUrlFilter)) as Observable<StreamingInfo[]>;
@@ -36,7 +34,7 @@ export class FetchService extends BaseCsrfService {
   // GET /api/stream/{streamId} - fetch stream info by id without duration
   fetchStreamById(streamId: number): Observable<StreamingInfo> {
         return this.http.get<StreamingInfo>(`${this.apiUrl}/stream/${streamId}`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         }).pipe(map(this.validUrlFilter)) as Observable<StreamingInfo>;
@@ -45,7 +43,7 @@ export class FetchService extends BaseCsrfService {
   fetchStreamByIdCustomDuration(streamId: number, urlDuration?: number): Observable<StreamingInfo> {
       const body = urlDuration ? { urlDuration: urlDuration.toString() } : {};
       return this.http.post<StreamingInfo>(`${this.apiUrl}/stream/${streamId}`, body, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
       }).pipe(map(this.validUrlFilter)) as Observable<StreamingInfo>;

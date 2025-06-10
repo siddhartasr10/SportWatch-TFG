@@ -44,7 +44,7 @@
                     profileLink="/Profile/lenteja"></app-video>
                 <!-- } -->
         @for (video of filteredVideos(); track video.title) {
-        <app-video [videoLink]="'/video/' + video.streamId " [videoImgUrl]="video.thumbnailUrl" [videoTitle]="video.title" [profileLink]="'/profile/' + video.author"
+        <app-video [videoLink]="'/video/' + video.streamId " [videoImgUrl]="video.thumbnailUrl || '/shared/empty_thumbnail.png'" [videoTitle]="video.title" [profileLink]="'/profile/' + video.author"
             [profileImgUrl]="''" [streamer]="video.author" [viewers]="0"></app-video>
         }
     </div>
