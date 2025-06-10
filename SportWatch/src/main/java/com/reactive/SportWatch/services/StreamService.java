@@ -132,9 +132,7 @@ public class StreamService {
         return stream;
     }
 
-    // Get the stream object_key by id 
-    // if no object_key and thumbnail_obj_key was found it will return empty stream
-    // if one of them was found it will return almost empty stream with the field.
+    // Get the stream object_key and thumbnail_obj_key by id 
     public Mono<Streaming> findFileById(int id) {
         log.info("Id passed to findFileById: " + Integer.toString(id));
         return dbClient.sql("SELECT * FROM streams WHERE stream_id = :stream_id")
@@ -153,4 +151,27 @@ public class StreamService {
             .map(strm -> {log.info("Found strm: " + strm.toString()); return strm;})
             .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No stream with that Id could be found")));
     };
+
+    public Mono<Void> viewAStream(Integer streamId, Integer userId) {
+        return dbClient.sql("INSERT INTO viewers_streams (stream_id, viewer_id) VALUES (:stream_id, :viewer_id)")
+            .bind("stream_id", streamId)
+            .bind("viewer_id", userId)
+            .fetch().rowsUpdated()
+            .flatMap(changes -> {
+                    switch (changes.intValue()) {
+                        case 0 -> log.warning("View wasn't added for some unknown reason");
+                        case 1 -> log.info("View added successfully");
+                    }
+                    return Mono.empty();
+                });
+    }
+
+    public Mono<Integer> countStreamViews(Integer streamId) {
+        return dbClient.sql("SELECT COUNT(viewer_id) as count FROM viewers_streams WHERE stream_id = :stream_id ")
+            .bind("stream_id", streamId)
+            .fetch().one().map(map -> (Integer) map.get("count"));
+    }
+
+
+
 }
