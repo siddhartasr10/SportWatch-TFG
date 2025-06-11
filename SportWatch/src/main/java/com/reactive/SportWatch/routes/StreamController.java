@@ -1,12 +1,13 @@
 package com.reactive.SportWatch.routes;
 
+import java.util.logging.Logger;
+
 import com.reactive.SportWatch.models.JsonResponse;
 import com.reactive.SportWatch.services.JwtService;
 import com.reactive.SportWatch.services.StreamService;
 import com.reactive.SportWatch.services.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +25,8 @@ public class StreamController {
     private JwtService jwtService;
     private UserService userService;
 
+    private static final Logger log = Logger.getLogger(StreamController.class.getName());
+
     @Autowired
     StreamController(StreamService streamService, JwtService jwtService, UserService userService) {
         this.streamService = streamService;
@@ -34,6 +37,7 @@ public class StreamController {
 
     @PostMapping("view/{stream_id}")
     Mono<JsonResponse> viewStream(@PathVariable Integer stream_id, ServerWebExchange exch) {
+        log.info("Viewing stream: " + stream_id);
         return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
             .flatMap(token -> jwtService.getUsernameFromToken(token))
             .flatMap(username -> userService.findIdByUsername(username))
