@@ -2,6 +2,7 @@ package com.reactive.SportWatch.services;
 
 import java.time.LocalDateTime;
 import java.util.logging.Logger;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.r2dbc.core.DatabaseClient;
@@ -169,16 +170,20 @@ public class StreamService {
     }
 
     public Mono<Integer> countStreamViews(Integer streamId) {
+        log.info("Getting stream views...");
         return dbClient.sql("SELECT COUNT(viewer_id) as count FROM viewers_streams WHERE stream_id = :stream_id ")
             .bind("stream_id", streamId)
-            .fetch().one().map(map -> (Integer) map.get("count"));
+            .fetch().one().map(map -> ((Long) map.get("count")).intValue());
     }
 
     public Mono<Boolean> isVideoAlreadyViewed(Integer streamId, Integer userId) {
         return dbClient.sql("SELECT * FROM viewers_streams WHERE stream_id = :stream_id AND viewer_id = :viewer_id")
             .bind("stream_id", streamId)
             .bind("viewer_id", userId)
-            .fetch().first().map(map -> map.get("viewer_id") != null);
+            .fetch().first()
+            .defaultIfEmpty(Map.of())
+            .map(map -> {log.info("IsvideoAlreadyviewed: " + map.toString()); return map;})
+            .map(map -> map.get("viewer_id") != null);
     }
 
 
