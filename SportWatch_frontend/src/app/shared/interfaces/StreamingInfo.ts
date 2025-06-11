@@ -9,4 +9,5 @@ export interface StreamingInfo {
   thumbnailUrl: string;  // Using string for URL
   desc: string;
   createdAt: string;     // ISO date string (LocalDateTime -> string)
+  viewerCount?: number;
 }

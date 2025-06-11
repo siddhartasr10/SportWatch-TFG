@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, WritableSignal, signal } from '@angular/core';
+import { Component, ElementRef, Signal, ViewChild, WritableSignal, computed, signal } from '@angular/core';
 import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -45,7 +45,7 @@ export class VideoIdComponent {
     suscribeBtnMsg : String = "";
 
     constructor(private fetchService: FetchService, private userService : UserService, private authService: AuthService, private streamService: StreamService,
-                private route : ActivatedRoute, private router : Router, private fechaService : FechaService, private commentService: CommentService) {
+                private route : ActivatedRoute, private router : Router, public fechaService : FechaService, private commentService: CommentService) {
 
         this.route.params.subscribe((params : Params) => {
             const id = params["id"] as string;
@@ -58,11 +58,21 @@ export class VideoIdComponent {
                 next: (stream) => {
                     this.mainVideo = stream;
                     this.mainVideo!.createdAt = this.fechaService.getTimeAgo(stream.createdAt);
+                    this.streamService.getStreamViews(this.mainVideo.streamId).subscribe((views) => this.mainVideo!.viewerCount = views);
 
                     // Añado el view al stream si no lo tiene.
                     this.streamService.viewStream(stream.streamId).subscribe();
                     this.fetchService.fetchAllStreams().subscribe({
-                        next: (videos: StreamingInfo[]) => this.videos.set(videos.filter((video) => video.streamId !== this.mainVideo!.streamId)),
+                        next: (videos: StreamingInfo[]) => {
+                            this.videos.set(videos.filter((video) => video.streamId !== this.mainVideo!.streamId))
+                            this.videos.update(videos => {
+                                for (let video of videos) {
+                                    this.streamService.getStreamViews(video.streamId).subscribe((views) => video.viewerCount= views)
+                                }
+                                return videos
+                            });
+
+                        },
                         error: (error: HttpErrorResponse) => console.log("Error ocurred loading videos: ", error),
                     });
 
@@ -151,8 +161,6 @@ export class VideoIdComponent {
         this.userService.getSuscribersOfUsername(this.mainVideo!.author).pipe(map((suscribersStreamers: SuscribersStreamers[]) => suscribersStreamers.map((suscriberStreamer: SuscribersStreamers) => suscriberStreamer.suscriber_id)))
             .subscribe((userIds : number[]) => this.authorUserSuscribers = userIds);
     }
-
-
 
     loadHls() {
         console.log("Videoref after: ", this.videoRef);

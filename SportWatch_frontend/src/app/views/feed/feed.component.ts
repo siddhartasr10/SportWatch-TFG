@@ -1,5 +1,7 @@
-import { Component, WritableSignal, signal, } from '@angular/core';
+import { Component, WritableSignal, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+
+import { firstValueFrom } from 'rxjs';
 
 import { MatChipListbox, MatChipOption, MatChipsModule } from '@angular/material/chips';
 
@@ -9,6 +11,8 @@ import { StreamingInfo } from '../../shared/interfaces/StreamingInfo';
 // import { UploadService } from '../../shared/services/upload-service/upload-service.service';
 import { FetchService } from '../../shared/services/fetch-service/fetch-service.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { FechaService } from '../../shared/services/fecha-service/fecha-service.service';
+import { StreamService } from '../../shared/services/stream-service/stream-service.service';
 
 @Component({
   selector: 'app-feed',
@@ -17,8 +21,8 @@ import { HttpErrorResponse } from '@angular/common/http';
   styleUrl: './feed.component.css'
 })
 export class FeedComponent {
-    constructor(private router : Router, private fetchService : FetchService, private route : ActivatedRoute) {
-        this.loadVideos();
+    constructor(private router : Router, private fetchService : FetchService, private route : ActivatedRoute,
+                public fechaService : FechaService, private streamService: StreamService) {
 
         this.route.queryParams.subscribe((params) => {
             console.log(params);
@@ -32,6 +36,18 @@ export class FeedComponent {
     videos : WritableSignal<StreamingInfo[]> = signal([]);
     filteredVideos : WritableSignal<StreamingInfo[]> = signal([]);
 
+    async ngOnInit() {
+        // this.loadVideos();
+        // console.log("videos in this moment:", this.videos());
+        // let videosCpy = {...this.videos()};
+        // for (let video of videosCpy) {
+        //     let videoCpy = {...video};
+        //     videoCpy.viewerCount = await firstValueFrom(this.streamService.getStreamViews(videoCpy.streamId));
+        // }
+
+        // return videosCpy;
+        await this.loadVideos();
+    }
 
     // Me podría pasar los parámetros si quisiera del valor del .value del input si sacara el otro componente pero no sería escalable para funcionar en todos los componentes.
     onSearch(searchQuery : WritableSignal<string>) {
@@ -42,19 +58,22 @@ export class FeedComponent {
 
     }
 
-    loadVideos() : void {
-        this.fetchService.fetchAllStreams().subscribe({
-            next: (videos : StreamingInfo[]) => this.videos.set(videos),
-            error: (error : HttpErrorResponse) => console.log("Error ocurred loading videos: ", error),
-            complete: () => {
-                console.log("current search:", this.search());
-                console.log("Videos before search filtering: ", this.videos());
-                this.filteredVideos.set(this.filterBySearch(this.videos()));
+    async loadVideos() : Promise<void> {
+        let videos = await firstValueFrom(this.fetchService.fetchAllStreams());
 
-                console.log("Videos after search filtering: ", this.filteredVideos());
-                this.filteredVideos.set(this.filterByCategory(this.filteredVideos()));
-            }
-        });
+        let videosCpy = [...videos];
+        for (let video of videosCpy) {
+            video.viewerCount = await firstValueFrom(this.streamService.getStreamViews(video.streamId));;
+        }
+
+        this.videos.set(videosCpy);
+
+        console.log("current search:", this.search());
+        console.log("Videos before search filtering: ", this.videos());
+        this.filteredVideos.set(this.filterBySearch(this.videos()));
+
+        console.log("Videos after search filtering: ", this.filteredVideos());
+        this.filteredVideos.set(this.filterByCategory(this.filteredVideos()));
 
     }
 

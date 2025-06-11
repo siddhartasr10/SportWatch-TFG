@@ -9,10 +9,11 @@ import { RouterLink } from '@angular/router';
 })
 export class VideoComponent {
     @Input() videoLink : string = "";
-    @Input() videoImgUrl : string = "";
+    @Input() videoImgUrl : string = "/shared/empty_thumbnail.jpg";
     @Input() profileLink : string = "";
     @Input() profileImgUrl : string = "/shared/default_user.svg";
     @Input() videoTitle : string = "";
     @Input() streamer : string = "";
     @Input() viewers : number = 0;
+    @Input() createdAt : string = "";
 }
