@@ -54,10 +54,11 @@ export class LoggedHeaderComponent {
     }
 
     handleLogout() {
-        this.authService.addCsrfTokenToCookies().subscribe({
-            next: (res) => this.authService.logout().subscribe({complete: () => this.router.navigate(['login'])}),
-
-        });
+        // this.authService.csrf.addCsrfTokenToCookies().subscribe({
+        //     next: (res) => this.authService.logout().subscribe({complete: () => this.router.navigate(['login'])}),
+        //
+        this.authService.logout().subscribe({complete: () => this.router.navigate(['login'])});
+        // });
         // this.authService.logout().subscribe({
         //     next: () => this.router.navigate(['login']),
         // });

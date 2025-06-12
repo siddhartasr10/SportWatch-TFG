@@ -9,8 +9,7 @@ import { Comment } from '../../interfaces/Comment';
 })
 export class CommentService {
     protected readonly apiUrl : string = 'http://localhost:4200/api';
-    constructor(private http: HttpClient, private csrf: BaseCsrfService) {
-    }
+    constructor(private http: HttpClient, private csrf: BaseCsrfService) {}
 
     /**
       * POST /api/comment

@@ -15,7 +15,7 @@ export class BaseCsrfService {
         return this.http.get<{msg: string}>(`${this.apiUrl}/csrf-token`, {withCredentials: true});
     }
 
-    getXsrfToken() : string {
+    public getXsrfToken() : string {
         return document.cookie.split("; ").filter(cookiePair => cookiePair.startsWith("XSRF"))[0].split("=")[1];
     }
 }

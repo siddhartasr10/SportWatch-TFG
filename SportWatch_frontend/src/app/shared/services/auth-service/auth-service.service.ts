@@ -5,12 +5,11 @@ import { BaseCsrfService } from '../base-csrf-service/base-csrf-service.service'
 
 
 @Injectable({providedIn: 'root'})
-export class AuthService extends BaseCsrfService {
+export class AuthService {
+    protected readonly apiUrl : string = 'http://localhost:4200/api';
     // I really hope angular starts automatically taking the cookie and setting it as header
     // when i move to prod, bc this is ugly (it should do it btw but angular doesnt want to.)
-    constructor(http : HttpClient) {
-        super(http)
-    }
+    constructor(private http : HttpClient, private csrf: BaseCsrfService) {}
 
     // Server only recognizes x-url-form-encoded so data must be passed by requestParams.
     register(username: string, password: string, email: string) : Observable<Object> {
@@ -24,7 +23,7 @@ export class AuthService extends BaseCsrfService {
         // let params = `username=${username}&password=${password}&email=${email}`;
 
         return this.http.post(`${this.apiUrl}/register`, params, {
-            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -35,7 +34,7 @@ export class AuthService extends BaseCsrfService {
         let params : HttpParams = new HttpParams().appendAll({'username': username, 'password': password});
 
         return this.http.post(`${this.apiUrl}/login`, params.toString(), {
-            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded', 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -44,7 +43,7 @@ export class AuthService extends BaseCsrfService {
 
     logout() : Observable<Object> {
         return this.http.post(`${this.apiUrl}/logout`, "", {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });
@@ -54,7 +53,7 @@ export class AuthService extends BaseCsrfService {
     // msg has the username.
     checkUser() : Observable<{[msg: string] : string}> {
         return this.http.get<{[msg: string] : string}>(`${this.apiUrl}/check-user`, {
-            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.getXsrfToken() }),
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
             withCredentials: true,
             responseType: 'json',
         });

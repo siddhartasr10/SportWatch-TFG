@@ -5,15 +5,17 @@ import { RegisterComponent } from './views/register/register.component';
 import { FeedComponent } from './views/feed/feed.component';
 import { ProfileComponent } from './views/profile/profile.component';
 import { VideoIdComponent } from './views/video-id/video-id.component';
+import { LoggedGuard } from './shared/guards/logged-guard/logged-guard.guard';
+
 
 
 export const routes: Routes = [
     { path: 'welcome', component: LandingComponent },
     { path: 'login', component: LoginComponent },
     { path: 'register', component: RegisterComponent },
-    { path: 'feed', component: FeedComponent },
-    { path: 'profile/:username', component: ProfileComponent },
-    { path: 'video/:id', component: VideoIdComponent },
+    { path: 'feed', component: FeedComponent, canActivate: [LoggedGuard] },
+    { path: 'profile/:username', component: ProfileComponent, canActivate: [LoggedGuard]},
+    { path: 'video/:id', component: VideoIdComponent, canActivate: [LoggedGuard]},
     { path: '', redirectTo: '/welcome', pathMatch: 'full'},
     // NOTE: keep the wildcard as last route.
     { path: '**', redirectTo: '/welcome'},

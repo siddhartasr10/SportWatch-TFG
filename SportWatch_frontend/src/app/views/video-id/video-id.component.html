@@ -17,7 +17,8 @@
 
     <div class="flex items-center gap-3">
         <!-- Avatar -->
-        <a [routerLink]="'/profile/' + mainVideo.author" ><img
+        <a [routerLink]="'/profile/' + mainVideo.author" >
+            <img
         [src]="'/shared/default_user.svg'"
         alt="{{ mainVideo.author }}"
         class="w-10 h-10 rounded-full object-cover" />
@@ -55,15 +56,61 @@
     </div>
 
     <!-- Comments -->
-    <div class="mt-6">
+    <div class="mt-6 flex flex-col gap-y-4">
       <h3 class="text-lg font-semibold mb-2">Comments</h3>
-      <div *ngFor="let comment of comments()" class="mb-4 border-b pb-2">
-        <div class="text-sm font-medium ">{{ comment.username }}</div>
-        <div class="text-sm">{{ comment.text }}</div>
-      </div>
+      <!-- <mat-form-field hideRequiredMarker="true" (keydown.enter)="handleComment()" class="w-2/7">
+           <mat-label> Comentario </mat-label>
+           <input matInput required [formControl]="inputComment"/>
+           <mat-error *LoginngIf=""></mat-error>
+           </mat-form-field> -->
+      <input (keydown.enter)="createComment($event)" type=text placeholder="Añade un comentario"
+             class="hover:outline-0 active:outline-0 focus:outline-0 border-b-1 border-gray-500 placeholder:text-gray-400">
+
+        <div *ngFor="let comment of comments()" class="flex gap-3 mb-6">
+        <!-- Avatar/Icon placeholder -->
+        <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold text-sm">
+            <img
+            [src]="'/shared/default_user.svg'"
+            alt="{{ mainVideo.author }}"
+            class="w-10 h-10 rounded-full object-cover" />
+        </div>
+
+        <!-- Comment Content -->
+        <div class="flex flex-col text-white">
+        <div class="flex items-center gap-x-2">
+            <span class="text-sm font-semibold">{{ comment.author }}</span>
+
+            <!-- Actions (only show if author is current user) -->
+            <div *ngIf="comment.author === actualUsername" class="flex items-center gap-x-2 text-sm text-gray-400">
+                <i
+                    class="fa fa-pen cursor-pointer hover:text-yellow-400 transition"
+                    title="Editar"
+                    (click)="startEditingComment(comment)">
+                </i>
+                <i
+                    class="fa fa-xmark cursor-pointer hover:text-red-500 transition"
+                    title="Eliminar"
+                    (click)="deleteComment($event, comment)">
+                </i>
+            </div>
+
+        </div>
+
+        <p *ngIf="editingComment?.commentId != comment.commentId"
+           class="text-sm text-gray-300 mt-1">{{ comment.comment }}</p>
+
+        <input #editInput *ngIf="editingComment?.commentId == comment.commentId"
+            type="text"
+            class="mt-1 p-1 text-sm text-black rounded bg-white"
+            (blur)="updateEditedComment(editInput.value)" />
+
+        </div>
+      <!-- TODO: terminar esto, no va el color por cierto -->
     </div>
+     <ng-template class="text-black" ngIf="comments().length === 0"> No hay comentarios. </ng-template>
   </div>
 
+  </div>
   <!-- Sidebar -->
   <div class="w-full md:w-80">
     <h3 class="text-md font-semibold mb-2">Up Next</h3>
@@ -81,19 +128,3 @@
     </div>
   </div>
 </div>
-
-<!-- HLS.js Script -->
-<!-- <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script> -->
-<!-- <script> -->
-<!-- document.addEventListener('DOMContentLoaded', function () { -->
-    <!-- const video = document.querySelector('video'); -->
-<!-- const videoSrc = ''; // Replace this dynamically in your component -->
-    <!-- if (Hls.isSupported()) { -->
-    <!-- const hls = new Hls(); -->
-    <!-- hls.loadSource(videoSrc); -->
-    <!-- hls.attachMedia(video); -->
-    <!-- } else if (video.canPlayType('application/vnd.apple.mpegurl')) { -->
-    <!-- video.src = videoSrc; -->
-    <!-- } -->
-<!-- }); -->
-<!-- </script> -->

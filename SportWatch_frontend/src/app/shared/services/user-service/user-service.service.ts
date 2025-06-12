@@ -29,6 +29,15 @@ export class UserService  {
 
     }
 
+    getUserById(id : number) : Observable<{username: string, password: string}> {
+        return this.http.get<{username:string, password: string}>(`${this.apiUrl}/user/id/${id}`, {
+            headers: new HttpHeaders({ 'X-XSRF-TOKEN': this.csrf.getXsrfToken() }),
+            withCredentials: true,
+            responseType: 'json',
+        });
+
+    }
+
   /**
    * Retrieves a list of followers for the given username.
    * @param username The username whose followers are to be retrieved.
