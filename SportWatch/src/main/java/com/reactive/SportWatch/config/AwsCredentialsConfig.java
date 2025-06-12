@@ -36,8 +36,6 @@ public class AwsCredentialsConfig {
                 throw new IllegalArgumentException("AWS credentials file must contain two lines: accessKey; and secretKey;");
             }
 
-            reader.close();
-
             return AwsBasicCredentials.create(accessKey, secretKey);
         }
         catch (IOException e) {

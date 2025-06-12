@@ -51,14 +51,14 @@ public class SecurityConfig {
         http
             .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange(exchanges -> exchanges
-                               .pathMatchers("/api/register", "/api/login", "/api/csrf-token", "/api/logout").permitAll()
+                               .pathMatchers("/api/register", "/api/login", "/api/csrf-token", "/api/logout", "/feed", "/video/**", "/profile/**").permitAll()
                                .pathMatchers("/api/**").authenticated()
                                .anyExchange().permitAll())
             .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
             // Con NoOP desactivo la session, lo que con el login por defecto hace que no sea capaz de autentificarme.
             .csrf(csrf -> csrf.disable())
-            .httpBasic(httpConf -> httpConf.disable())
-            .formLogin(login->login.disable());
+            .httpBasic().disable()
+            .formLogin().disable();
 
         return http.build();
     }
@@ -76,16 +76,25 @@ public class SecurityConfig {
     public WebFilter csrfTokenFilter() {
         return (exch, chain) -> {
             // HttpMethod Obj "matches" method is a String.equals not a regex match.
-            if (exch.getRequest().getMethod().matches("GET")) {
-            String csrfToken = UUID.randomUUID().toString();
+            ServerHttpRequest request = exch.getRequest();
 
-            ResponseCookie cookie = ResponseCookie.from("XSRF-TOKEN", csrfToken)
-            .httpOnly(false)
-            .path("/")
-            .sameSite("Lax")
-            .build();
+            String headerToken = request.getHeaders().getFirst("X-XSRF-TOKEN");
+            String cookieToken = request.getCookies().getFirst("XSRF-TOKEN").getValue();
 
-            exch.getResponse().addCookie(cookie);
+            Boolean areEqual = false;
+            if (headerToken != null && cookieToken != null && headerToken.equals(cookieToken))
+                areEqual = true;
+
+            if (exch.getRequest().getMethod().matches("GET") && !areEqual) {
+                String csrfToken = UUID.randomUUID().toString();
+
+                ResponseCookie cookie = ResponseCookie.from("XSRF-TOKEN", csrfToken)
+                .httpOnly(false)
+                .path("/")
+                .sameSite("Lax")
+                .build();
+
+                exch.getResponse().addCookie(cookie);
             }
             return chain.filter(exch);
         };
@@ -100,8 +109,7 @@ public class SecurityConfig {
                 String headerToken = request.getHeaders().getFirst("X-XSRF-TOKEN");
                 log.info("Header Token: " + headerToken);
 
-                String cookieToken = (request.getCookies().getFirst("XSRF-TOKEN") != null) ?
-                        request.getCookies().getFirst("XSRF-TOKEN").getValue() : null;
+                String cookieToken = request.getCookies().getFirst("XSRF-TOKEN").getValue();
                 log.info("Cookie Token: " + cookieToken);
 
                 log.info("Are they equals: " + headerToken.equals(cookieToken));

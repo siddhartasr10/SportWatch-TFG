@@ -78,6 +78,22 @@ public class UserService implements ReactiveUserDetailsService, ReactiveUserDeta
         return user;
     }
 
+
+    public Mono<UserDetails> findById(int userId) {
+        Mono<UserDetails> id = dbClient.sql("SELECT username, password FROM users WHERE user_id = :user_id")
+                .bind("user_id", userId)
+                .map((row, metadata) -> {
+                    return User.builder()
+                        .username(row.get("username", String.class))
+                        .password(row.get("password", String.class))
+                        .build();
+                    }).first();
+
+        id = id.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found.")));
+
+        return id;
+    }
+
     public Mono<Integer> findIdByUsername(String username) {
         Mono<Integer> id = dbClient.sql("SELECT user_id FROM users WHERE username = :username")
                 .bind("username", username)

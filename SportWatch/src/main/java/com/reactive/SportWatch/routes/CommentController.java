@@ -1,5 +1,7 @@
 package com.reactive.SportWatch.routes;
 
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import com.reactive.SportWatch.models.Comment;
@@ -21,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 // Not to confuse with FetchController to get the streams.
@@ -43,22 +44,24 @@ public class CommentController {
         this.userService = userService;
     }
 
+    // we don't need here neither author or commentid
     @PostMapping("comment")
-    Mono<JsonResponse> createComment(@RequestBody Comment comment, ServerWebExchange exch) {
-        return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
-            .flatMap(token -> jwtService.getUsernameFromToken(token))
-            .flatMap(username -> userService.findIdByUsername(username))
-            .filter(id -> id == comment.authorId())
-            .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED,
-                                                                  "You must be the owner of the comment you're creating!")))
-            .flatMap(id -> commentService.createComment(comment))
-            .map(cmnt -> new JsonResponse("New Comment created for stream: " + cmnt.authorId().toString()));
+    Mono<JsonResponse> createComment(@RequestBody Map<String, String> json, ServerWebExchange exch) {
+        return extractComment(json)
+            .flatMap(comment ->
+                jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
+                    .flatMap(jwtService::getUsernameFromToken)
+                    .doOnNext(username -> log.info("Comment before creating: " + comment))
+                    .flatMap(userService::findIdByUsername)
+                    .flatMap(id -> commentService.createComment(comment.authorId(id)))
+                    .map(cmnt -> new JsonResponse("New Comment created for stream: " + cmnt.authorId().toString()))
+            );
     }
 
     // Important, if i make payed streams comments of private streams have to check if the user is subscribed to that
     // stream author.
     @GetMapping("comment/{stream_id}")
-    Flux<Comment> listStreamComments(@PathVariable Integer stream_id, ServerWebExchange exch) {
+    Mono<List<Comment>> listStreamComments(@PathVariable Integer stream_id, ServerWebExchange exch) {
         return commentService.findByStreamId(stream_id);
 
     }
@@ -93,4 +96,22 @@ public class CommentController {
     }
 
 
+    Mono<Comment> extractComment(Map<String, String> json) {
+        return Mono.fromCallable(() -> {
+            var comment = new Comment()
+                         .streamId(Integer.parseInt(json.get("streamId")))
+                         .comment(json.get("comment"));
+            try {
+                comment.authorId(Integer.parseInt(json.get("authorId")));
+                log.info("Comment to be sent:" + comment);
+                return comment;
+            }
+            catch (NumberFormatException err) {
+                log.info("Comment to be sent:" + comment);
+                return comment;
+            }
+
+
+            });
+    }
 }

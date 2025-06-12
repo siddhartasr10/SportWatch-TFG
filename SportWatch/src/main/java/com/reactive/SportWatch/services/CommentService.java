@@ -1,15 +1,15 @@
 package com.reactive.SportWatch.services;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.logging.Logger;
 
 import com.reactive.SportWatch.models.Comment;
 
-import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 
@@ -128,13 +128,13 @@ public class CommentService {
     // Para escalar este tipo de funciones en aplicaciones grandes me imagino que hacen paginacion de la base de datos.
     // Es decir, hay rutas que los resultados de estas funciones los cortan un poco o incluso solo se traen los primeros x que se les pida
     // y permiten rangos.
-    public Flux<Comment> findByStreamId(Integer streamId) {
+    public Mono<List<Comment>> findByStreamId(Integer streamId) {
         return dbClient.sql("SELECT * FROM comments WHERE stream_id = :stream_id").bind("stream_id", streamId)
             .map(row -> new Comment().commentId(row.get("comment_id", Integer.class))
                  .authorId(row.get("author_id", Integer.class))
                  .streamId(row.get("stream_id", Integer.class))
                  .comment(row.get("comment", String.class))
                  .createdAt(row.get("created_at", LocalDateTime.class)))
-            .all();
+            .all().collectList();
     }
 }

@@ -9,6 +9,7 @@ import com.reactive.SportWatch.services.JwtService;
 import com.reactive.SportWatch.services.UserService;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,6 +51,12 @@ public class UserController {
     @GetMapping("user/{username}")
     Mono<ExtUserDetails> getUserByUsername(@PathVariable String username) {
         return userService.findAllByUsername(username);
+    }
+
+    // Basic username/password
+    @GetMapping("user/id/{id}")
+    Mono<UserDetails> getUserById(@PathVariable Integer id) {
+        return userService.findById(id);
     }
     @GetMapping("followers/{username}")
     Flux<Map<String, Object>> getFollowersOfUsername(@PathVariable String username) {
