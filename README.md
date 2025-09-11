@@ -16,25 +16,25 @@ Ej: ESPN, FoxSports (tiene pero unicamente con servidores en EEUU), Skysports (r
 **Competidores**: (en parte) DAZN, HBO/Max (Max sports)
 
 ## 2. Funcionalidades Clave
-1. **Autenticación de usuarios** ✔️
+1.**Autenticación de usuarios** ✔️
 
-2. **Streaming de vídeo**:  Se permite subir contenido en directo y se puede ver desde el canal del autor ✔️
+2.**Streaming de vídeo**:  Se permite subir contenido en directo y se puede ver desde el canal del autor ✔️
 
-3. **Servicio de seguimiento y subscripción**:  Los usuarios pueden seguir o subscribirse (de pago) a los autores para ser notificados de su contenido y tener el acceso total a este. ✔️
+3.**Servicio de seguimiento y subscripción**:  Los usuarios pueden seguir o subscribirse (de pago) a los autores para ser notificados de su contenido y tener el acceso total a este. ✔️
 
-4. **Feed dinámico de inicio**:  La página de inicio muestra a los usuarios registrados y en parte a los no registrados algunos de los directos. ✔️
+4.**Feed dinámico de inicio**:  La página de inicio muestra a los usuarios registrados y en parte a los no registrados algunos de los directos. ✔️
 
-5. **Comentarios y Notificaciones**:  En cada directo se muestran unos comentarios y los usuarios pueden recibir notificaciones si les contestan un comentario o uno de los streamers a los que siguen empieza un directo. ✔️
+5.**Comentarios y Notificaciones**:  En cada directo se muestran unos comentarios y los usuarios pueden recibir notificaciones si les contestan un comentario o uno de los streamers a los que siguen empieza un directo. ✔️
 
-### 3. Funcionalidades Opcionales
+## 3. Funcionalidades Opcionales
 
-1. **Panel de suscripciones**: Cada usuario puede ver en su panel de suscripciones los directos actuales y resubidos de cada uno de los streamers a los que siguen. ✔️
+1.**Panel de suscripciones**: Cada usuario puede ver en su panel de suscripciones los directos actuales y resubidos de cada uno de los streamers a los que siguen. ✔️
 
-2. **Directo resubido**: Los streamers pueden decidir si dejar resubido el directo, una vez resubido se vera en su perfil y los usuarios podrán verlo en sus paneles de suscripción. ✔️ (Actualmente todos se resuben por defecto).
+2.**Directo resubido**: Los streamers pueden decidir si dejar resubido el directo, una vez resubido se vera en su perfil y los usuarios podrán verlo en sus paneles de suscripción. ✔️ (Actualmente todos se resuben por defecto).
 
-3. **Administradores**: Permitir la creación de usuarios con un rol especial de administrador, para un producto minimo viable no lo veo un requerimiento, puedo borrar registros desde Adminer 
+3.**Administradores**: Permitir la creación de usuarios con un rol especial de administrador, para un producto minimo viable no lo veo un requerimiento, puedo borrar registros desde Adminer 
 
-4. **Plataforma de Pago**: Soporte para pagos con Stripe.
+4.**Plataforma de Pago**: Soporte para pagos con Stripe.
 
 ## 3. Requerimientos Técnicos
 **Frontend**: Angular, HTML, CSS, [HLS.js](https://github.com/video-dev/hls.js)
