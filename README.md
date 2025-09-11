@@ -1,6 +1,9 @@
 # SportWatch-TFG
 Plataforma de streaming de deportes que le da la posibilidad a diferentes proveedores de unificarse y dar planes completos y ofertas conjuntas.
 
+![Presentacion-ezgif com-optimize](https://github.com/user-attachments/assets/bdc47d7a-68ea-49e5-9833-96e7a9c3704a)
+
+
 ## Como Uber Eats pero con deportes
 SportWatch se lleva el 0% de lo que generen los proveedores y les da una plataforma para coordinarse y ofrecer un mejor servicio a los usuarios.
 
