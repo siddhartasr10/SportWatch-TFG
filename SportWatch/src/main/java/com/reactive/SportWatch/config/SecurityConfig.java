@@ -51,14 +51,14 @@ public class SecurityConfig {
         http
             .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
             .authorizeExchange(exchanges -> exchanges
-                               .pathMatchers("/api/register", "/api/login", "/api/csrf-token", "/api/logout", "/feed", "/video/**", "/profile/**").permitAll()
+                               .pathMatchers("/api/register", "/api/login", "/api/csrf-token", "/api/check-user", "/api/logout", "/feed", "/video/**", "/profile/**").permitAll()
                                .pathMatchers("/api/**").authenticated()
                                .anyExchange().permitAll())
+            .httpBasic().disable()
+            .formLogin(login -> login.loginPage("/login"))
             .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
             // Con NoOP desactivo la session, lo que con el login por defecto hace que no sea capaz de autentificarme.
-            .csrf(csrf -> csrf.disable())
-            .httpBasic().disable()
-            .formLogin().disable();
+            .csrf(csrf -> csrf.disable());
 
         return http.build();
     }
@@ -79,13 +79,11 @@ public class SecurityConfig {
             ServerHttpRequest request = exch.getRequest();
 
             String headerToken = request.getHeaders().getFirst("X-XSRF-TOKEN");
-            String cookieToken = request.getCookies().getFirst("XSRF-TOKEN").getValue();
+            String cookieToken = (request.getCookies().getFirst("XSRF-TOKEN") != null)
+                ? request.getCookies().getFirst("XSRF-TOKEN").getValue()
+                : null;
 
-            Boolean areEqual = false;
-            if (headerToken != null && cookieToken != null && headerToken.equals(cookieToken))
-                areEqual = true;
-
-            if (exch.getRequest().getMethod().matches("GET") && !areEqual) {
+            if (exch.getRequest().getMethod().matches("GET") && cookieToken == null) {
                 String csrfToken = UUID.randomUUID().toString();
 
                 ResponseCookie cookie = ResponseCookie.from("XSRF-TOKEN", csrfToken)
@@ -109,7 +107,10 @@ public class SecurityConfig {
                 String headerToken = request.getHeaders().getFirst("X-XSRF-TOKEN");
                 log.info("Header Token: " + headerToken);
 
-                String cookieToken = request.getCookies().getFirst("XSRF-TOKEN").getValue();
+                String cookieToken = (request.getCookies().getFirst("XSRF-TOKEN") != null)
+                    ? request.getCookies().getFirst("XSRF-TOKEN").getValue()
+                    : null;
+
                 log.info("Cookie Token: " + cookieToken);
 
                 log.info("Are they equals: " + headerToken.equals(cookieToken));
