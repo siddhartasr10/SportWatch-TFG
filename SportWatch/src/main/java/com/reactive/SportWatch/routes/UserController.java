@@ -18,9 +18,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.server.ServerWebExchange;
 
+import io.jsonwebtoken.JwtException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -38,14 +39,14 @@ public class UserController {
         this.userService = userService;
     }
 
-
     // Don't need to check jwt as route is jwt protected.
     // Returns {msg: "username"}
     @GetMapping("check-user")
     Mono<JsonResponse> checkUser(ServerWebExchange exch) {
-        return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
-                .flatMap(token -> jwtService.getUsernameFromToken(token))
-                .map(username -> new JsonResponse(username));
+            return jwtService.extractTokenFromCookies(exch.getRequest().getCookies())
+                    .flatMap(token -> jwtService.getUsernameFromToken(token))
+                    .defaultIfEmpty("Invalid user token, no username could be found or token wasn't signed or expired")
+                    .map(username -> new JsonResponse(username));
     }
 
     @GetMapping("user/{username}")
