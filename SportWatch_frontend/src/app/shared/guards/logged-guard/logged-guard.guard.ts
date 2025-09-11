@@ -16,10 +16,6 @@ export class LoggedGuard implements CanActivate {
 
   canActivate(): Observable<boolean> {
       return this.authService.checkUser().pipe(map(usernameOrError => {
-<<<<<<< Updated upstream
-          console.log("Mensajillo: ", usernameOrError);
-=======
->>>>>>> Stashed changes
           if (usernameOrError['msg'] == this.invalidUsernameMsg) {
               this.router.navigate(["/", "login"]);
               return false;

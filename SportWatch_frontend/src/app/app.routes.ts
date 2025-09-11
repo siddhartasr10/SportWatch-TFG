@@ -6,13 +6,13 @@ import { FeedComponent } from './views/feed/feed.component';
 import { ProfileComponent } from './views/profile/profile.component';
 import { VideoIdComponent } from './views/video-id/video-id.component';
 import { LoggedGuard } from './shared/guards/logged-guard/logged-guard.guard';
-
+import { AlreadyLoggedGuard } from './shared/guards/already-logged-guard/already-logged-guard.guard';
 
 
 export const routes: Routes = [
     { path: 'welcome', component: LandingComponent },
-    { path: 'login', component: LoginComponent },
-    { path: 'register', component: RegisterComponent },
+    { path: 'login', component: LoginComponent, canActivate: [AlreadyLoggedGuard] },
+    { path: 'register', component: RegisterComponent, canActivate: [AlreadyLoggedGuard] },
     { path: 'feed', component: FeedComponent, canActivate: [LoggedGuard] },
     { path: 'profile/:username', component: ProfileComponent, canActivate: [LoggedGuard]},
     { path: 'video/:id', component: VideoIdComponent, canActivate: [LoggedGuard]},
