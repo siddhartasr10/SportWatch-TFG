@@ -44,6 +44,6 @@ Ej: ESPN, FoxSports (tiene pero unicamente con servidores en EEUU), Skysports (r
 
 **Backend**: Java Spring-boot (Webflux), PostgreSQL, Adminer 
 
-**Integraciones**: AWS Streaming/Cloudflare Streaming
+**Integraciones**: AWS Streaming (SQS, IVS y un Bucket S3)
 
 **Despliegue**: Docker (Actualmente solo la base de datos está containerizada, el proyecto de spring boot se puede convertir facilmente en un .jar y crearse una imagen desde ahí cuando quiera)
