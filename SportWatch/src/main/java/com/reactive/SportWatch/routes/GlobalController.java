@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,10 +34,14 @@ public class GlobalController {
 
         final Resource ENTRYPOINT = new ClassPathResource("static/index.html");
 
-        if (Pattern.compile("\\.(?:js|css|html|ico|img)$").matcher(path).find()) {
+        if (Pattern.compile("\\.(?:js|css|html|ico|img|png|jpeg|ico|woff2|svg)$").matcher(path).find()) {
 
             Resource source = extractResourceFromPath(path);
-            return Mono.just(ResponseEntity.ok(source));
+
+            var response = ResponseEntity.ok();
+            // Los svgs no se pueden ver en la página cuando se mandan como MEDIA text/html, necesita su media especial.
+            if (path.endsWith(".svg")) response.contentType(MediaType.valueOf("image/svg+xml"));
+            return Mono.just(response.body(source));
         }
 
         /* Logica para añadir manualmente el token a la solicitud (al final hice un filtro que esta en securityConfig)
@@ -50,12 +55,12 @@ public class GlobalController {
 
         // System.out.println(path);
         try {
-            Matcher matcher = Pattern.compile("[/\\w|\\d-]*\\.[html|css|js|img|ico]+").matcher(path); matcher.find();
+            Matcher matcher = Pattern.compile("[/\\w|\\d-]*\\.[html|css|js|img|ico|png|jpeg|woff2|svg]+").matcher(path); matcher.find();
             String filePath = matcher.group();
 
-        // System.out.println(filePath);
+            System.out.println("static" + filePath);
 
-            ClassPathResource source = new ClassPathResource("static/" + filePath);
+            ClassPathResource source = new ClassPathResource("static" + filePath);
             if (!source.exists() || !source.isFile() || !source.isReadable()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No file: " + filePath + " was found");
 
             return source;
