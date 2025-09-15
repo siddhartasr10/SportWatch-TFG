@@ -58,7 +58,7 @@ public class GlobalController {
             Matcher matcher = Pattern.compile("[/\\w|\\d-]*\\.[html|css|js|img|ico|png|jpeg|woff2|svg]+").matcher(path); matcher.find();
             String filePath = matcher.group();
 
-            System.out.println("static" + filePath);
+            // System.out.println("static" + filePath);
 
             ClassPathResource source = new ClassPathResource("static" + filePath);
             if (!source.exists() || !source.isFile() || !source.isReadable()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No file: " + filePath + " was found");

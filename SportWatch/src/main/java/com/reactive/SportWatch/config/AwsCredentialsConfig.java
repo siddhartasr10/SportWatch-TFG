@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -25,12 +27,17 @@ public class AwsCredentialsConfig {
     public AwsBasicCredentials awsCredentials() {
 
         try {
-            File awsCredentialsFile = new ClassPathResource(awsFilePath).getFile();
-            BufferedReader reader = new BufferedReader(new FileReader(awsCredentialsFile));
+            // getFile no funciona dentro de un jar ya que no son archivos del sistema sino comprimidos.
+            InputStream awsCredentialsFile = new ClassPathResource(awsFilePath).getInputStream();
+            // \\R es regex para todos los tipos de newline. split usa regex por defecto en java es verda.
+            String[] fileLines = new String(awsCredentialsFile.readAllBytes(), StandardCharsets.UTF_8).split("\\R");
 
-            String accessKey = reader.readLine();
-            String secretKey = reader.readLine();
-            reader.close();
+            // BufferedReader reader = new BufferedReader((awsCredentialsFile));
+
+            String accessKey = fileLines[0];
+            String secretKey = fileLines[1];
+
+            awsCredentialsFile.close();
 
             if (accessKey == null || secretKey == null) {
                 throw new IllegalArgumentException("AWS credentials file must contain two lines: accessKey; and secretKey;");

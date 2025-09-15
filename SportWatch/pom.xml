@@ -11,6 +11,7 @@
 	<groupId>com.reactive</groupId>
 	<artifactId>SportWatch</artifactId>
 	<version>1.0</version>
+	<packaging>jar</packaging>
 	<name>SportWatch</name>
 	<description>Sports streaming platform</description>
 	<url/>
@@ -140,6 +141,10 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+				<!-- Added to specify to the build plugin the jar's main class> -->
+					<mainClass>com.reactive.SportWatch.SportWatchApp</mainClass>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

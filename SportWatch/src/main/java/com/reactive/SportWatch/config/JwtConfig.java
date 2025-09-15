@@ -1,6 +1,7 @@
 package com.reactive.SportWatch.config;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyFactory;
@@ -33,8 +34,12 @@ public class JwtConfig {
     @Bean
     public RSAPublicKey publicKey() {
         try {
-        Path path = new ClassPathResource(publicKeyClassPath).getFile().toPath();
-        byte[] keyBytes = Files.readAllBytes(path);
+            // No puedo usar getFile si quiero empaquetar la aplicación en un JAR, ya que la clase File depende del sistema de archivos.
+        // Path path = new ClassPathResource(publicKeyClassPath).getFile().toPath();
+        // Files.readAllBytes(path);
+        InputStream file = new ClassPathResource(publicKeyClassPath).getInputStream();
+        byte[] keyBytes = file.readAllBytes();
+        file.close();
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return (RSAPublicKey) keyFactory.generatePublic(keySpec);
@@ -58,8 +63,10 @@ public class JwtConfig {
     @Bean
     public RSAPrivateKey privateKey() {
         try {
-        Path path = new ClassPathResource(privateKeyClassPath).getFile().toPath();
-        byte[] keyBytes = Files.readAllBytes(path);
+        // Path path = new ClassPathResource(privateKeyClassPath).getFile().toPath();
+        InputStream file = new ClassPathResource(privateKeyClassPath).getInputStream();
+        byte[] keyBytes = file.readAllBytes();
+        file.close();
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         return (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
