@@ -1,5 +1,6 @@
 package com.reactive.SportWatch.routes;
 
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,27 +30,40 @@ import reactor.core.publisher.Mono;
 @RestController
 public class GlobalController {
 
+    Logger log = Logger.getLogger(GlobalController.class.getName());
+
     @GetMapping("/{*path}")
     Mono<ResponseEntity<Resource>> defaultRouter(@PathVariable String path, ServerWebExchange exch) {
 
         final Resource ENTRYPOINT = new ClassPathResource("static/index.html");
 
-        if (Pattern.compile("\\.(?:js|css|html|ico|img|png|jpeg|ico|woff2|svg)$").matcher(path).find()) {
+        if (Pattern.compile("\\.(?:html|css|js|img|ico|png|jpeg|woff2|svg)$").matcher(path).find()) {
 
             Resource source = extractResourceFromPath(path);
 
-            var response = ResponseEntity.ok();
             // Los svgs no se pueden ver en la página cuando se mandan como MEDIA text/html, necesita su media especial.
-            if (path.endsWith(".svg")) response.contentType(MediaType.valueOf("image/svg+xml"));
-            return Mono.just(response.body(source));
+            return (path.endsWith(".svg"))
+                ? Mono.just(ResponseEntity.ok().contentType(MediaType.valueOf("image/svg+xml")).body(source))
+                : Mono.just(ResponseEntity.ok(source));
+
         }
 
-        /* Logica para añadir manualmente el token a la solicitud (al final hice un filtro que esta en securityConfig)
-              Mono<CsrfToken> csrfToken = exch.getAttribute(CsrfToken.class.getName());
-              return csrfToken.doOnNext(token -> System.out.println(token.getToken())) .then */
-
-        return (Mono.just(ResponseEntity.ok(ENTRYPOINT)));
+        return Mono.just(ResponseEntity.ok(ENTRYPOINT));
     }
+
+    // @GetMapping(value = {"/**/{path:*\\.svg$}", "/{path:*\\.svg$}"})
+
+
+
+    /**
+     * @deprecated Antes la usaba para todos los archivos, pero servirlos manualmente con ClassPath da problemas dentro de un jar. <br>
+     * Curiosamente no con string literales pero si con paths de variables (lo cual es un problema jajajaj) <br>
+     * Porque a veces under the hood se convertirá en inputStream y otras en File -> File.toString y cuando lo hace a File <br>
+     * pues falla por el mismo motivo que fallaba jwtConfig y AwsConfig. <br>
+     *
+     * @param path String
+     * @return ClassPathResource
+     */
 
     public ClassPathResource extractResourceFromPath(String path) {
 
@@ -58,10 +72,18 @@ public class GlobalController {
             Matcher matcher = Pattern.compile("[/\\w|\\d-]*\\.[html|css|js|img|ico|png|jpeg|woff2|svg]+").matcher(path); matcher.find();
             String filePath = matcher.group();
 
+            log.info("Recurso solicitado: " + "static" + filePath);
             // System.out.println("static" + filePath);
 
-            ClassPathResource source = new ClassPathResource("static" + filePath);
-            if (!source.exists() || !source.isFile() || !source.isReadable()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No file: " + filePath + " was found");
+            // todos los path empiezan por una /
+            String finalPath = "static" + filePath;
+
+
+            ClassPathResource source = new ClassPathResource(finalPath);
+            // !source.isFile() || !source.exists() ||
+            if (!source.isReadable()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No file: " + filePath + " was found");
+
+            log.info("Recurso recuperado: " + source.toString());
 
             return source;
         }
