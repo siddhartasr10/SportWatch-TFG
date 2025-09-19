@@ -255,6 +255,9 @@ export class VideoIdComponent {
     loadHls() {
         console.log("Videoref after: ", this.videoRef);
         const video = this.videoRef?.nativeElement;
+        // Esto en prod se comenta ya que no existe el proxy.
+        // videoSrc = this.mainVideo?.streamUrl
+
         const videoSrc = this.mainVideo!?.streamUrl.replace(
           'https://streams-ivs.s3.eu-west-1.amazonaws.com',
           '/stream-proxy');
