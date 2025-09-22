@@ -1,49 +1,73 @@
-# SportWatch-TFG
-Plataforma de streaming de deportes que le da la posibilidad a diferentes proveedores de unificarse y dar planes completos y ofertas conjuntas.
+# 🚀 Guía de Ejecución del Servidor SportWatch
 
-![Presentacion-ezgif com-optimize](https://github.com/user-attachments/assets/bdc47d7a-68ea-49e5-9833-96e7a9c3704a)
+Este documento explica cómo ejecutar el servidor **SportWatch** en dos modalidades, junto con la configuración de base de datos y credenciales necesarias.
 
+---
 
-## Como Uber Eats pero con deportes
-SportWatch se lleva el 0% de lo que generen los proveedores y les da una plataforma para coordinarse y ofrecer un mejor servicio a los usuarios.
+## ⚙️ 1. Ejecución desde el JAR
 
-### [Modelo de datos del proyecto](https://dbdesigner.page.link/XkXt13BZTccx8t896) (Diagrama ER)
+1. Compilar y generar el JAR si aún no existe:
+   ```bash
+   mvn clean package
+   ```
 
-# Análisis del proyecto:
-## 1. Descripción General
-**Objetivo Principal**: Crear un sitio de streaming de vídeo que permita a los proveedores de deportes externalizar la creación de una plataforma web internacional para solo centrarse en la gestión de su contenido y sus canales de televisión.
+2. Ejecutar el servidor:
+   ```bash
+   java -jar target/SportWatch-1.0.jar
+   ```
 
-**Público Objetivo**: Canales de deportes de pago que no tengan plataforma OTT, que la tengan pero prefieran ahorrar costes o que la tengan pero restringida a ese país. O en muchos casos que tengan plataforma pero sea bastante cutre/lenta.
-Ej: ESPN, FoxSports (tiene pero unicamente con servidores en EEUU), Skysports (restringido a UK), canales de televisión de cualquier país que tengan los derechos de emisión del deporte pero solo funcionen por ese medio (Ej: Diema sport, sport.ro)
+3. Levantar la base de datos (desde el directorio `db/`):
+   ```bash
+   cd db/
+   docker compose up -d
+   ```
 
-**Competidores**: (en parte) DAZN, HBO/Max (Max sports)
+---
 
-## 2. Funcionalidades Clave
-1.**Autenticación de usuarios** ✔️
+## ⚙️ 2. Ejecución desde el código fuente (`sportwatch/`)
 
-2.**Streaming de vídeo**:  Se permite subir contenido en directo y se puede ver desde el canal del autor ✔️
+1. Ejecutar el servidor directamente con Maven:
+   ```bash
+   mvn clean spring-boot:run
+   ```
 
-3.**Servicio de seguimiento y subscripción**:  Los usuarios pueden seguir o subscribirse (de pago) a los autores para ser notificados de su contenido y tener el acceso total a este. ✔️
+2. Levantar la base de datos (desde el directorio `db/`):
+   ```bash
+   cd db/
+   docker compose up -d
+   ```
 
-4.**Feed dinámico de inicio**:  La página de inicio muestra a los usuarios registrados y en parte a los no registrados algunos de los directos. ✔️
+---
 
-5.**Comentarios y Notificaciones**:  En cada directo se muestran unos comentarios y los usuarios pueden recibir notificaciones si les contestan un comentario o uno de los streamers a los que siguen empieza un directo. ✔️
+## 🗄️ 3. Configuración de la Base de Datos y Credenciales
 
-## 3. Funcionalidades Opcionales
+La base de datos se configura en el archivo `application.properties`.
 
-1.**Panel de suscripciones**: Cada usuario puede ver en su panel de suscripciones los directos actuales y resubidos de cada uno de los streamers a los que siguen. ✔️
+### 🔧 Configuración de la base de datos
 
-2.**Directo resubido**: Los streamers pueden decidir si dejar resubido el directo, una vez resubido se vera en su perfil y los usuarios podrán verlo en sus paneles de suscripción. ✔️ (Actualmente todos se resuben por defecto).
+```properties
+spring.r2dbc.url=r2dbc:postgresql://localhost:5432/sportwatch
+spring.r2dbc.username=user
+spring.r2dbc.password=password
+```
 
-3.**Administradores**: Permitir la creación de usuarios con un rol especial de administrador, para un producto minimo viable no lo veo un requerimiento, puedo borrar registros desde Adminer 
+### 🔑 Claves necesarias
 
-4.**Plataforma de Pago**: Soporte para pagos con Stripe.
+El servidor necesita las siguientes claves, configuradas también en `application.properties`:
 
-## 3. Requerimientos Técnicos
-**Frontend**: Angular, HTML, CSS, [HLS.js](https://github.com/video-dev/hls.js)
+```properties
+jwt.public-key-path=secrets/certs/jws-public-key.der
+jwt.private-key-path=secrets/certs/jws-private-key.der
+aws.credentials.file=secrets/aws.txt
+```
 
-**Backend**: Java Spring-boot (Webflux), PostgreSQL, Adminer 
+### 📂 Formato del archivo `aws.txt`
 
-**Integraciones**: AWS Streaming (SQS, IVS y un Bucket S3)
+El archivo `secrets/aws.txt` debe contener:
 
-**Despliegue**: Docker (Actualmente solo la base de datos está containerizada, el proyecto de spring boot se puede convertir facilmente en un .jar y crearse una imagen desde ahí cuando quiera)
+- **Primera línea** → `accessKey`
+- **Segunda línea** → `secretKey`
+
+---
+
+✅ Con estos pasos y configuraciones, el servidor SportWatch debería funcionar correctamente.
