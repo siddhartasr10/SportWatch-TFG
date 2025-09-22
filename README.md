@@ -1,4 +1,4 @@
-# 🚀 Guía de Ejecución del Servidor SportWatch
+# 🚀 Guía de Ejecución de SportWatch
 
 Este documento explica cómo ejecutar el servidor **SportWatch** en dos modalidades, junto con la configuración de base de datos y credenciales necesarias.
 
@@ -26,6 +26,8 @@ Este documento explica cómo ejecutar el servidor **SportWatch** en dos modalida
 
 ## ⚙️ 2. Ejecución desde el código fuente (`sportwatch/`)
 
+### 🔹 Opción A: Manual con Maven
+
 1. Ejecutar el servidor directamente con Maven:
    ```bash
    mvn clean spring-boot:run
@@ -36,6 +38,30 @@ Este documento explica cómo ejecutar el servidor **SportWatch** en dos modalida
    cd db/
    docker compose up -d
    ```
+
+### 🔹 Opción B: Con el script `quickstart.sh`
+
+El proyecto incluye un script para facilitar la ejecución automática del servidor y la base de datos.
+
+**Contenido de `quickstart.sh`:**
+```bash
+#!/usr/bin sh
+
+$(sudo systemctl start docker);
+$(gnome-terminal --tab -- sh -c "cd SportWatch; mvn clean spring-boot:run");
+$(gnome-terminal --tab -- sh -c "cd db; docker compose up -d");
+```
+
+**Ejecución:**
+```bash
+chmod +x quickstart.sh
+./quickstart.sh
+```
+
+Este script:
+- Inicia el servicio **Docker**.
+- Abre una terminal y arranca el servidor con `mvn clean spring-boot:run`.
+- Abre otra terminal y levanta la base de datos con `docker compose up -d`.
 
 ---
 
@@ -69,4 +95,3 @@ El archivo `secrets/aws.txt` debe contener:
 - **Segunda línea** → `secretKey`
 
 ---
-
