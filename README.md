@@ -70,4 +70,3 @@ El archivo `secrets/aws.txt` debe contener:
 
 ---
 
-✅ Con estos pasos y configuraciones, el servidor SportWatch debería funcionar correctamente.
