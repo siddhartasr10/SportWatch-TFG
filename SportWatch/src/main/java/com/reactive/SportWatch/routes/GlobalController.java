@@ -72,7 +72,7 @@ public class GlobalController {
             Matcher matcher = Pattern.compile("[/\\w|\\d-]*\\.[html|css|js|img|ico|png|jpeg|woff2|svg]+").matcher(path); matcher.find();
             String filePath = matcher.group();
 
-            log.info("Recurso solicitado: " + "static" + filePath);
+            // log.info("Recurso solicitado: " + "static" + filePath);
             // System.out.println("static" + filePath);
 
             // todos los path empiezan por una /
@@ -80,10 +80,10 @@ public class GlobalController {
 
 
             ClassPathResource source = new ClassPathResource(finalPath);
-            // !source.isFile() || !source.exists() ||
+            // !source.isFile() || !source.exists() || source is file no se puede usar en un jar.
             if (!source.isReadable()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No file: " + filePath + " was found");
 
-            log.info("Recurso recuperado: " + source.toString());
+            // log.info("Recurso recuperado: " + source.toString());
 
             return source;
         }
