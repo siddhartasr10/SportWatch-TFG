@@ -51,6 +51,7 @@ $(sudo systemctl start docker);
 $(gnome-terminal --tab -- sh -c "cd SportWatch; mvn clean spring-boot:run");
 $(gnome-terminal --tab -- sh -c "cd db; docker compose up -d");
 ```
+> Esta script esta enfocada en el desarrollo y no funcionará si no tienes la terminal de gnome.
 
 **Ejecución:**
 ```bash
