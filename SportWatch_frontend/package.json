@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "find src/app/shared/services -maxdepth 3 -type f -name \\*.service.ts -exec sed -i 's/4200/8080/' {} \\; && ng build --configuration production --aot && find src/app/shared/services -maxdepth 3 -type f -name \\*.service.ts -exec sed -i 's/8080/4200/' {} \\;",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
