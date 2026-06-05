@@ -135,7 +135,7 @@ Las retransmisiones se gestionan mediante Amazon IVS y utilizan una configuraci�
 
 ---
 
-### ⚠️ Importante para colaboradores
+### ⚠️ Importante si quieres recrear la funcionalidad
 
 Los identificadores de AWS actualmente están ligados a una cuenta concreta y se encuentran hardcodeados en `UploadService`.
 
