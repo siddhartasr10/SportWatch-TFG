@@ -96,3 +96,53 @@ El archivo `secrets/aws.txt` debe contener:
 - **Segunda línea** → `secretKey`
 
 ---
+## ☁️ 4. Recursos AWS Utilizados
+
+SportWatch utiliza varios servicios de AWS para gestionar el almacenamiento de contenido, la mensajería interna y las retransmisiones en directo.
+
+Actualmente, los identificadores de estos recursos se encuentran definidos directamente en la clase `UploadService` mediante constantes y no a través de `application.properties`.
+
+```java
+private final String RECORDINGCONF = "...";
+private final String SQSQUEUE = "...";
+private final String QUEUEURL = "...";
+private final String BUCKETNAME = "...";
+```
+
+### 📦 Amazon S3
+
+La aplicación utiliza el bucket:
+
+```text
+streams-ivs
+```
+
+Este bucket almacena las grabaciones generadas durante las retransmisiones en directo.
+
+### 📨 Amazon SQS
+
+La aplicación utiliza la cola:
+
+```text
+stream-upload-queue
+```
+
+para gestionar eventos relacionados con la subida y procesamiento de grabaciones.
+
+### 📺 Amazon IVS
+
+Las retransmisiones se gestionan mediante Amazon IVS y utilizan una configuración de grabación (*Recording Configuration*) específica asociada a la cuenta AWS del proyecto.
+
+---
+
+### ⚠️ Importante para colaboradores
+
+Los identificadores de AWS actualmente están ligados a una cuenta concreta y se encuentran hardcodeados en `UploadService`.
+
+Si deseas desplegar SportWatch en tu propia cuenta AWS, deberás:
+
+1. Crear tu propio bucket S3.
+2. Crear una cola SQS equivalente.
+3. Crear la configuración de grabación de Amazon IVS.
+4. Sustituir los valores de las constantes en `UploadService` por los identificadores de tus recursos.
+> O sustituirlo por variables en el `application.properties`
